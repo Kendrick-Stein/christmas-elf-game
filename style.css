@@ -117,3 +117,6 @@ html,body{width:100%;height:100%;overflow:hidden;overscroll-behavior:none}body{b
 .event-hud[data-kind="gold"],.event-hud[data-kind="santa"]{border-color:#fada91;color:#ffe7ad}
 .event-hud[data-kind="blue"]{border-color:#a5cfff;color:#ebf7ff}
 @media(max-height:530px) and (min-width:641px){.event-hud{top:86px}}
+
+/* A warm pool behind the snow and stacked sprites, not over the catch guide or HUD. */
+.screen::before{content:"";position:absolute;inset:0;pointer-events:none;background:radial-gradient(ellipse 66% 66% at 48% 71%,#ebb07833 0%,#f0aa7500 100%)}

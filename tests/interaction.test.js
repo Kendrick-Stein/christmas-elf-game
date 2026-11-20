@@ -85,7 +85,7 @@ test('quick arrow presses nudge 7 units both ways, long hold motion remains 445 
  $('right').fire('pointerdown',{pointerId:1});advance(160);$('right').fire('pointerup',{pointerId:1});advance(16);
  assert(Math.abs(elves[0]-(center+7+445*.160))<=.51);
 });
-test('390px touch drag uses chosen gain, touch microtap does not coast and setting persists',()=>{
+test('390px bottom arrow uses chosen gain, touch microtap does not coast and setting persists',()=>{
  const {$,advance,elves,stored}=harness(390);$('start').fire('click');advance(32);
  const center=elves[0], f=$('field'), pos=center*390/640;
  $('sensitivity').fire('change',{target:{value:'low'}});
@@ -93,7 +93,7 @@ test('390px touch drag uses chosen gain, touch microtap does not coast and setti
  f.fire('pointerdown',{pointerId:31,pointerType:'touch',clientX:pos});
  f.fire('pointermove',{pointerId:31,pointerType:'touch',clientX:pos+20});
  f.fire('pointercancel',{pointerId:31});advance(16);
- assert(Math.abs(elves[0]-(center+20*640/390*.66))<=.51);
+ assert.equal(elves[0],center);
  const next=elves[0];
  $('right').fire('pointerdown',{pointerId:32,pointerType:'touch'});advance(48);
  $('right').fire('pointerup',{pointerId:32,pointerType:'touch'});advance(16);
@@ -151,7 +151,7 @@ test('same immutable branch art and dimensions in flight and after landing; actu
  point(297);
  advance(2700);
  const placed=leaves.find(o=>o.h===31);
- assert(placed);assert.equal(placed.src,falling.src);
+ assert(placed);assert.equal(placed.src,falling.src);assert.match(falling.src,/pixel-branch-\d+\.svg\?v=warm-13$/);
  assert.equal(placed.w,falling.w);assert.equal(placed.actualHeight,falling.actualHeight);
  assert.equal(placed.x,falling.x);assert.notEqual(placed.x,297);
  point(340);advance(16);assert.equal(leaves.find(o=>o.h===31).x,340);
@@ -176,7 +176,7 @@ test('late ornaments shimmer with differing phases and are static for reduced mo
    const h=harness(640,420,reduced);h.$('start').fire('click');h.follow(true);h.advance(36000);
    assert.match(h.$('chapter').textContent,/星树已点亮/);
    h.follow(false);h.w.fire('keydown',{key:'Escape'});
-   const read=()=>h.pixels.filter(o=>['#ffd979','#ff849b','#88edcf','#9bb9ff'].includes(o.color)&&[7,9].includes(o.pos[2])).map(o=>o.alpha);
+   const read=()=>h.pixels.filter(o=>['#ffdc76','#ff8fae','#a3f4be','#a6bbfa'].includes(o.color)&&[7,9].includes(o.pos[2])).map(o=>o.alpha);
    h.advance(16);const first=read();h.advance(432);
    assert(first.length>=5);return [first,read()];
  }
@@ -228,7 +228,7 @@ test('foreground decor paints above all settled branches and end snapshot keeps 
  const sprites=[];
  const poster=new Proxy({drawImage:im=>sprites.push(im.src)},{get:(o,k)=>o[k]??(()=>{})});
  w.ElfShareSource.draw(poster,snap,{x:0,bottom:0,scale:1});
- assert(sprites.some(url=>url.endsWith('/pixel-cane.svg')));assert(sprites.some(url=>url.endsWith('/pixel-bell.svg')));
+ assert(sprites.some(url=>url.endsWith('/pixel-cane.svg?v=warm-13')));assert(sprites.some(url=>url.endsWith('/pixel-bell.svg?v=warm-13')));
  $('start').fire('click');assert.equal(w.ElfShareSource.snapshot(),null);
 });
 function waitForEvent(h,type){
@@ -238,27 +238,30 @@ function waitForEvent(h,type){
  assert.equal(h.$('eventHud').dataset.kind,type);
  assert(parseInt(h.$('score').textContent,10)>=200);
 }
-test('green warning reverses held controls, touch rebases at both transitions, pause freezes countdown',()=>{
+test('green warning reverses held and bottom arrow controls; field touch stays disabled and pause freezes countdown',()=>{
  const h=harness(390,650,true,.01,.5),{$,w,d,elves}=h;
  waitForEvent(h,'green');
  assert.match($('eventHud').textContent,/准备/);
- const field=$('field'), pointerId=1, pos=elves[0]*390/640;
+ const field=$('field'), pointerId=1, pos=28, before=elves[0];
  field.fire('pointerdown',{pointerId,pointerType:'touch',clientX:pos});
- const before=elves[0];
+ h.advance(16);assert.equal(elves[0],before);
  for(let i=0;i<120&&!/4 秒/.test($('eventHud').textContent);i++)h.advance(16);
  assert.match($('eventHud').textContent,/4 秒/);
  field.fire('pointermove',{pointerId,pointerType:'touch',clientX:pos});h.advance(16);assert(Math.abs(elves[0]-before)<1);
- field.fire('pointermove',{pointerId,pointerType:'touch',clientX:pos+15});h.advance(16);assert(elves[0]<before-15);
+ field.fire('pointermove',{pointerId,pointerType:'touch',clientX:pos+15});h.advance(16);assert.equal(elves[0],before);
  field.fire('pointerup',{pointerId});
  const mid=elves[0];w.fire('keydown',{key:'ArrowRight'});h.advance(96);w.fire('keyup',{key:'ArrowRight'});assert(elves[0]<mid-20);
- const preTap=elves[0];$('left').fire('click',{detail:0});h.advance(16);assert(elves[0]>preTap+5);
+ $('sensitivity').fire('change',{target:{value:'low'}});
+ const preTap=elves[0];$('left').fire('pointerdown',{pointerId:3,pointerType:'touch'});
+ h.advance(32);$('left').fire('pointerup',{pointerId:3});h.advance(16);
+ assert(Math.abs(elves[0]-(preTap+7*.66))<=1);
  const badge=$('eventHud').textContent;d.hidden=true;d.fire('visibilitychange');h.advance(10000);
  assert($('eventHud').hidden);d.hidden=false;w.fire('keydown',{key:'Escape'});assert.equal($('eventHud').textContent,badge);
- const endPos=elves[0]*390/640;
- field.fire('pointerdown',{pointerId,pointerType:'touch',clientX:endPos});const endBefore=elves[0];
+ const endPos=350,endBefore=elves[0];
+ field.fire('pointerdown',{pointerId,pointerType:'touch',clientX:endPos});h.advance(16);assert.equal(elves[0],endBefore);
  for(let i=0;i<270&&!$('eventHud').hidden;i++)h.advance(16);
  assert($('eventHud').hidden);field.fire('pointermove',{pointerId,pointerType:'touch',clientX:endPos});h.advance(16);assert(Math.abs(elves[0]-endBefore)<1);
- field.fire('pointermove',{pointerId,pointerType:'touch',clientX:endPos+14});h.advance(16);assert(elves[0]>endBefore+12);
+ field.fire('pointermove',{pointerId,pointerType:'touch',clientX:endPos+14});h.advance(16);assert.equal(elves[0],endBefore);
 });
 test('deer warns before fixed route: stationary tree loses one layer, dodge avoids it, gold attaches for 30',()=>{
  const blue=harness(640,420,true,.99,.5);waitForEvent(blue,'blue');
@@ -282,4 +285,18 @@ test('deer warns before fixed route: stationary tree loses one layer, dodge avoi
  let got=false;
  for(let i=0;i<300&&!got;i++){gold.advance(16);got=gold.labels.includes('驯鹿礼灯 +30');}
  assert(got);
+});
+
+test('far touch taps and drags do not move sled, while desktop pointing remains direct',()=>{
+ const {$,advance,elves,point}=harness(390);$('start').fire('click');advance(32);
+ const center=elves[0], field=$('field');
+ field.fire('pointerdown',{pointerId:45,pointerType:'touch',clientX:28});advance(16);assert.equal(elves[0],center);
+ field.fire('pointerup',{pointerId:45});advance(16);assert.equal(elves[0],center);
+ $('sensitivity').fire('change',{target:{value:'low'}});
+ field.fire('pointerdown',{pointerId:46,pointerType:'touch',clientX:338});
+ advance(16);assert.equal(elves[0],center);
+ field.fire('pointermove',{pointerId:46,pointerType:'touch',clientX:318});
+ advance(16);assert.equal(elves[0],center);
+ field.fire('pointerup',{pointerId:46});
+ point(300);advance(16);assert(Math.abs(elves[0]-300*640/390)<=.51);
 });

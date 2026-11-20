@@ -3,10 +3,10 @@
 const C=window.ElfCore,$=id=>document.getElementById(id),canvas=$('field'),g=canvas.getContext('2d'),screen=$('screen'),panel=$('panel'),start=$('start'),left=$('left'),right=$('right'),banner=$('banner');
 const W=640,H=420,CL=46,CR=W-46,reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const clamp=(x,a,b)=>Math.max(a,Math.min(x,b));
-const art={};for(const n of ['green-mischief','reindeer','santa']){art[n]=new Image();art[n].src='./assets/sprite-'+n+'.svg';}for(const n of ['sled','cane','bell',...Array.from({length:8},(_,i)=>'branch-'+i)]){art[n]=new Image();art[n].src='./assets/pixel-'+n+'.svg';}
+const art={};for(const n of ['green-mischief','reindeer','santa']){art[n]=new Image();art[n].src='./assets/sprite-'+n+'.svg';}for(const n of ['sled','cane','bell',...Array.from({length:8},(_,i)=>'branch-'+i)]){art[n]=new Image();art[n].src='./assets/pixel-'+n+'.svg?v=warm-13';}
 const snow=Array.from({length:42},(_,i)=>({x:(i*137.5)%W,y:(i*83.4)%H,r:1+i%3*.42,v:8+i%7*2}));
 const ORDINARY_ORNAMENTS=['string','bow','string','cane','bell','string','bauble'];
-const TINTS=['#ffd979','#ff849b','#88edcf','#9bb9ff'];
+const TINTS=['#ffdc76','#ff8fae','#a3f4be','#a6bbfa'];
 const tones={bad:[176,132],nice:[523],bright:[659,784],festival:[523,659,784,1047]};
 const motion={keys:new Set(),buttons:new Map(),pointer:null};
 const sensitivityKey='snow-pine-input-v1', sensitivityScale={low:.66,medium:1,high:1.36};
@@ -367,10 +367,14 @@ function drawBranch(x,bottom,w,index,ctx=g){
 }
 function squareLight(ctx,x,y,seed,glow,size){
  const px=Math.round(x),py=Math.round(y),tint=TINTS[seed%TINTS.length],u=Math.round(size/2);
- ctx.globalAlpha=.12+glow*.26;ctx.fillStyle=tint;ctx.fillRect(px-u-2,py-3,size+4,size+6);
+ ctx.fillStyle=tint;
+ ctx.globalAlpha=.07+glow*.13;ctx.fillRect(px-u-4,py-4,size+8,size+8);
+ ctx.globalAlpha=.12+glow*.29;ctx.fillRect(px-u-2,py-2,size+4,size+4);
  ctx.globalAlpha=1;ctx.fillStyle='#162c33';ctx.fillRect(px-u-1,py-1,size+2,size+2);
  ctx.globalAlpha=glow;ctx.fillStyle=tint;ctx.fillRect(px-u,py,size,size);
- ctx.fillStyle='#fff3d3';ctx.fillRect(px-u+1,py+1,Math.max(2,u-1),2);ctx.globalAlpha=1;
+ ctx.fillStyle='#fff7df';ctx.fillRect(px-u+1,py+1,Math.max(2,u-1),2);
+ ctx.globalAlpha=glow*.62;ctx.fillStyle='#fff5d2';ctx.fillRect(px-u+1,py+size-2,Math.max(2,size-2),1);
+ ctx.globalAlpha=1;
 }
 function pulse(time,phase,still){return still?.94:.64+.32*Math.cos(time*2.05-phase);}
 function hanging(ctx,x0,y0,x1,y1){
@@ -527,16 +531,16 @@ window.addEventListener('keydown',e=>{if(e.altKey||e.ctrlKey||e.metaKey)return;i
 window.addEventListener('keyup',e=>motion.keys.delete(e.key));window.addEventListener('blur',resetInput);document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
 function screenX(e){const b=canvas.getBoundingClientRect();return ((e.clientX-b.left)*canvas.width/b.width-view.insetX)/view.scale;}
 canvas.addEventListener('pointerdown',e=>{
- if(mode!=='playing'||motion.pointer!==null)return;
- const px=screenX(e),top=C.support(state),touch=e.pointerType==='touch';
- // Dragging a held tree keeps the grab point stable; tap far away to aim directly.
- if(!reversed&&(!touch||Math.abs(px-(x+top.x))>Math.max(26,top.w*.44)))x=clamp(px-top.x,CL,CR);
- motion.pointer={id:e.pointerId,base:x,at:px,last:px,touch,relative:touch||reversed};canvas.setPointerCapture(e.pointerId);
+ if(mode!=='playing'||motion.pointer!==null||e.pointerType==='touch')return;
+ const px=screenX(e),top=C.support(state);
+ // Touch movement is exclusive to the bottom controls. Mouse aiming is unchanged.
+ if(!reversed)x=clamp(px-top.x,CL,CR);
+ motion.pointer={id:e.pointerId,base:x,at:px,last:px,relative:reversed};canvas.setPointerCapture(e.pointerId);
 });
 canvas.addEventListener('pointermove',e=>{
- if(mode!=='playing'||motion.pointer?.id!==e.pointerId)return;
+ if(mode!=='playing'||motion.pointer?.id!==e.pointerId||e.pointerType==='touch')return;
  const p=motion.pointer,px=screenX(e);
- p.last=px;x=clamp(p.relative?p.base+(px-p.at)*inputSign()*(p.touch?sensitivityScale[sensitivity]:1):px-C.support(state).x,CL,CR);
+ p.last=px;x=clamp(p.relative?p.base+(px-p.at)*inputSign():px-C.support(state).x,CL,CR);
 });
 for(const n of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(n,e=>{if(motion.pointer?.id===e.pointerId)motion.pointer=null;});
 for(const [btn,dir] of [[left,'left'],[right,'right']]){
