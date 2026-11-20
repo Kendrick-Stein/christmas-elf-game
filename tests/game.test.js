@@ -238,3 +238,10 @@ test('cold deer is dodgeable inward from either edge and shears one top without 
  a.equal(s.score,0);a.equal(s.level,2);a.equal(s.combo,0);a.equal(s.hearts,5);
  a.deepEqual(s.layers,[{x:0,w:117},{x:0,w:85}]);
 });
+test('bell mounts on real lower branch and misses outside any contact without changing the round',()=>{
+ const s=C.fresh();s.layers=[{x:0,w:112},{x:38,w:46}];s.level=2;
+ const before=JSON.stringify(s);
+ a.equal(C.decorationContact(s,300,300,262,270,262,359,'bell').row,0);
+ a.equal(C.decorationContact(s,300,300,227,270,227,359,'bell'),null);
+ a.equal(JSON.stringify(s),before);
+});

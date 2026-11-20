@@ -13,7 +13,7 @@ function harness(width=640,height=420,reduced=true,eventPick=null,random=.50){
  const leaves=[],elves=[],pixels=[],labels=[],paints=[];let transform=[],airborne=false;
  $('field').getContext=()=>new Proxy({}, {get:(o,k)=>o[k]??(k==='setTransform'?((...args)=>{transform=args;}):k==='clearRect'?()=>{leaves.length=0;elves.length=0;pixels.length=0;labels.length=0;paints.length=0;airborne=false;}:
  k==='setLineDash'?a=>{if(a.length)airborne=true;}:k==='fillRect'?(...pos)=>pixels.push({pos,color:o.fillStyle,alpha:o.globalAlpha}):
- k==='stroke'?()=>paints.push(o.strokeStyle):k==='fillText'?t=>labels.push(t):k==='drawImage'?(img,x,y,w,h)=>{if(img.src.includes('/pixel-branch-')){paints.push(airborne?'air-branch':'branch');leaves.push({x:x+w/2,y:y+h/2,w,h:airborne?0:31,actualHeight:h,src:img.src});}if(img.src.includes('/pixel-sled.svg'))elves.push(x+w/2);if(img.src.includes('/pixel-cane.svg'))paints.push(airborne?'air-cane':'cane');}:()=>{})});
+ k==='stroke'?()=>paints.push(o.strokeStyle):k==='fillText'?t=>labels.push(t):k==='drawImage'?(img,x,y,w,h)=>{if(img.src.includes('/pixel-branch-')){paints.push(airborne?'air-branch':'branch');leaves.push({x:x+w/2,y:y+h/2,w,h:airborne?0:31,actualHeight:h,src:img.src});}if(img.src.includes('/pixel-sled.svg'))elves.push(x+w/2);if(img.src.includes('/pixel-bell.svg'))paints.push(airborne?'air-bell':'bell');if(img.src.includes('/pixel-cane.svg'))paints.push(airborne?'air-cane':'cane');}:()=>{})});
  let raf,time=0;
  const c=vm.createContext({window:w,document:d,devicePixelRatio:1,matchMedia:q=>({matches:q.includes("reduced-motion")?reduced:true}),Image:class{constructor(){this.complete=true;this.naturalWidth=160;}},requestAnimationFrame:fn=>{raf=fn;},localStorage:{getItem:k=>stored.get(k),setItem:(k,v)=>stored.set(k,v)}});
  Object.assign(c,{console});
@@ -203,15 +203,15 @@ test('foreground decor paints above all settled branches and end snapshot keeps 
  const h=harness(),{$,w}=h;
  assert.equal(w.ElfShareSource.snapshot(),null);
  $('start').fire('click');h.follow(true);
- let orderSeen=false,caneFell=false,caneAttached=false,caneReward=false;
- for(let i=0;i<530;i++){
+ let orderSeen=false,caneFell=false,caneAttached=false,caneReward=false,bellFell=false,bellAttached=false,bellReward=false;
+ for(let i=0;i<800;i++){
    h.advance(160);
-   const {paints}=h;caneFell ||= paints.includes('air-cane');caneAttached ||= paints.includes('cane');caneReward ||= h.labels.includes('拐杖糖 +8');
+   const {paints}=h;caneFell ||= paints.includes('air-cane');caneAttached ||= paints.includes('cane');caneReward ||= h.labels.includes('拐杖糖 +8');bellFell ||= paints.includes('air-bell');bellAttached ||= paints.includes('bell');bellReward ||= h.labels.includes('铃铛 +8');
    if(paints.includes('#d8bc93')&&paints.includes('branch')){
      assert(paints.indexOf('#d8bc93')>paints.lastIndexOf('branch'));orderSeen=true;
    }
  }
- assert(orderSeen&&caneFell&&caneAttached&&caneReward);h.follow(false);h.point(590);
+ assert(orderSeen&&caneFell&&caneAttached&&caneReward);assert(bellFell&&bellAttached&&bellReward);h.follow(false);h.point(590);
  for(let i=0;i<150&&$('panel').hidden;i++){
    h.advance(200);
    const o=h.leaves.find(o=>o.h!==31);if(o)h.point(o.x<320?590:50);
@@ -220,7 +220,7 @@ test('foreground decor paints above all settled branches and end snapshot keeps 
  const entries=snap.layers.flatMap(l=>l.ornaments);
  assert.equal(entries.length,snap.lights+snap.decorations);
  assert(entries.some(o=>o.kind==='bow'));
- assert(entries.some(o=>o.kind==='cane'));
+ assert(entries.some(o=>o.kind==='cane'));assert(entries.some(o=>o.kind==='bell'));
  assert(entries.some(o=>o.kind==='festival'));
  assert(entries.every(o=>Number.isFinite(o.dx)&&o.dy>=-26&&o.dy<=0));
  assert(entries.length>3);assert(Object.isFrozen(snap.layers[0].ornaments));
@@ -228,7 +228,7 @@ test('foreground decor paints above all settled branches and end snapshot keeps 
  const sprites=[];
  const poster=new Proxy({drawImage:im=>sprites.push(im.src)},{get:(o,k)=>o[k]??(()=>{})});
  w.ElfShareSource.draw(poster,snap,{x:0,bottom:0,scale:1});
- assert(sprites.some(url=>url.endsWith('/pixel-cane.svg')));
+ assert(sprites.some(url=>url.endsWith('/pixel-cane.svg')));assert(sprites.some(url=>url.endsWith('/pixel-bell.svg')));
  $('start').fire('click');assert.equal(w.ElfShareSource.snapshot(),null);
 });
 function waitForEvent(h,type){
