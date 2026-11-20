@@ -3,7 +3,7 @@
 const C=window.ElfCore,$=id=>document.getElementById(id),canvas=$('field'),g=canvas.getContext('2d'),screen=$('screen'),panel=$('panel'),start=$('start'),left=$('left'),right=$('right'),banner=$('banner');
 const W=640,H=420,CL=46,CR=W-46,reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const clamp=(x,a,b)=>Math.max(a,Math.min(x,b));
-const art={};for(const n of ['sled','cane',...Array.from({length:8},(_,i)=>'branch-'+i)]){art[n]=new Image();art[n].src='./assets/pixel-'+n+'.svg';}
+const art={};for(const n of ['green-mischief','reindeer','santa']){art[n]=new Image();art[n].src='./assets/sprite-'+n+'.svg';}for(const n of ['sled','cane',...Array.from({length:8},(_,i)=>'branch-'+i)]){art[n]=new Image();art[n].src='./assets/pixel-'+n+'.svg';}
 const snow=Array.from({length:42},(_,i)=>({x:(i*137.5)%W,y:(i*83.4)%H,r:1+i%3*.42,v:8+i%7*2}));
 const ORDINARY_ORNAMENTS=['string','bow','string','cane','string','bauble'];
 const TINTS=['#ffd979','#ff849b','#88edcf','#9bb9ff'];
@@ -15,6 +15,7 @@ try{const previous=localStorage.getItem(sensitivityKey);if(Object.hasOwn(sensiti
 $('sensitivity').value=sensitivity;
 $('sensitivity').addEventListener('change',e=>{const key=e.target.value;if(Object.hasOwn(sensitivityScale,key)){sensitivity=key;try{localStorage.setItem(sensitivityKey,key);}catch{}}});
 const layoutCache=new WeakMap();
+const eventHud=$('eventHud');let events=C.newEvents(),reversed=false,eventText='';
 let ornaments=new Map(),stringWait=7.4,lightSerial=0,ordinaryIndex=0,lastCart=W/2;
 let mode='ready',state=C.fresh(),x=W/2,leaf=null,lights=[],pickup=null,effects=[],camera=0,wait=.4,last=0,clock=0,wave=0,bulbWait=0,notice=0,display='',muted=true,audio=null;
 const POWERS=['compress','wide','magnet'],P_LABEL={compress:'压缩',wide:'加宽',magnet:'吸附',stable:'稳固'},P_ICON={compress:'⇣',wide:'↔',magnet:'∪',stable:'✦'},P_COLOR={compress:'#f8b0b4',wide:'#ffde8a',magnet:'#a5f1df'};let nextPower=3,powerCount=0;
@@ -85,7 +86,7 @@ function createBulb(kind){
  return {kind,seed:lightSerial++,x:clamp(topX-drift+(Math.random()-.5)*(festival?180:118),48,W-48),...enterSky(camera-16,vy),vy,vx};
 }
 function lose(){
- mode='lost';resetInput();leaf=null;lights=[];pickup=null;banner.hidden=true;
+ mode='lost';events.active=null;setReverse(false);resetInput();leaf=null;lights=[];pickup=null;banner.hidden=true;
  const old=best;best={level:Math.max(old.level,state.level),score:Math.max(old.score,state.score)};
  const record=best.level>old.level||best.score>old.score;
  if(record)try{localStorage.setItem(recordKey,JSON.stringify(best));}catch{}
@@ -128,7 +129,7 @@ function update(dt){
  const keyboard=(keys.has('ArrowRight')||keys.has('d')||keys.has('D')?1:0)-(keys.has('ArrowLeft')||keys.has('a')||keys.has('A')?1:0);
  const buttons=buttonRate('right')-buttonRate('left');
  const d=keyboard||buttons;
- if(d)x=clamp(x+d*445*sensitivityScale[sensitivity]*dt,CL,CR);
+ if(d)x=clamp(x+inputSign()*d*445*sensitivityScale[sensitivity]*dt,CL,CR);
  const oldCart=lastCart;lastCart=x;
  const topY=C.surface(state);
  if(!leaf){wait-=dt;if(wait<=0)createLeaf();}
@@ -177,17 +178,108 @@ function update(dt){
      const row=ornaments.get(hit.row)||[];layoutCache.delete(row);
      row.push({kind:o.kind,seed:o.seed,dx:hit.dx,dy:hit.dy});ornaments.set(hit.row,row);
      const str=o.kind==='string', fest=o.kind==='festival';
-     const points=fest||str?C.light(state,o.kind):8;
+     const points=fest||str?C.light(state,o.kind):o.kind==='gift'?30:8;
      if(!fest&&!str){state.score+=points;state.decorations++;}
-     const name={festival:'彩灯',string:'灯串',bow:'蝴蝶结',bauble:'彩球',cane:'拐杖糖'}[o.kind];
+     const name={festival:'彩灯',string:'灯串',bow:'蝴蝶结',bauble:'彩球',cane:'拐杖糖',gift:'驯鹿礼灯'}[o.kind];
      label(name+' +'+points+(str||fest?' · 稳固':''),x+state.layers[hit.row].x+hit.dx,
        clamp(C.CART_Y-hit.row*state.spacing+hit.dy-camera-22,42,340),'#ffd47e');tone('bright');
    }else if(o.y>C.CART_Y+20||o.y>camera+view.worldHeight-view.extra+28)lights.splice(i,1);
  }
+ updateEvent(dt,oldCart);
  for(const f of effects){f.y-=dt*28;f.ttl-=dt;}
  effects=effects.filter(f=>f.ttl>0);
  if(notice>0){notice-=dt;if(notice<=0)banner.hidden=true;}
  hud();
+}
+const inputSign=()=>reversed?-1:1;
+function setReverse(value){
+ if(reversed===value)return;
+ reversed=value;
+ if(motion.pointer){
+   const p=motion.pointer;p.base=x;p.at=p.last;p.relative=true;
+ }
+}
+function eventNotify(e){
+ if(e.type==='green')return e.phase==='warn'?'绿毛怪来了 · 准备左右反转':'左右反转 · '+Math.ceil(e.end-state.elapsed)+' 秒';
+ if(e.type==='santa')return '圣诞老人来了 · 稳住底部';
+ if(e.kind==='gold')return '金色驯鹿 · 接住礼灯 +30';
+ return e.phase==='warn'?'冷色驯鹿 · 快离开标记路线':'冷色驯鹿 · 闪开路线';
+}
+function eventStatus(){
+ const e=mode==='playing'?events.active:null;
+ const text=e?eventNotify(e):'';
+ if(eventText===text)return;eventText=text;
+ eventHud.hidden=!text;eventHud.dataset.kind=e?.type==='deer'?e.kind:e?.type||'';
+ eventHud.textContent=text;
+}
+function updateEvent(dt,oldCart){
+ const time=state.elapsed;
+ const startEvent=C.nextEvent(events,state.score,time);
+ if(startEvent?.type==='deer'){
+   startEvent.kind=Math.random()<.50?'gold':'blue';
+   startEvent.lane=clamp(x+C.support(state).x,27,W-27);
+ }
+ const e=events.active;if(!e)return;
+ if(e.phase==='warn'&&time>=e.end){
+   if(e.type==='green'){e.phase='run';e.end=time+4;setReverse(true);}
+   else if(e.type==='santa'){
+      const moved=C.realignBase(state);
+      show(moved?'圣诞老人 · 把底部推稳了':'圣诞老人 · 底部已经很稳');
+      C.finishEvent(events,time);
+   }else{
+      if(e.kind==='gold'){
+        const vy=177;
+        lights.push({kind:'gift',seed:lightSerial++,x:e.lane,...enterSky(camera-14,vy),vy,vx:0});
+      }
+      e.phase='run';e.end=time+(e.kind==='blue'?3.45:3);e.y=camera-36;
+   }
+ }else if(e.phase==='run'){
+   if(e.type==='deer'){
+      const prev=e.y;
+      e.y+=dt*(e.kind==='blue'?167:182);
+      // Resolve after settling the regular branch. If it landed this frame,
+      // the dive can shear that new top only, never both layers.
+      const surface=C.surface(state);
+      if(e.kind==='blue'&&!e.checked&&e.y>=surface){
+        e.checked=true;
+        const t=clamp((surface-prev)/(e.y-prev),0,1),at=oldCart+(x-oldCart)*t;
+        if(C.deerTouch(state,at,Math.min(prev,surface-1e-6),e.y,e.lane)){
+          const lost=C.deerBump(state);
+          if(lost){
+            for(const o of ornaments.get(lost.row)||[]){
+              if(o.kind==='festival'||o.kind==='string')state.lights=Math.max(0,state.lights-1);
+              else state.decorations=Math.max(0,state.decorations-1);
+            }
+            ornaments.delete(lost.row);
+            if(leaf&&!leaf.goingPast&&C.classify(0,leaf.w,C.support(state).w)!=='perfect')leaf.goingPast=true;
+            show(lost.points?'驯鹿撞到树顶 · −1 层、−'+lost.points+' 分':'驯鹿撞到树顶 · −1 层');
+            label('−1 层',e.lane,clamp(C.surface(state)-camera-20,43,330),'#b8d9ff');tone('bad');
+          }
+        }else show('躲开驯鹿了！');
+      }
+   }
+   if(time>=e.end){setReverse(false);C.finishEvent(events,time);}
+ }
+}
+function drawEvent(viewY,tipY){
+ const e=events.active;if(!e)return;
+ const top=x+C.support(state).x;
+ if(e.type==='green'){
+   sprite('green-mischief',clamp(top+54,35,W-35),Math.min(view.worldHeight-45,tipY+43),50,48);
+ }else if(e.type==='santa'){
+   sprite('santa',clamp(top-55,35,W-35),Math.min(view.worldHeight-45,tipY+39),51,52);
+ }else if(e.type==='deer'){
+   const blue=e.kind==='blue',lane=e.lane;
+   const sy=e.phase==='warn'?Math.max(58,tipY-106):e.y-viewY;
+   if(blue&&!e.checked){
+     g.fillStyle='#98c9fa38';g.fillRect(Math.round(lane)-14,43,28,Math.max(0,tipY-43));
+     g.strokeStyle='#b5dafd';g.lineWidth=2;g.setLineDash([6,6]);
+     g.beginPath();g.moveTo(lane,43);g.lineTo(lane,tipY+13);g.stroke();g.setLineDash([]);
+     g.fillStyle='#baddff';g.fillRect(lane-13,tipY+12,26,3);
+   }
+   g.save();g.shadowBlur=blue?13:16;g.shadowColor=blue?'#98d0ff':'#ffd57c';
+   sprite('reindeer',lane,sy,58,45);g.restore();
+ }
 }
 function frame(t){
  g.setTransform(1,0,0,1,0,0);g.clearRect(0,0,canvas.width,canvas.height);
@@ -257,6 +349,7 @@ function frame(t){
    g.fill();g.stroke();g.shadowBlur=0;
    g.font='900 20px system-ui';g.textAlign='center';g.fillStyle=P_COLOR[kind];g.fillText(P_ICON[kind],px,py+7);g.restore();
  }
+ drawEvent(viewY,tipY);
  for(const o of lights)drawOrnament(g,o.kind,o.x,o.y-viewY,34,o.seed,time,reduce,true);
  for(const f of effects){
   g.save();g.globalAlpha=clamp(f.ttl*1.5,0,1);g.font='800 16px system-ui';g.textAlign='center';g.lineWidth=4;g.strokeStyle='#162c29';g.strokeText(f.text,f.x,f.y+view.extra);g.fillStyle=f.color;g.fillText(f.text,f.x,f.y+view.extra);g.restore();
@@ -312,6 +405,12 @@ function drawOrnament(ctx,kind,x,y,span,seed,time,still,air=false,anchorX=x,anch
    ctx.fillStyle='#26313f';ctx.fillRect(px-5,py-3,10,9);
    ctx.fillStyle=TINTS[seed%4];ctx.fillRect(px-6,py-2,12,7);ctx.fillRect(px-4,py-4,8,11);
    ctx.fillStyle='#fff1d3';ctx.fillRect(px-3,py-2,3,3);
+ }else if(kind==='gift'){
+   hanging(ctx,anchorX,anchorY,x,y+3);
+   const py=Math.round(y)+6,px=Math.round(x);
+   squareLight(ctx,px,py,0,pulse(time,seed*1.15,still),11);
+   ctx.fillStyle='#e57363';ctx.fillRect(px-1,py,3,11);ctx.fillRect(px-6,py+3,11,2);
+   ctx.fillStyle='#fff1b2';ctx.fillRect(px-1,py-2,3,2);
  }else if(kind==='cane'){
    hanging(ctx,anchorX,anchorY,x+2,y+4);
    sprite('cane',Math.round(x),Math.round(y)+13,18,22,ctx);
@@ -391,6 +490,7 @@ window.ElfShareSource=Object.freeze({
 });
 function radiusMagnet(s){return Math.min(44,25+s.level);}
 function hud(){
+ eventStatus();
  const r=Math.round(state.risk),windNow=wind(),tag=[state.score,state.level,state.combo,state.hearts,r,windNow,best.level,best.score,mode,Math.ceil(state.buffs.wide),Math.ceil(state.buffs.magnet),Math.ceil(state.buffs.stable)].join(':');
  if(display===tag)return;display=tag;
  $('score').textContent=String(state.score).padStart(3,'0');$('combo').innerHTML=state.combo+'<span> / 4</span>';
@@ -408,7 +508,7 @@ function button(text){start.innerHTML=text+' <span aria-hidden="true">↗</span>
 function resetInput(){motion.keys.clear();motion.buttons.clear();motion.pointer=null;left.classList.remove('held');right.classList.remove('held');}
 function begin(){
  if(mode==='paused'){mode='playing';panel.hidden=true;hud();canvas.focus({preventScroll:true});return;}
- mode='playing';state=C.fresh();x=W/2;leaf=null;lights=[];pickup=null;nextPower=3;powerCount=0;ornaments=new Map();stringWait=7.4;lightSerial=0;ordinaryIndex=0;lastCart=x;effects=[];wait=.44;camera=0;wave=0;bulbWait=0;notice=0;resetInput();banner.hidden=true;panel.hidden=true;hud();canvas.focus({preventScroll:true});tone('nice');emitShare('reset');
+ mode='playing';state=C.fresh();events=C.newEvents();setReverse(false);x=W/2;leaf=null;lights=[];pickup=null;nextPower=3;powerCount=0;ornaments=new Map();stringWait=7.4;lightSerial=0;ordinaryIndex=0;lastCart=x;effects=[];wait=.44;camera=0;wave=0;bulbWait=0;notice=0;resetInput();banner.hidden=true;panel.hidden=true;hud();canvas.focus({preventScroll:true});tone('nice');emitShare('reset');
 }
 function pause(){
  if(mode!=='playing')return;mode='paused';resetInput();panel.hidden=false;
@@ -427,17 +527,17 @@ canvas.addEventListener('pointerdown',e=>{
  if(mode!=='playing'||motion.pointer!==null)return;
  const px=screenX(e),top=C.support(state),touch=e.pointerType==='touch';
  // Dragging a held tree keeps the grab point stable; tap far away to aim directly.
- if(!touch||Math.abs(px-(x+top.x))>Math.max(26,top.w*.44))x=clamp(px-top.x,CL,CR);
- motion.pointer={id:e.pointerId,base:x,at:px,touch};canvas.setPointerCapture(e.pointerId);
+ if(!reversed&&(!touch||Math.abs(px-(x+top.x))>Math.max(26,top.w*.44)))x=clamp(px-top.x,CL,CR);
+ motion.pointer={id:e.pointerId,base:x,at:px,last:px,touch,relative:touch||reversed};canvas.setPointerCapture(e.pointerId);
 });
 canvas.addEventListener('pointermove',e=>{
  if(mode!=='playing'||motion.pointer?.id!==e.pointerId)return;
  const p=motion.pointer,px=screenX(e);
- x=clamp(p.touch?p.base+(px-p.at)*sensitivityScale[sensitivity]:px-C.support(state).x,CL,CR);
+ p.last=px;x=clamp(p.relative?p.base+(px-p.at)*inputSign()*(p.touch?sensitivityScale[sensitivity]:1):px-C.support(state).x,CL,CR);
 });
 for(const n of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(n,e=>{if(motion.pointer?.id===e.pointerId)motion.pointer=null;});
 for(const [btn,dir] of [[left,'left'],[right,'right']]){
- const press=()=>{if(mode==='playing')x=clamp(x+(dir==='left'?-7:7)*sensitivityScale[sensitivity],CL,CR);};
+ const press=()=>{if(mode==='playing')x=clamp(x+inputSign()*(dir==='left'?-7:7)*sensitivityScale[sensitivity],CL,CR);};
  btn.addEventListener('pointerdown',e=>{if(mode!=='playing'||motion.buttons.has(dir))return;btn.setPointerCapture(e.pointerId);motion.buttons.set(dir,{id:e.pointerId,age:0,touch:e.pointerType==='touch'});btn.classList.add('held');press();});
  for(const n of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(n,e=>{if(motion.buttons.get(dir)?.id===e.pointerId){motion.buttons.delete(dir);btn.classList.remove('held');}});
  btn.addEventListener('click',e=>{if(e.detail===0)press();});

@@ -28,7 +28,7 @@ const BRANCH_BANDS=[
  [[-0.02923,0.09846,-25.5,-21.5],[-0.15692,0.23692,-21.5,-17.5],[-0.28462,0.35538,-17.5,-13.5],[-0.40308,0.43385,-13.5,-10.5],[-0.40308,0.49231,-10.5,-9.5],[-0.49231,0.49231,-9.5,-6.5],[-0.49231,0.41538,-6.5,-5.5],[-0.41538,0.41538,-5.5,-3.5],[-0.41538,0.27692,-3.5,-2.5],[-0.32308,0.27692,-2.5,-0.5]],
  [[-0.0283,0.09811,-25.5,-21.5],[-0.1566,0.23585,-21.5,-17.5],[-0.28491,0.35283,-17.5,-13.5],[-0.40189,0.43208,-13.5,-10.5],[-0.40189,0.49057,-10.5,-9.5],[-0.49057,0.49057,-9.5,-6.5],[-0.49057,0.39623,-6.5,-5.5],[-0.39623,0.39623,-5.5,-3.5],[-0.39623,0.22642,-3.5,-2.5],[-0.28302,0.22642,-2.5,-0.5]]
 ];
-const D_RADIUS={string:{x:12,y:6},festival:{x:5,y:7},bow:{x:7,y:6},bauble:{x:5,y:7},cane:{x:7,y:8}};
+const D_RADIUS={string:{x:12,y:6},festival:{x:5,y:7},bow:{x:7,y:6},bauble:{x:5,y:7},cane:{x:7,y:8},gift:{x:7,y:7}};
 function segmentBox(x0,y0,x1,y1,left,top,right,bottom){
  let a=0,b=1;
  for(const [p,v,lo,hi] of [[x0,x1-x0,left,right],[y0,y1-y0,top,bottom]]){
@@ -142,10 +142,52 @@ function tick(s,dt){
  for(const k of ['wide','magnet','stable'])s.buffs[k]=Math.max(0,s.buffs[k]-dt);
  return healed;
 }
+const EVENT_TYPES=['green','santa','deer'];
+const newEvents=()=>({unlocked:false,next:Infinity,active:null,bag:[]});
+function nextEvent(events,score,time,random=Math.random){
+ if(!events.unlocked&&score>=200){events.unlocked=true;events.next=time;}
+ if(events.active||time<events.next)return null;
+ if(!events.bag.length)events.bag=EVENT_TYPES.slice();
+ const pick=Math.floor(clamp(random(),0,.999999)*events.bag.length);
+ events.active={type:events.bag.splice(pick,1)[0],phase:'warn',end:time+1.45};
+ return events.active;
+}
+function finishEvent(events,time,random=Math.random){
+ events.active=null;events.next=time+20+clamp(random(),0,1)*15;
+}
+function realignBase(s){
+ let changed=0;
+ for(let i=0;i<Math.min(3,s.layers.length);i++){
+   const row=s.layers[i],delta=-Math.sign(row.x)*Math.min(12,Math.abs(row.x)*.48);
+   if(Math.abs(delta)<.15)continue;
+   const below=s.layers[i-1]||{x:0,w:TRAY},above=s.layers[i+1];
+   const keeps=(parent,child,px,cx)=>{
+     const existing=overlap(parent.x,parent.w,child.x,child.w);
+     return overlap(px,parent.w,cx,child.w)+1e-7>=Math.min(existing,child.w*.35);
+   };
+   for(const factor of [1,.5,.25]){
+     const aim=row.x+delta*factor;
+     if(keeps(below,row,below.x,aim)&&(!above||keeps(row,above,aim,above.x))){row.x=aim;changed++;break;}
+   }
+ }
+ return changed;
+}
+function deerBump(s){
+ if(s.status!=='playing'||!s.layers.length)return null;
+ const row=s.layers.length-1,points=Math.min(30,s.score);
+ s.layers.pop();s.level=s.layers.length;s.score-=points;s.combo=0;
+ s.narrowRun=0;s.sinceBroad=0;
+ for(let i=s.layers.length-1;i>=0&&s.layers[i].w<66;i--)s.narrowRun++;
+ for(let i=s.layers.length-1;i>=0&&s.layers[i].w<93;i--)s.sinceBroad++;
+ return {row,points};
+}
+function deerTouch(s,cart,from,to,laneX){
+ return crossesSurface(from,to,surface(s))&&Math.abs(cart+support(s).x-laneX)<=support(s).w*.5+14;
+}
 function difficulty(s){
  const l=s.level,wind=clamp((l-3)*4.0,0,49);
  return {speed:clamp(98+l*7.3,98,276),wind};
 }
-const core={CART_Y,TRAY,LEVEL_HEIGHT,MIN_WIDTH,MAX_WIDTH,STAR_AT,HEARTS,HEAL_EVERY,STREAK,FESTIVAL,BUFF_DURATION,WIDE_EXTRA,MIN_SPACING,STABLE_DURATION,STABLE_SCALE,STRING_DURATION,STRING_SCORE,fresh,nextWidth,decorationContact,surface,support,receiving,viewport,fall,worldTop,crossesSurface,overlap,classify,placement,land,miss,light,power,attract,tick,difficulty};
+const core={CART_Y,TRAY,LEVEL_HEIGHT,MIN_WIDTH,MAX_WIDTH,STAR_AT,HEARTS,HEAL_EVERY,STREAK,FESTIVAL,BUFF_DURATION,WIDE_EXTRA,MIN_SPACING,STABLE_DURATION,STABLE_SCALE,STRING_DURATION,STRING_SCORE,fresh,nextWidth,decorationContact,surface,support,receiving,viewport,fall,worldTop,crossesSurface,overlap,classify,placement,land,miss,light,power,attract,tick,newEvents,nextEvent,finishEvent,realignBase,deerBump,deerTouch,difficulty};
 if(typeof module!=='undefined')module.exports=core;else global.ElfCore=core;
 })(globalThis);

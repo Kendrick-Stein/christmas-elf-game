@@ -1,7 +1,7 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const read=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
-function harness(width=640,height=420,reduced=true){
+function harness(width=640,height=420,reduced=true,eventPick=null,random=.50){
  const size={width,height};
  const elements=new Map(),freshNode=()=>{const events=new Map(),classes=new Set(),attrs=new Map(),span={textContent:''};return {
   addEventListener:(n,fn)=>events.set(n,fn),fire:(n,e={})=>events.get(n)?.({preventDefault(){},...e}),textContent:'',innerHTML:'',hidden:false,style:{setProperty(){}},focus(){d.activeElement=this;},setPointerCapture(){},getBoundingClientRect:()=>({...size,left:0,right:size.width}),querySelector:()=>span,
@@ -17,14 +17,16 @@ function harness(width=640,height=420,reduced=true){
  let raf,time=0;
  const c=vm.createContext({window:w,document:d,devicePixelRatio:1,matchMedia:q=>({matches:q.includes("reduced-motion")?reduced:true}),Image:class{constructor(){this.complete=true;this.naturalWidth=160;}},requestAnimationFrame:fn=>{raf=fn;},localStorage:{getItem:k=>stored.get(k),setItem:(k,v)=>stored.set(k,v)}});
  Object.assign(c,{console});
- vm.runInContext('globalThis.Math.random=()=>.50',c);
+ vm.runInContext('globalThis.Math.random=()=>'+random,c);
  vm.runInContext(read('game-core.js'),c);
  w.ElfCore=c.ElfCore;
+ if(eventPick!==null){const pick=w.ElfCore.nextEvent;w.ElfCore.nextEvent=(...args)=>pick(...args,()=>eventPick);}
+
  vm.runInContext(read('game.js'),c);
  let tracking=false;
  const point=x=>{$('field').fire('pointerdown',{pointerId:1,clientX:x});$('field').fire('pointermove',{pointerId:1,clientX:x});$('field').fire('pointerup',{pointerId:1});};
  return {$,w,d,point,leaves,elves,pixels,labels,paints,stored,transform:()=>transform,setSize:(w,h)=>{size.width=w;size.height=h;},follow:b=>tracking=b,advance:ms=>{for(let i=0;i<ms;i+=16){
-      if(tracking && leaves.length){const o=leaves.find(x=>x.h!==31&&x.y>0);if(o)point(o.x);}
+      if(tracking && leaves.length){const o=leaves.find(x=>x.h!==31&&x.y>0);if(o)point(o.x*transform[0]+transform[4]);}
       raf(time+=16);
  }}};
 }
@@ -228,4 +230,56 @@ test('foreground decor paints above all settled branches and end snapshot keeps 
  w.ElfShareSource.draw(poster,snap,{x:0,bottom:0,scale:1});
  assert(sprites.some(url=>url.endsWith('/pixel-cane.svg')));
  $('start').fire('click');assert.equal(w.ElfShareSource.snapshot(),null);
+});
+function waitForEvent(h,type){
+ h.$('start').fire('click');h.follow(true);
+ for(let i=0;i<240&&h.$('eventHud').dataset.kind!==type;i++)h.advance(125);
+ h.follow(false);
+ assert.equal(h.$('eventHud').dataset.kind,type);
+ assert(parseInt(h.$('score').textContent,10)>=200);
+}
+test('green warning reverses held controls, touch rebases at both transitions, pause freezes countdown',()=>{
+ const h=harness(390,650,true,.01,.5),{$,w,d,elves}=h;
+ waitForEvent(h,'green');
+ assert.match($('eventHud').textContent,/准备/);
+ const field=$('field'), pointerId=1, pos=elves[0]*390/640;
+ field.fire('pointerdown',{pointerId,pointerType:'touch',clientX:pos});
+ const before=elves[0];
+ for(let i=0;i<120&&!/4 秒/.test($('eventHud').textContent);i++)h.advance(16);
+ assert.match($('eventHud').textContent,/4 秒/);
+ field.fire('pointermove',{pointerId,pointerType:'touch',clientX:pos});h.advance(16);assert(Math.abs(elves[0]-before)<1);
+ field.fire('pointermove',{pointerId,pointerType:'touch',clientX:pos+15});h.advance(16);assert(elves[0]<before-15);
+ field.fire('pointerup',{pointerId});
+ const mid=elves[0];w.fire('keydown',{key:'ArrowRight'});h.advance(96);w.fire('keyup',{key:'ArrowRight'});assert(elves[0]<mid-20);
+ const preTap=elves[0];$('left').fire('click',{detail:0});h.advance(16);assert(elves[0]>preTap+5);
+ const badge=$('eventHud').textContent;d.hidden=true;d.fire('visibilitychange');h.advance(10000);
+ assert($('eventHud').hidden);d.hidden=false;w.fire('keydown',{key:'Escape'});assert.equal($('eventHud').textContent,badge);
+ const endPos=elves[0]*390/640;
+ field.fire('pointerdown',{pointerId,pointerType:'touch',clientX:endPos});const endBefore=elves[0];
+ for(let i=0;i<270&&!$('eventHud').hidden;i++)h.advance(16);
+ assert($('eventHud').hidden);field.fire('pointermove',{pointerId,pointerType:'touch',clientX:endPos});h.advance(16);assert(Math.abs(elves[0]-endBefore)<1);
+ field.fire('pointermove',{pointerId,pointerType:'touch',clientX:endPos+14});h.advance(16);assert(elves[0]>endBefore+12);
+});
+test('deer warns before fixed route: stationary tree loses one layer, dodge avoids it, gold attaches for 30',()=>{
+ const blue=harness(640,420,true,.99,.5);waitForEvent(blue,'blue');
+ assert.match(blue.$('eventHud').textContent,/快离开/);
+ let struck=0;
+ for(let i=0;i<250&&!blue.$('eventHud').hidden;i++){
+   const before=Number.parseInt(blue.$('progress').innerHTML,10);
+   blue.advance(16);
+   if(blue.labels.includes('−1 层')&&Number.parseInt(blue.$('progress').innerHTML,10)<before)struck++;
+ }
+ assert.equal(struck,1);
+ const evade=harness(640,420,true,.99,.5);waitForEvent(evade,'blue');
+ evade.point(evade.elves[0]>320?93:551);
+ let dodge=false;
+ for(let i=0;i<250&&!evade.$('eventHud').hidden;i++){
+   evade.advance(16);dodge ||= evade.$('banner').textContent==='躲开驯鹿了！';
+   assert(!evade.labels.includes('−1 层'));
+ }
+ assert(dodge);
+ const gold=harness(640,420,true,.99,.49);waitForEvent(gold,'gold');gold.follow(true);
+ let got=false;
+ for(let i=0;i<300&&!got;i++){gold.advance(16);got=gold.labels.includes('驯鹿礼灯 +30');}
+ assert(got);
 });

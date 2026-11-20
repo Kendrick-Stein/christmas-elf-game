@@ -200,3 +200,41 @@ test('a candy cane catches an actual side branch and ignoring it does not change
  a.equal(C.decorationContact(s,300,300,232,270,232,360,'cane'),null);
  a.equal(JSON.stringify(s),before);
 });
+test('event threshold latches once, events never overlap, the active cooldown spans 20–35 seconds',()=>{
+ const e=C.newEvents();
+ a.equal(C.nextEvent(e,199,7,()=>0),null);
+ a.equal(C.nextEvent(e,200,8,()=>0).type,'green');
+ a.equal(C.nextEvent(e,400,46,()=>0),null);
+ C.finishEvent(e,46,()=>0);
+ a.equal(C.nextEvent(e,130,65.999,()=>0),null);
+ a.equal(C.nextEvent(e,130,66,()=>0).type,'santa');
+ C.finishEvent(e,70,()=>1);
+ a.equal(C.nextEvent(e,500,104.999,()=>0),null);
+ a.equal(C.nextEvent(e,500,105,()=>0).type,'deer');
+});
+test('Santa gently realigns only the lower three, preserving offset support and geometry',()=>{
+ const s=C.fresh();s.layers=[{x:31,w:88},{x:50,w:82},{x:73,w:60},{x:111,w:60},{x:90,w:54}];s.level=5;s.score=256;
+ const old=s.layers.map(l=>({...l}));
+ a(C.realignBase(s)>0);
+ a.deepEqual(s.layers.slice(3),old.slice(3));
+ a.equal(s.score,256);a.equal(s.level,5);
+ s.layers.forEach((l,i)=>{
+  a.equal(l.w,old[i].w);a(Math.abs(l.x)<=Math.abs(old[i].x));
+  if(!i)return;
+  const cur=s.layers[i-1],prior=old[i-1];
+  a(C.overlap(cur.x,cur.w,l.x,l.w)+1e-6>=Math.min(l.w*.35,C.overlap(prior.x,prior.w,old[i].x,old[i].w)));
+ });
+});
+test('cold deer is dodgeable inward from either edge and shears one top without spending hearts',()=>{
+ const s=C.fresh();s.level=3;s.layers=[{x:0,w:117},{x:0,w:85},{x:4,w:58}];s.combo=3;s.score=19;
+ const y=C.surface(s);
+ for(const [at,away] of [[46,165],[594,460],[320,428]]){
+   const lane=at+4;
+   a.equal(C.deerTouch(s,at,y-19,y+8,lane),true);
+   a.equal(C.deerTouch(s,away,y-19,y+8,lane),false);
+   a.equal(C.deerTouch(s,at,y+1,y+7,lane),false);
+ }
+ a.deepEqual(C.deerBump(s),{row:2,points:19});
+ a.equal(s.score,0);a.equal(s.level,2);a.equal(s.combo,0);a.equal(s.hearts,5);
+ a.deepEqual(s.layers,[{x:0,w:117},{x:0,w:85}]);
+});

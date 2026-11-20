@@ -111,3 +111,9 @@ html,body{width:100%;height:100%;overflow:hidden;overscroll-behavior:none}body{b
  #settlementTree{height:clamp(52px,20dvh,104px)}
  .panel.settlement-panel #panelTag,.panel.settlement-panel #panelIcon,.panel.settlement-panel #panelFine{display:none}
 }
+
+.event-hud{position:absolute;right:12px;top:120px;z-index:4;max-width:calc(100% - 24px);padding:7px 10px;border:1px solid #baffab;color:#e6ffcd;background:#202a3ef5;box-shadow:2px 2px #0a192b;font-size:clamp(.67rem,2.7vw,.87rem);font-weight:800;line-height:1.2;pointer-events:none}
+.event-hud[hidden]{display:none}
+.event-hud[data-kind="gold"],.event-hud[data-kind="santa"]{border-color:#fada91;color:#ffe7ad}
+.event-hud[data-kind="blue"]{border-color:#a5cfff;color:#ebf7ff}
+@media(max-height:530px) and (min-width:641px){.event-hud{top:86px}}
