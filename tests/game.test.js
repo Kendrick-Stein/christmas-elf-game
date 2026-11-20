@@ -173,3 +173,23 @@ test('active clock restores one heart on 30-second boundaries, not repeatedly or
  s.status='lost';s.hearts=0;a.equal(C.tick(s,90),false);a.equal(s.hearts,0);
  const replay=C.fresh();replay.hearts=4;a.equal(C.tick(replay,29),false);a.equal(replay.hearts,4);
 });
+test('decorations contact the nearest real branch, including lower sides; foliage remains top-only',()=>{
+ const s=C.fresh();
+ s.layers=[{x:0,w:120},{x:38,w:46}];s.level=2;
+ const center=C.decorationContact(s,300,300,338,285,338,370,'festival');
+ a.equal(center.row,1);a(center.dy<-22);
+ const lower=C.decorationContact(s,300,300,264,285,264,370,'bow');
+ a.equal(lower.row,0);a(lower.dx<-30);
+ a.equal(C.placement(s,300,264,65).rating,'miss');
+ a.equal(C.decorationContact(s,300,300,227,285,227,370,'bauble'),null);
+ s.buffs.wide=C.BUFF_DURATION;
+ a.equal(C.decorationContact(s,300,300,227,285,227,370,'bauble'),null);
+});
+test('decoration sweep catches touch at high dt and a moving cart without endpoint overlap',()=>{
+ const s=C.fresh();s.layers=[{x:0,w:61}];s.level=1;
+ const clipped=C.decorationContact(s,300,300,334,315,334,363,'festival');
+ a.equal(clipped.row,0);a(clipped.dx>25);a(clipped.dy<0);
+ const sweep=C.decorationContact(s,245,355,300,334,300,336,'string');
+ a.equal(sweep.row,0);a(sweep.t>0&&sweep.t<1);
+ a.equal(C.decorationContact(s,300,300,300,360,300,363,'bauble'),null);
+});

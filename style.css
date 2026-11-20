@@ -87,3 +87,27 @@ html,body{width:100%;height:100%;overflow:hidden;overscroll-behavior:none}body{b
 @media(max-width:350px){.chapter b{display:none}.settings .sense{font-size:0}.settings .sense select{font-size:.7rem}.settings .sense::before{content:"灵敏度";font-size:.62rem}}
 @media(max-height:470px) and (orientation:landscape){.mast{min-height:34px;padding-top:calc(2px + env(safe-area-inset-top,0px));padding-bottom:2px}.controls button{min-height:45px}.footer{bottom:calc(57px + env(safe-area-inset-bottom,0px))}}
 .buffs .stable{color:#ffd98a;border-color:#d5ab6b}.buffs:has(.stable){width:calc(100% - 18px);flex-direction:row;flex-wrap:wrap}
+
+/* V9 settlement remains usable in short landscape and with mobile safe-area. */
+.panel.settlement-panel{overflow-y:auto;overscroll-behavior:contain;place-items:safe center;padding-block:9px}
+.panel.settlement-panel .card{width:min(390px,100%);max-width:100%;padding:10px 12px;background:#192c46f7}
+.panel.settlement-panel #panelTitle{margin-bottom:6px}
+.panel.settlement-panel #panelText{margin:6px 0 9px;color:#ffcf89;font-weight:800}
+#settlementTree{display:block;width:100%;height:clamp(58px,27dvh,184px);border:1px solid #617e9c;background:#163054}
+#settlementTree[hidden],.share-actions[hidden],.share-status[hidden],.share-link[hidden]{display:none}
+.share-actions{display:grid;grid-template-columns:minmax(0,1.55fr) minmax(0,1fr);gap:7px;margin:0 0 6px}
+.share-actions button{min-height:44px;padding-inline:4px;font-size:.85rem}
+.share-actions #shareTree{background:#345676;color:#f6ecd7;border-color:#87a8bf;box-shadow:3px 3px 0 #1d2e43}
+.share-actions #shareTree:hover{background:#427099}
+.share-actions button[aria-disabled="true"]{opacity:.63;cursor:default}
+.panel.settlement-panel #start{min-height:44px;background:transparent;border-color:transparent;color:#c5d9eb;box-shadow:none;font-size:.80rem;text-decoration:underline}
+.panel.settlement-panel #start:hover{color:#fff2d1}
+.panel.settlement-panel .panel-fine{margin-top:2px}
+.share-status{font-size:.73rem;margin:5px 0;line-height:1.4;color:#d5e6ee}
+.share-link{display:flex;flex-direction:column;gap:3px;font-size:.73rem;text-align:left;margin:4px 0 6px}
+.share-link input{background:#12253e;border:1px solid #87a8bf;color:#fff1cb;width:100%;font:inherit;padding:5px;min-height:34px}
+@media(max-height:460px) and (orientation:landscape){
+ .panel.settlement-panel .card{padding:5px 10px}
+ #settlementTree{height:clamp(52px,20dvh,104px)}
+ .panel.settlement-panel #panelTag,.panel.settlement-panel #panelIcon,.panel.settlement-panel #panelFine{display:none}
+}

@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#11162b"><meta name="description" content="推着小精灵的雪橇，在雪夜垒起一棵圣诞树。"><title>松针雪夜 · 垒树挑战</title><link rel="icon" href="./assets/pixel-leaf.svg" type="image/svg+xml"><link rel="stylesheet" href="./style.css?v=branches-8"><script defer src="./game-core.js?v=branches-8"></script><script defer src="./game.js?v=branches-8"></script></head>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#11162b"><meta name="description" content="推着小精灵的雪橇，在雪夜垒起一棵圣诞树。"><title>松针雪夜 · 垒树挑战</title><link rel="icon" href="./assets/pixel-leaf.svg" type="image/svg+xml"><link rel="stylesheet" href="./style.css?v=share-9"><script defer src="./game-core.js?v=share-9"></script><script defer src="./share.js?v=share-9"></script><script defer src="./game.js?v=share-9"></script></head>
 <body><main class="shell" id="shell">
 <header class="mast"><h1 class="brand">松针雪夜</h1><div class="settings"><button class="help-toggle" type="button" id="helpToggle" aria-expanded="false" aria-controls="rules">玩法</button><label class="sense" for="sensitivity">灵敏度 <select id="sensitivity"><option value="low">低</option><option value="medium" selected>标准</option><option value="high">高</option></select></label><button id="sound" class="sound" type="button" aria-pressed="false" aria-label="打开声音">♫ <span>静音</span></button></div></header>
 <section class="stage">
@@ -17,7 +17,16 @@
 <div id="panelIcon" class="panel-icon" hidden aria-hidden="true">✦</div>
 <p id="panelTag" class="panel-tag" hidden></p>
 <h2 id="panelTitle">垒得越高越好</h2>
+<canvas id="settlementTree" width="420" height="184" hidden aria-hidden="true"></canvas>
 <p id="panelText">移动树顶，对准落下的松叶。</p>
+<div id="shareActions" class="share-actions" hidden>
+<button id="saveTree" type="button" aria-disabled="true">保存我的树</button>
+<button id="shareTree" type="button" aria-disabled="true">分享</button>
+</div>
+<p id="shareStatus" class="share-status" role="status" hidden></p>
+<label id="shareLinkLabel" class="share-link" hidden>复制游戏链接
+<input id="shareLink" type="url" readonly spellcheck="false">
+</label>
 <button id="start" type="button">开始垒树 <span aria-hidden="true">↗</span></button>
 <p id="panelFine" class="panel-fine"></p>
 </div></div></div>

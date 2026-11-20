@@ -10,10 +10,10 @@ function harness(width=640,height=420,reduced=true){
  const d=freshNode(),w=freshNode(),stored=new Map();
  const $=id=>{if(!elements.has(id))elements.set(id,freshNode());return elements.get(id);};
  d.getElementById=$;d.hidden=false;
- const leaves=[],elves=[],pixels=[],labels=[];let transform=[],airborne=false;
- $('field').getContext=()=>new Proxy({}, {get:(o,k)=>o[k]??(k==='setTransform'?((...args)=>{transform=args;}):k==='clearRect'?()=>{leaves.length=0;elves.length=0;pixels.length=0;labels.length=0;airborne=false;}:
+ const leaves=[],elves=[],pixels=[],labels=[],paints=[];let transform=[],airborne=false;
+ $('field').getContext=()=>new Proxy({}, {get:(o,k)=>o[k]??(k==='setTransform'?((...args)=>{transform=args;}):k==='clearRect'?()=>{leaves.length=0;elves.length=0;pixels.length=0;labels.length=0;paints.length=0;airborne=false;}:
  k==='setLineDash'?a=>{if(a.length)airborne=true;}:k==='fillRect'?(...pos)=>pixels.push({pos,color:o.fillStyle,alpha:o.globalAlpha}):
- k==='fillText'?t=>labels.push(t):k==='drawImage'?(img,x,y,w,h)=>{if(img.src.includes('/pixel-branch-'))leaves.push({x:x+w/2,y:y+h/2,w,h:airborne?0:31,actualHeight:h,src:img.src});if(img.src.includes('/pixel-sled.svg'))elves.push(x+w/2);}:()=>{})});
+ k==='stroke'?()=>paints.push(o.strokeStyle):k==='fillText'?t=>labels.push(t):k==='drawImage'?(img,x,y,w,h)=>{if(img.src.includes('/pixel-branch-')){paints.push(airborne?'air-branch':'branch');leaves.push({x:x+w/2,y:y+h/2,w,h:airborne?0:31,actualHeight:h,src:img.src});}if(img.src.includes('/pixel-sled.svg'))elves.push(x+w/2);}:()=>{})});
  let raf,time=0;
  const c=vm.createContext({window:w,document:d,devicePixelRatio:1,matchMedia:q=>({matches:q.includes("reduced-motion")?reduced:true}),Image:class{constructor(){this.complete=true;this.naturalWidth=160;}},requestAnimationFrame:fn=>{raf=fn;},localStorage:{getItem:k=>stored.get(k),setItem:(k,v)=>stored.set(k,v)}});
  Object.assign(c,{console});
@@ -23,7 +23,7 @@ function harness(width=640,height=420,reduced=true){
  vm.runInContext(read('game.js'),c);
  let tracking=false;
  const point=x=>{$('field').fire('pointerdown',{pointerId:1,clientX:x});$('field').fire('pointermove',{pointerId:1,clientX:x});$('field').fire('pointerup',{pointerId:1});};
- return {$,w,d,point,leaves,elves,pixels,labels,stored,transform:()=>transform,setSize:(w,h)=>{size.width=w;size.height=h;},follow:b=>tracking=b,advance:ms=>{for(let i=0;i<ms;i+=16){
+ return {$,w,d,point,leaves,elves,pixels,labels,paints,stored,transform:()=>transform,setSize:(w,h)=>{size.width=w;size.height=h;},follow:b=>tracking=b,advance:ms=>{for(let i=0;i<ms;i+=16){
       if(tracking && leaves.length){const o=leaves.find(x=>x.h!==31&&x.y>0);if(o)point(o.x);}
       raf(time+=16);
  }}};
@@ -157,24 +157,24 @@ test('same immutable branch art and dimensions in flight and after landing; actu
 test('ordinary strings arrive before a four-catch streak, attach and reward a smaller bonus, optional miss does not drain hearts',()=>{
  const get=harness();get.$('start').fire('click');
  get.advance(7550);
- assert(get.pixels.some(o=>o.color==='#98aebb')); // airborne cord
+ assert(get.paints.includes('#a9bda4')); // airborne cord
  assert(parseInt(get.$('progress').innerHTML,10)<4);
  let caught=false,cabled=false;
  for(let i=0;i<150;i++){
-   get.advance(16);caught ||= get.labels.some(t=>t.includes('灯串 +12')); cabled ||= get.pixels.some(o=>o.color==='#214739');
+   get.advance(16);caught ||= get.labels.some(t=>t.includes('灯串 +12')); cabled ||= get.paints.includes('#d8bc93');
  }
  assert(caught);assert(cabled);assert.equal(get.$('hearts').getAttribute('aria-label'),'生命 5');
  const miss=harness();miss.$('start').fire('click');miss.advance(7800);
  miss.point(409);miss.advance(1600);
  assert.equal(miss.$('hearts').getAttribute('aria-label'),'生命 5');
- assert.equal(miss.$('score').textContent,'060');assert(!miss.pixels.some(o=>o.color==='#214739'));
+ assert.equal(miss.$('score').textContent,'060');assert(!miss.paints.includes('#d8bc93'));
 });
 test('late ornaments shimmer with differing phases and are static for reduced motion',()=>{
  function phases(reduced){
    const h=harness(640,420,reduced);h.$('start').fire('click');h.follow(true);h.advance(36000);
    assert.match(h.$('chapter').textContent,/星树已点亮/);
    h.follow(false);h.w.fire('keydown',{key:'Escape'});
-   const read=()=>h.pixels.filter(o=>['#ffd979','#ff849b','#88edcf','#9bb9ff'].includes(o.color)&&o.pos[2]===5).map(o=>o.alpha);
+   const read=()=>h.pixels.filter(o=>['#ffd979','#ff849b','#88edcf','#9bb9ff'].includes(o.color)&&[7,9].includes(o.pos[2])).map(o=>o.alpha);
    h.advance(16);const first=read();h.advance(432);
    assert(first.length>=5);return [first,read()];
  }
@@ -196,4 +196,32 @@ test('timed heal waits for active play after pausing or hiding and supplies visi
  let feedback=false;
  while(spent<31000&&!feedback){h.advance(16);spent+=16;feedback=h.labels.includes('+1 心');}
  assert(feedback);assert(spent>=29960);assert.equal(hearts(),'生命 5');
+});
+test('foreground decor paints above all settled branches and end snapshot keeps every caught item',()=>{
+ const h=harness(),{$,w}=h;
+ assert.equal(w.ElfShareSource.snapshot(),null);
+ $('start').fire('click');h.follow(true);
+ let orderSeen=false;
+ for(let i=0;i<330;i++){
+   h.advance(160);
+   const {paints}=h;
+   if(paints.includes('#d8bc93')&&paints.includes('branch')){
+     assert(paints.indexOf('#d8bc93')>paints.lastIndexOf('branch'));orderSeen=true;
+   }
+ }
+ assert(orderSeen);h.follow(false);h.point(590);
+ for(let i=0;i<150&&$('panel').hidden;i++){
+   h.advance(200);
+   const o=h.leaves.find(o=>o.h!==31);if(o)h.point(o.x<320?590:50);
+ }
+ const snap=w.ElfShareSource.snapshot();assert(snap);
+ const entries=snap.layers.flatMap(l=>l.ornaments);
+ assert.equal(entries.length,snap.lights+snap.decorations);
+ assert(entries.some(o=>o.kind==='bow'));
+ assert(entries.some(o=>o.kind==='bauble'));
+ assert(entries.some(o=>o.kind==='festival'));
+ assert(entries.every(o=>Number.isFinite(o.dx)&&o.dy>=-26&&o.dy<=0));
+ assert(entries.length>3);assert(Object.isFrozen(snap.layers[0].ornaments));
+ const box=w.ElfShareSource.bounds(snap);assert(box.top<0&&box.bottom>0);
+ $('start').fire('click');assert.equal(w.ElfShareSource.snapshot(),null);
 });

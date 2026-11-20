@@ -3,7 +3,7 @@
 const CART_Y=345,TRAY=112,LEVEL_HEIGHT=19,MIN_WIDTH=48,MAX_WIDTH=128,STAR_AT=12,HEARTS=5,HEAL_EVERY=30,STREAK=4,FESTIVAL=5;
 const BUFF_DURATION=8,WIDE_EXTRA=46,MIN_SPACING=10,STABLE_DURATION=6,STABLE_SCALE=.67,STRING_DURATION=2.5,STRING_SCORE=12;
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
-const fresh=()=>({score:0,combo:0,bestCombo:0,level:0,lights:0,perfect:0,festival:0,hearts:HEARTS,risk:0,narrowRun:0,sinceBroad:0,spacing:LEVEL_HEIGHT,buffs:{wide:0,magnet:0,stable:0},layers:[],status:'playing',reason:null,elapsed:0});
+const fresh=()=>({score:0,combo:0,bestCombo:0,level:0,lights:0,decorations:0,perfect:0,festival:0,hearts:HEARTS,risk:0,narrowRun:0,sinceBroad:0,spacing:LEVEL_HEIGHT,buffs:{wide:0,magnet:0,stable:0},layers:[],status:'playing',reason:null,elapsed:0});
 const surface=s=>CART_Y-s.layers.length*s.spacing;
 const support=s=>s.layers[s.layers.length-1]||{x:0,w:TRAY};
 function nextWidth(s,random=Math.random()){
@@ -16,6 +16,45 @@ function nextWidth(s,random=Math.random()){
  const growth=parent<72?.74:parent>107?.25:.53;
  if(r<growth)return sample(Math.min(hi,parent+1),hi,r/growth);
  return sample(lo,Math.max(lo,parent-1),(r-growth)/(1-growth));
+}
+// Horizontal slabs of the exact eight branch sprite outlines, normalized around each center.
+const BRANCH_BANDS=[
+ [[-0.02968,0.09935,-25.5,-21.5],[-0.15871,0.23871,-21.5,-17.5],[-0.28774,0.35806,-17.5,-13.5],[-0.4071,0.43742,-13.5,-10.5],[-0.4071,0.49677,-10.5,-9.5],[-0.49677,0.49677,-9.5,-6.5],[-0.49677,0.46452,-6.5,-5.5],[-0.46452,0.46452,-5.5,-3.5],[-0.46452,0.40645,-3.5,-2.5],[-0.42581,0.40645,-2.5,-0.5]],
+ [[-0.02992,0.09921,-25.5,-21.5],[-0.15906,0.2378,-21.5,-17.5],[-0.28819,0.35669,-17.5,-13.5],[-0.40709,0.43622,-13.5,-10.5],[-0.40709,0.49606,-10.5,-9.5],[-0.49606,0.49606,-9.5,-6.5],[-0.49606,0.45669,-6.5,-5.5],[-0.45669,0.45669,-5.5,-3.5],[-0.45669,0.38583,-3.5,-2.5],[-0.40945,0.38583,-2.5,-0.5]],
+ [[-0.02932,0.09925,-25.5,-21.5],[-0.15865,0.23835,-21.5,-17.5],[-0.28797,0.35714,-17.5,-13.5],[-0.40677,0.43684,-13.5,-10.5],[-0.40677,0.49624,-10.5,-9.5],[-0.49624,0.49624,-9.5,-6.5],[-0.49624,0.45865,-6.5,-5.5],[-0.45865,0.45865,-5.5,-3.5],[-0.45865,0.39098,-3.5,-2.5],[-0.41353,0.39098,-2.5,-0.5]],
+ [[-0.02909,0.09909,-25.5,-21.5],[-0.15818,0.23818,-21.5,-17.5],[-0.28727,0.35727,-17.5,-13.5],[-0.40636,0.43636,-13.5,-10.5],[-0.40636,0.49545,-10.5,-9.5],[-0.49545,0.49545,-9.5,-6.5],[-0.49545,0.45,-6.5,-5.5],[-0.45,0.45,-5.5,-3.5],[-0.45,0.36818,-3.5,-2.5],[-0.39545,0.36818,-2.5,-0.5]],
+ [[-0.02872,0.09894,-25.5,-21.5],[-0.15745,0.23723,-21.5,-17.5],[-0.28617,0.35638,-17.5,-13.5],[-0.40532,0.43511,-13.5,-10.5],[-0.40532,0.49468,-10.5,-9.5],[-0.49468,0.49468,-9.5,-6.5],[-0.49468,0.44149,-6.5,-5.5],[-0.44149,0.44149,-5.5,-3.5],[-0.44149,0.34574,-3.5,-2.5],[-0.37766,0.34574,-2.5,-0.5]],
+ [[-0.03038,0.09873,-25.5,-21.5],[-0.15823,0.23671,-21.5,-17.5],[-0.28608,0.3557,-17.5,-13.5],[-0.40506,0.43418,-13.5,-10.5],[-0.40506,0.49367,-10.5,-9.5],[-0.49367,0.49367,-9.5,-6.5],[-0.49367,0.43038,-6.5,-5.5],[-0.43038,0.43038,-5.5,-3.5],[-0.43038,0.31646,-3.5,-2.5],[-0.35443,0.31646,-2.5,-0.5]],
+ [[-0.02923,0.09846,-25.5,-21.5],[-0.15692,0.23692,-21.5,-17.5],[-0.28462,0.35538,-17.5,-13.5],[-0.40308,0.43385,-13.5,-10.5],[-0.40308,0.49231,-10.5,-9.5],[-0.49231,0.49231,-9.5,-6.5],[-0.49231,0.41538,-6.5,-5.5],[-0.41538,0.41538,-5.5,-3.5],[-0.41538,0.27692,-3.5,-2.5],[-0.32308,0.27692,-2.5,-0.5]],
+ [[-0.0283,0.09811,-25.5,-21.5],[-0.1566,0.23585,-21.5,-17.5],[-0.28491,0.35283,-17.5,-13.5],[-0.40189,0.43208,-13.5,-10.5],[-0.40189,0.49057,-10.5,-9.5],[-0.49057,0.49057,-9.5,-6.5],[-0.49057,0.39623,-6.5,-5.5],[-0.39623,0.39623,-5.5,-3.5],[-0.39623,0.22642,-3.5,-2.5],[-0.28302,0.22642,-2.5,-0.5]]
+];
+const D_RADIUS={string:{x:12,y:6},festival:{x:5,y:7},bow:{x:7,y:6},bauble:{x:5,y:7}};
+function segmentBox(x0,y0,x1,y1,left,top,right,bottom){
+ let a=0,b=1;
+ for(const [p,v,lo,hi] of [[x0,x1-x0,left,right],[y0,y1-y0,top,bottom]]){
+  if(Math.abs(v)<1e-8){if(p<lo||p>hi)return null;continue;}
+  const t=(lo-p)/v,u=(hi-p)/v;a=Math.max(a,Math.min(t,u));b=Math.min(b,Math.max(t,u));
+  if(a>b)return null;
+ }
+ return a;
+}
+function decorationContact(s,oldCart,newCart,x0,y0,x1,y1,kind){
+ const r=D_RADIUS[kind];if(!r||!s.layers.length)return null;
+ const left=x0-oldCart,right=x1-newCart;
+ const minY=Math.min(y0,y1)-r.y,maxY=Math.max(y0,y1)+r.y;
+ const first=Math.max(0,Math.ceil((CART_Y-maxY-26)/s.spacing));
+ const last=Math.min(s.layers.length-1,Math.floor((CART_Y-minY)/s.spacing));
+ let best=null;
+ for(let i=last;i>=first;i--){
+  const layer=s.layers[i],bottom=CART_Y-i*s.spacing;
+  for(const [relA,relB,relTop,relBottom] of BRANCH_BANDS[i%8]){
+   const a=relA*layer.w,b=relB*layer.w;
+   const t=segmentBox(left-layer.x,y0-bottom,right-layer.x,y1-bottom,a-r.x,relTop-r.y,b+r.x,relBottom+r.y);
+   if(t===null||best&&t>=best.t)continue;
+   best={row:i,t,dx:clamp(left-layer.x+(right-left)*t,a,b),dy:clamp(y0-bottom+(y1-y0)*t,relTop,relBottom)};
+  }
+ }
+ return best;
 }
 const receiving=s=>{const top=support(s);return {x:top.x,w:top.w+(s.buffs.wide>0?WIDE_EXTRA:0)};};
 const crossesSurface=(oldY,newY,oldSurface,newSurface=oldSurface)=>oldY<oldSurface&&newY>=newSurface;
@@ -107,6 +146,6 @@ function difficulty(s){
  const l=s.level,wind=clamp((l-3)*4.0,0,49);
  return {speed:clamp(98+l*7.3,98,276),wind};
 }
-const core={CART_Y,TRAY,LEVEL_HEIGHT,MIN_WIDTH,MAX_WIDTH,STAR_AT,HEARTS,HEAL_EVERY,STREAK,FESTIVAL,BUFF_DURATION,WIDE_EXTRA,MIN_SPACING,STABLE_DURATION,STABLE_SCALE,STRING_DURATION,STRING_SCORE,fresh,nextWidth,surface,support,receiving,viewport,fall,worldTop,crossesSurface,overlap,classify,placement,land,miss,light,power,attract,tick,difficulty};
+const core={CART_Y,TRAY,LEVEL_HEIGHT,MIN_WIDTH,MAX_WIDTH,STAR_AT,HEARTS,HEAL_EVERY,STREAK,FESTIVAL,BUFF_DURATION,WIDE_EXTRA,MIN_SPACING,STABLE_DURATION,STABLE_SCALE,STRING_DURATION,STRING_SCORE,fresh,nextWidth,decorationContact,surface,support,receiving,viewport,fall,worldTop,crossesSurface,overlap,classify,placement,land,miss,light,power,attract,tick,difficulty};
 if(typeof module!=='undefined')module.exports=core;else global.ElfCore=core;
 })(globalThis);
