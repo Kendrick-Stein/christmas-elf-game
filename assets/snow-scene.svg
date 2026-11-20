@@ -1,0 +1,27 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 660" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="sky" x2="0" y2="1"><stop stop-color="#102a32"/><stop offset=".7" stop-color="#21544a"/><stop offset="1" stop-color="#183c41"/></linearGradient>
+    <linearGradient id="snow" x2="0" y2="1"><stop stop-color="#9cd8c7"/><stop offset="1" stop-color="#43796f"/></linearGradient>
+    <radialGradient id="halo"><stop stop-color="#ffd890" stop-opacity=".26"/><stop offset="1" stop-color="#ffd890" stop-opacity="0"/></radialGradient>
+    <g id="pine"><path d="M0-124 17-91 9-91 27-61 18-62 39-27 27-29 51 0H-51l24-29-12 2 21-35-9 1L-9-91h-8Z"/><path d="M-5-3h10v17H-5z"/></g>
+    <pattern id="stars" width="173" height="140" patternUnits="userSpaceOnUse">
+      <g fill="#d7edd8"><circle cx="24" cy="28" r="1.3"/><circle cx="108" cy="88" r="1.7"/><circle cx="63" cy="126" r="1"/><circle cx="143" cy="32" r="1.4"/><circle cx="3" cy="103" r=".8"/><circle cx="82" cy="49" r=".7"/></g>
+      <path d="M48 67v10m-5-5h10m112 43v6m-3-3h6" stroke="#ffe3a8" stroke-width="1" stroke-linecap="round"/>
+    </pattern>
+  </defs>
+  <path d="M0 0h800v660H0Z" fill="url(#sky)"/><path d="M0 0h800v530H0Z" fill="url(#stars)" opacity=".55"/>
+  <circle cx="650" cy="144" r="120" fill="url(#halo)"/><circle cx="650" cy="144" r="43" fill="#f5d79a" opacity=".65"/><circle cx="650" cy="144" r="37" fill="#f9e6b8" opacity=".8"/>
+  <path d="M0 461 92 414 158 425 264 350l64 38 72-63 115 89 100-50 100 48 85-31v279H0Z" fill="#6da79b" opacity=".27"/>
+  <path d="M0 490 161 410l112 52 80-40 53 29 112-43 130 52 87-44 65 30v214H0Z" fill="#327563" opacity=".55"/>
+  <g fill="#185748" opacity=".75">
+    <use href="#pine" transform="translate(23 559) scale(.91)"/><use href="#pine" transform="translate(79 540) scale(.73)"/><use href="#pine" transform="translate(137 555) scale(.54)"/><use href="#pine" transform="translate(201 550) scale(.68)"/><use href="#pine" transform="translate(244 566) scale(.58)"/>
+    <use href="#pine" transform="translate(553 553) scale(.68)"/><use href="#pine" transform="translate(615 544) scale(.62)"/><use href="#pine" transform="translate(676 550) scale(.95)"/><use href="#pine" transform="translate(742 557) scale(.74)"/><use href="#pine" transform="translate(790 557) scale(1.04)"/>
+  </g>
+  <g fill="#0e3d36">
+    <use href="#pine" transform="translate(26 603) scale(1.38)"/><use href="#pine" transform="translate(99 584) scale(.73)"/><use href="#pine" transform="translate(148 607) scale(.93)"/>
+    <use href="#pine" transform="translate(659 603) scale(.8)"/><use href="#pine" transform="translate(718 592) scale(.79)"/><use href="#pine" transform="translate(778 596) scale(1.39)"/>
+  </g>
+  <path d="M0 585c120 12 164 22 275 5 151-27 331-4 525 2v68H0Z" fill="url(#snow)"/>
+  <path d="M0 624c172-37 211 15 342 0 170-25 283 14 458-9v45H0Z" fill="#cae6d4" opacity=".43"/>
+  <path d="M0 643c163-18 239 12 353 2 178-16 305 9 447-2v17H0Z" fill="#133f39" opacity=".23"/>
+</svg>
