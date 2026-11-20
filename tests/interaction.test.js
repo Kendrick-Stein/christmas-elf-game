@@ -1,16 +1,16 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const read=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
-function harness(){
+function harness(width=640){
  const elements=new Map(),freshNode=()=>{const events=new Map(),classes=new Set(),attrs=new Map(),span={textContent:''};return {
-  addEventListener:(n,fn)=>events.set(n,fn),fire:(n,e={})=>events.get(n)?.({preventDefault(){},...e}),textContent:'',innerHTML:'',hidden:false,focus(){},setPointerCapture(){},getBoundingClientRect:()=>({width:640,height:420,left:0,right:640}),querySelector:()=>span,
+  addEventListener:(n,fn)=>events.set(n,fn),fire:(n,e={})=>events.get(n)?.({preventDefault(){},...e}),textContent:'',innerHTML:'',hidden:false,style:{setProperty(){}},focus(){},setPointerCapture(){},getBoundingClientRect:()=>({width,height:420,left:0,right:width}),querySelector:()=>span,
   dataset:{},classList:{add:x=>classes.add(x),remove:x=>classes.delete(x),toggle:(x,b)=>b?classes.add(x):classes.delete(x),contains:x=>classes.has(x)},setAttribute:(n,v)=>attrs.set(n,v),getAttribute:n=>attrs.get(n)
  };};
  const d=freshNode(),w=freshNode(),stored=new Map();
  const $=id=>{if(!elements.has(id))elements.set(id,freshNode());return elements.get(id);};
  d.getElementById=$;d.hidden=false;
- const leaves=[];
- $('field').getContext=()=>new Proxy({}, {get:(o,k)=>o[k]??(k==='clearRect'?()=>{leaves.length=0;}:k==='drawImage'?(img,x,y,w,h)=>{if(img.src.includes('/leaf.svg'))leaves.push({x:x+w/2,y:y+h/2,w,h});}:()=>{})});
+ const leaves=[],elves=[];
+ $('field').getContext=()=>new Proxy({}, {get:(o,k)=>o[k]??(k==='clearRect'?()=>{leaves.length=0;elves.length=0;}:k==='drawImage'?(img,x,y,w,h)=>{if(img.src.includes('/pixel-leaf.svg'))leaves.push({x:x+w/2,y:y+h/2,w,h});if(img.src.includes('/pixel-sled.svg'))elves.push(x+w/2);}:()=>{})});
  let raf,time=0;
  const c=vm.createContext({window:w,document:d,devicePixelRatio:1,matchMedia:()=>({matches:true}),Image:class{constructor(){this.complete=true;this.naturalWidth=160;}},requestAnimationFrame:fn=>{raf=fn;},localStorage:{getItem:k=>stored.get(k),setItem:(k,v)=>stored.set(k,v)}});
  Object.assign(c,{console});
@@ -20,7 +20,7 @@ function harness(){
  vm.runInContext(read('game.js'),c);
  let tracking=false;
  const point=x=>{$('field').fire('pointerdown',{pointerId:1,clientX:x});$('field').fire('pointermove',{pointerId:1,clientX:x});$('field').fire('pointerup',{pointerId:1});};
- return {$,w,d,point,leaves,follow:b=>tracking=b,advance:ms=>{for(let i=0;i<ms;i+=16){
+ return {$,w,d,point,leaves,elves,stored,follow:b=>tracking=b,advance:ms=>{for(let i=0;i<ms;i+=16){
       if(tracking && leaves.length){const o=leaves.find(x=>x.h!==31&&x.y>0);if(o)point(o.x);}
       raf(time+=16);
  }}};
@@ -68,4 +68,42 @@ test('visible drops activate compression, wide and attraction in order, then cou
  const badge=$('buffs').innerHTML;w.fire('keydown',{key:'Escape'});assert($('buffs').hidden);
  advance(11000);assert.equal($('buffs').innerHTML,badge);w.fire('keydown',{key:'Escape'});
  assert.equal($('buffs').innerHTML,badge);
+});
+test('quick arrow presses nudge 7 units both ways, long hold motion remains 445 units/sec',()=>{
+ const {$,advance,elves}=harness();$('start').fire('click');advance(32);
+ const center=elves[0];
+ $('left').fire('pointerdown',{pointerId:1});$('left').fire('pointerup',{pointerId:1});advance(16);
+ assert.equal(elves[0],center-7);
+ $('right').fire('click',{detail:0});advance(16);
+ assert.equal(elves[0],center);
+ $('right').fire('pointerdown',{pointerId:1});advance(160);$('right').fire('pointerup',{pointerId:1});advance(16);
+ assert(Math.abs(elves[0]-(center+7+445*.160))<=.51);
+});
+test('390px touch drag uses chosen gain, touch microtap does not coast and setting persists',()=>{
+ const {$,advance,elves,stored}=harness(390);$('start').fire('click');advance(32);
+ const center=elves[0], f=$('field'), pos=center*390/640;
+ $('sensitivity').fire('change',{target:{value:'low'}});
+ assert.equal(stored.get('snow-pine-input-v1'),'low');
+ f.fire('pointerdown',{pointerId:31,pointerType:'touch',clientX:pos});
+ f.fire('pointermove',{pointerId:31,pointerType:'touch',clientX:pos+20});
+ f.fire('pointercancel',{pointerId:31});advance(16);
+ assert(Math.abs(elves[0]-(center+20*640/390*.66))<=.51);
+ const next=elves[0];
+ $('right').fire('pointerdown',{pointerId:32,pointerType:'touch'});advance(48);
+ $('right').fire('pointerup',{pointerId:32,pointerType:'touch'});advance(16);
+ assert(Math.abs(elves[0]-(next+7*.66))<=1);
+ $('right').fire('pointerdown',{pointerId:33,pointerType:'touch'});advance(176);
+ $('right').fire('pointerup',{pointerId:33,pointerType:'touch'});advance(16);
+ assert(elves[0]-next>20);
+});
+test('miss changes score when crossing top, is signalled while the foliage still falls, and does not double-penalize',()=>{
+ const {$,advance,point,leaves}=harness();
+ $('start').fire('click');advance(4050);assert.equal($('score').textContent,'030');
+ // Let a subsequent leaf spawn, then shift out of its path.
+ advance(700);point(590);
+ for(let i=0;i<280&&$('hearts').getAttribute('aria-label')==='生命 5';i++)advance(16);
+ assert.equal($('hearts').getAttribute('aria-label'),'生命 4');assert.equal($('score').textContent,'020');
+ assert.match($('banner').textContent,/−10 分/);assert(leaves.some(o=>o.h!==31));
+ advance(750);
+ assert.equal($('hearts').getAttribute('aria-label'),'生命 4');assert.equal($('score').textContent,'020');
 });

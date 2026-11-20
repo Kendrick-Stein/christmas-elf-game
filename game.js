@@ -3,10 +3,15 @@
 const C=window.ElfCore,$=id=>document.getElementById(id),canvas=$('field'),g=canvas.getContext('2d'),screen=$('screen'),panel=$('panel'),start=$('start'),left=$('left'),right=$('right'),banner=$('banner');
 const W=640,H=420,CL=46,CR=W-46,reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const clamp=(x,a,b)=>Math.max(a,Math.min(x,b));
-const art={};for(const n of ['elf','leaf','bulb']){art[n]=new Image();art[n].src='./assets/'+n+'.svg';}
+const art={};for(const n of ['sled','leaf','bulb']){art[n]=new Image();art[n].src='./assets/pixel-'+n+'.svg';}
 const snow=Array.from({length:42},(_,i)=>({x:(i*137.5)%W,y:(i*83.4)%H,r:1+i%3*.42,v:8+i%7*2}));
 const tones={bad:[176,132],nice:[523],bright:[659,784],festival:[523,659,784,1047]};
 const motion={keys:new Set(),buttons:new Map(),pointer:null};
+const sensitivityKey='snow-pine-input-v1', sensitivityScale={low:.66,medium:1,high:1.36};
+let sensitivity='medium';
+try{const previous=localStorage.getItem(sensitivityKey);if(Object.hasOwn(sensitivityScale,previous))sensitivity=previous;}catch{}
+$('sensitivity').value=sensitivity;
+$('sensitivity').addEventListener('change',e=>{const key=e.target.value;if(Object.hasOwn(sensitivityScale,key)){sensitivity=key;try{localStorage.setItem(sensitivityKey,key);}catch{}}});
 let mode='ready',state=C.fresh(),x=W/2,leaf=null,lights=[],pickup=null,effects=[],camera=0,wait=.4,last=0,flick=0,clock=0,wave=0,bulbWait=0,notice=0,display='',muted=true,audio=null;
 const POWERS=['compress','wide','magnet'],P_LABEL={compress:'压缩',wide:'加宽',magnet:'吸附'},P_ICON={compress:'⇣',wide:'↔',magnet:'∪'},P_COLOR={compress:'#f8b0b4',wide:'#ffde8a',magnet:'#a5f1df'};let nextPower=3,powerCount=0;
 let best={level:0,score:0};const recordKey='snow-pine-tower-v3';
@@ -62,7 +67,11 @@ function lose(){
  start.focus({preventScroll:true});tone('bad');hud();
 }
 function onMiss(o){
- C.miss(state);label('没搭上 −10 · −1 心',o.x,clamp(o.y-camera,38,335),'#ffc0ba');tone('bad');wait=.29;
+ const before=state.score;C.miss(state);
+ const points=before-state.score;
+ label(points?'−'+points+' 分 · −1 心':'漏接 · −1 心',o.x,clamp(C.surface(state)-camera-19,45,330),'#ffd1c0');
+ show(points?'漏接：−'+points+' 分、−1 心':'漏接：−1 心');
+ tone('bad');wait=.29;
  if(state.status==='lost')lose();
 }
 function spawnPower(){
@@ -73,9 +82,17 @@ function spawnPower(){
 }
 function update(dt){
  C.tick(state,dt);const base=C.worldTop(state);
- camera+=(base-camera)*Math.min(1,dt*4.8);
- const keys=motion.keys,d=(motion.buttons.has('right')||keys.has('ArrowRight')||keys.has('d')||keys.has('D')?1:0)-(motion.buttons.has('left')||keys.has('ArrowLeft')||keys.has('a')||keys.has('A')?1:0);
- if(d)x=clamp(x+d*445*dt,CL,CR);
+ camera+=(base-camera)*Math.min(1,dt*6.2);screen.style.setProperty('--pan',Math.round(Math.min(32,-camera*.17))+'px');
+ const keys=motion.keys,buttonRate=k=>{
+   const p=motion.buttons.get(k);if(!p)return 0;
+   p.age+=dt;
+   // A normal touch microtap stays a single tiny nudge; only long holds coast.
+   return p.touch?(p.age<=.070?0:Math.min(.89,.48+(p.age-.070)*2.8)):1;
+ };
+ const keyboard=(keys.has('ArrowRight')||keys.has('d')||keys.has('D')?1:0)-(keys.has('ArrowLeft')||keys.has('a')||keys.has('A')?1:0);
+ const buttons=buttonRate('right')-buttonRate('left');
+ const d=keyboard||buttons;
+ if(d)x=clamp(x+d*445*sensitivityScale[sensitivity]*dt,CL,CR);
  const topY=C.surface(state);
  if(!leaf){wait-=dt;if(wait<=0)createLeaf();}
  if(leaf){
@@ -85,7 +102,7 @@ function update(dt){
    if(leaf.x<leaf.w*.38||leaf.x>W-leaf.w*.38){leaf.x=clamp(leaf.x,leaf.w*.38,W-leaf.w*.38);leaf.vx=-leaf.vx;}
    if(!leaf.goingPast&&C.crossesSurface(old+edge,leaf.y+edge,topY)){
      const o=leaf,p=C.land(state,x,o.x,o.w);
-     if(p.rating==='miss'){leaf.goingPast=true;}
+     if(p.rating==='miss'){leaf.goingPast=true;onMiss(o);if(mode==='lost')return;}
      else{
        leaf=null;wait=Math.max(.15,.34-state.level*.008);flick=1;
        label(p.rating==='perfect'?'稳稳的 +30':p.rating==='close'?'靠中 +20':'悬边 +10',o.x,topY-camera-24,p.rating==='catch'?'#ffc78b':'#d2f5c0');
@@ -97,7 +114,7 @@ function update(dt){
        if(state.status==='lost'){lose();return;}
      }
    }
-   if(leaf&&leaf.y+40>=camera+H){const o=leaf;leaf=null;onMiss(o);if(mode==='lost')return;}
+   if(leaf&&leaf.y+40>=camera+H){leaf=null;wait=.24;}
  }
  if(pickup){
    const p=pickup,old=p.y,top=C.receiving(state),y=C.surface(state);
@@ -125,11 +142,11 @@ function update(dt){
  hud();
 }
 function frame(t){
- g.setTransform(canvas.width/W,0,0,canvas.height/H,0,0);g.clearRect(0,0,W,H);
+ g.setTransform(canvas.width/W,0,0,canvas.height/H,0,0);g.imageSmoothingEnabled=false;g.clearRect(0,0,W,H);
  const weather=Math.min(1,state.level/20),time=reduce?0:t/1000,wx=wind();
  for(const s of snow){
   g.globalAlpha=.32+weather*.30;const sx=((s.x+time*wx*.29)%W+W)%W, sy=(s.y+time*(s.v+weather*38))%H;
-  ellipse(sx,sy,s.r+weather*.7,s.r,'#e4f5ed');
+  g.fillStyle='#b4dcf2';const p=s.r+(weather>.6?1:0);g.fillRect(Math.round(sx),Math.round(sy),p,p);
  }
  g.globalAlpha=1;
  if(state.festival>0){g.fillStyle='#ffd8010b';g.fillRect(0,0,W,H);}
@@ -139,11 +156,12 @@ function frame(t){
  const recv=C.receiving(state);
  const color=state.risk>=68?'#ffbbab':state.risk>=35?'#ffdc91':'#d6f4c9';
  if(cartY<H+80){
-  ellipse(x,cartY+52,76,8,'#051c1c9c');
-  g.strokeStyle='#dc9f61';g.lineWidth=5;g.beginPath();g.moveTo(x-61,cartY+38);g.quadraticCurveTo(x-76,cartY+37,x-76,cartY+27);g.moveTo(x-62,cartY+39);g.lineTo(x+75,cartY+39);g.stroke();
-  g.fillStyle='#98534f';g.fillRect(x-61,cartY+6,122,29);
-  g.fillStyle='#f1c77f';g.fillRect(x-57,cartY-3,114,10);
-  if(!sprite('elf',x+67,cartY+10,71,67))ellipse(x+73,cartY+15,19,25,'#d27158');
+  g.fillStyle='#223e64aa';g.fillRect(Math.round(x)-57,Math.round(cartY)+34,115,6);
+  const sw=C.TRAY/142*200,sh=sw/2;
+  if(!sprite('sled',Math.round(x),Math.round(cartY)-sh*.16,sw,sh)){
+     g.fillStyle='#994e61';g.fillRect(x-C.TRAY/2,cartY, C.TRAY,13);
+     g.fillStyle='#ffd284';g.fillRect(x-C.TRAY/2,cartY,C.TRAY,4);
+  }
  }
  for(let i=0;i<state.layers.length;i++){
    const l=state.layers[i],y=C.CART_Y-i*state.spacing-camera-state.spacing/2;
@@ -151,7 +169,7 @@ function frame(t){
    const wobble=reduce?0:Math.sin(time*7+i*.22)*state.risk*.018*(i/3);
    const shift=offset*Math.sign(s.x||1)*i*i*.8;
    const px=x+l.x+wobble+shift;
-   if(!sprite('leaf',px,y+offset*i*9,l.w,31))ellipse(px,y,l.w*.50,15,'#54a47c');
+   if(!sprite('leaf',Math.round(px),Math.round(y+offset*i*9),l.w,31))ellipse(px,y,l.w*.50,15,'#54a47c');
    if(state.lights>i%13 && i%2!==1){g.shadowColor='#ffc77c';g.shadowBlur=8;ellipse(px+l.w*(i%3===1?-.24:.24),y+3,3.7,3.7,i%3===1?'#f197af':'#ffdb77');g.shadowBlur=0;}
  }
  if(state.level>=C.STAR_AT&&!collapse){g.shadowColor='#ffd274';g.shadowBlur=13;star(topX,tipY-19,12,'#ffd78b');g.shadowBlur=0;}
@@ -221,14 +239,24 @@ start.addEventListener('click',begin);canvas.tabIndex=-1;
 const dirs=new Set(['ArrowLeft','ArrowRight','a','A','d','D']);
 window.addEventListener('keydown',e=>{if(e.altKey||e.ctrlKey||e.metaKey)return;if(e.key==='Escape'&&(mode==='playing'||mode==='paused')){e.preventDefault();mode==='paused'?begin():pause();return;}if(mode==='playing'&&dirs.has(e.key)){e.preventDefault();motion.keys.add(e.key);}});
 window.addEventListener('keyup',e=>motion.keys.delete(e.key));window.addEventListener('blur',resetInput);document.addEventListener('visibilitychange',()=>{if(document.hidden)pause();});
-function touch(e){const b=canvas.getBoundingClientRect();x=clamp((e.clientX-b.left)*W/b.width-C.support(state).x,CL,CR);}
-canvas.addEventListener('pointerdown',e=>{if(mode!=='playing'||motion.pointer!==null)return;motion.pointer=e.pointerId;canvas.setPointerCapture(e.pointerId);touch(e);});
-canvas.addEventListener('pointermove',e=>{if(mode==='playing'&&motion.pointer===e.pointerId)touch(e);});
-for(const n of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(n,e=>{if(motion.pointer===e.pointerId)motion.pointer=null;});
+function screenX(e){const b=canvas.getBoundingClientRect();return (e.clientX-b.left)*W/b.width;}
+canvas.addEventListener('pointerdown',e=>{
+ if(mode!=='playing'||motion.pointer!==null)return;
+ const px=screenX(e),top=C.support(state),touch=e.pointerType==='touch';
+ // Dragging a held tree keeps the grab point stable; tap far away to aim directly.
+ if(!touch||Math.abs(px-(x+top.x))>Math.max(26,top.w*.44))x=clamp(px-top.x,CL,CR);
+ motion.pointer={id:e.pointerId,base:x,at:px,touch};canvas.setPointerCapture(e.pointerId);
+});
+canvas.addEventListener('pointermove',e=>{
+ if(mode!=='playing'||motion.pointer?.id!==e.pointerId)return;
+ const p=motion.pointer,px=screenX(e);
+ x=clamp(p.touch?p.base+(px-p.at)*sensitivityScale[sensitivity]:px-C.support(state).x,CL,CR);
+});
+for(const n of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(n,e=>{if(motion.pointer?.id===e.pointerId)motion.pointer=null;});
 for(const [btn,dir] of [[left,'left'],[right,'right']]){
- const press=()=>{if(mode==='playing')x=clamp(x+(dir==='left'?-14:14),CL,CR);};
- btn.addEventListener('pointerdown',e=>{if(mode!=='playing'||motion.buttons.has(dir))return;btn.setPointerCapture(e.pointerId);motion.buttons.set(dir,e.pointerId);btn.classList.add('held');press();});
- for(const n of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(n,e=>{if(motion.buttons.get(dir)===e.pointerId){motion.buttons.delete(dir);btn.classList.remove('held');}});
+ const press=()=>{if(mode==='playing')x=clamp(x+(dir==='left'?-7:7)*sensitivityScale[sensitivity],CL,CR);};
+ btn.addEventListener('pointerdown',e=>{if(mode!=='playing'||motion.buttons.has(dir))return;btn.setPointerCapture(e.pointerId);motion.buttons.set(dir,{id:e.pointerId,age:0,touch:e.pointerType==='touch'});btn.classList.add('held');press();});
+ for(const n of ['pointerup','pointercancel','lostpointercapture'])btn.addEventListener(n,e=>{if(motion.buttons.get(dir)?.id===e.pointerId){motion.buttons.delete(dir);btn.classList.remove('held');}});
  btn.addEventListener('click',e=>{if(e.detail===0)press();});
 }
 function loop(t){

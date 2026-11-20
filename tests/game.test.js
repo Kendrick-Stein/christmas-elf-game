@@ -79,3 +79,12 @@ test('crossing uses world coordinates and a compressed plane cannot trigger a pr
  a(C.crossesSurface(compressed-1,compressed+1,compressed));
  a(!C.crossesSurface(compressed+1,compressed+3,compressed));
 });
+test('camera starts following at level five, then tracks world surface independent of collision geometry',()=>{
+ const s=C.fresh();
+ for(let i=0;i<4;i++)C.land(s,320,320,C.totalWidth(s.level));
+ a.equal(C.worldTop(s),0);
+ C.land(s,320,320,C.totalWidth(s.level));const five=C.worldTop(s);a(five<0);
+ for(let i=0;i<7;i++)C.land(s,320,320,C.totalWidth(s.level));
+ a(C.worldTop(s)<five-70);a(C.surface(s)-C.worldTop(s)>=195);
+ const savedCollisionSurface=C.surface(s);C.worldTop(s);a.equal(C.surface(s),savedCollisionSurface);
+});

@@ -9,7 +9,7 @@ const surface=s=>CART_Y-s.layers.length*s.spacing;
 const support=s=>s.layers[s.layers.length-1]||{x:0,w:TRAY};
 const receiving=s=>{const top=support(s);return {x:top.x,w:top.w+(s.buffs.wide>0?WIDE_EXTRA:0)};};
 const crossesSurface=(oldY,newY,oldSurface,newSurface=oldSurface)=>oldY<oldSurface&&newY>=newSurface;
-const worldTop=s=>Math.min(0,surface(s)-145);
+const worldTop=s=>Math.min(0,surface(s)-clamp(255-(s.level-5)*7,195,255));
 function overlap(parentX,parentW,childX,childW){
  return Math.max(0,Math.min(parentX+parentW/2,childX+childW/2)-Math.max(parentX-parentW/2,childX-childW/2));
 }
