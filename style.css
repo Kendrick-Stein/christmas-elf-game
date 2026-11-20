@@ -47,3 +47,42 @@ button{font:inherit;cursor:pointer}button:focus-visible{outline:3px solid #ffd18
 @media(pointer:coarse){.controls{grid-template-columns:minmax(0,1fr) minmax(0,1fr)}.controls #left{grid-column:1}.controls #right{grid-column:2}.controls button{min-height:60px;width:100%}.controls p{grid-row:2;grid-column:1/-1}.controls .touchHint{display:inline}.controls .deskHint{display:none}}
 .settings{display:flex;align-items:center;gap:8px}.sense{display:flex;align-items:center;gap:5px;color:var(--ice);font-size:.72rem;white-space:nowrap}.sense select{min-height:35px;background:#1b3048;border:1px solid #567497;color:var(--ink);font-family:inherit;font-size:.74rem;font-weight:700;padding:3px 4px}.sense select:focus-visible{outline:2px solid #ffd18f;outline-offset:2px}.screen{background-size:100% calc(100% + 32px);background-position:center calc(100% + var(--pan,0px))}.controls button{touch-action:none}
 @media(max-width:770px){.sense{font-size:.67rem}.sense select{min-height:32px}}
+
+/* Focus layout: the stage, not the copy, owns the viewport. */
+html,body{width:100%;height:100%;overflow:hidden;overscroll-behavior:none}body{background:#10172a}
+.shell{width:100%;height:100vh;height:100dvh;max-width:none;margin:0;display:grid;grid-template-rows:auto minmax(0,1fr);padding:0;isolation:isolate}
+.mast{position:relative;z-index:5;margin:0;padding:calc(4px + env(safe-area-inset-top,0px)) max(10px,env(safe-area-inset-right,0px)) 4px max(10px,env(safe-area-inset-left,0px));height:auto;min-height:42px;background:#17253e;border-color:#385674;gap:5px}
+.mast .brand{margin:0;color:#f5f0d8;font-size:.87rem;letter-spacing:.05em;white-space:nowrap}.settings{gap:6px}.settings label{gap:3px}.settings button,.sense select{min-height:33px}.help-toggle,.rail-head button,.focus-toggle{border:1px solid #6086a7;color:var(--ink);background:#223f5d;padding:2px 8px;font-size:.76rem}
+.stage{display:grid;grid-template-columns:minmax(0,1fr);gap:0;align-items:stretch;min-height:0;padding:0;position:relative}
+.play{grid-area:1/1;margin:0;min-height:0;min-width:0;display:block}
+.frame{height:100%;display:grid;grid-template-rows:minmax(0,1fr) auto;gap:0;border:0;background:#1a2d46;padding:0;box-shadow:none;min-height:0}
+.screen{min-height:0;height:100%;border:0;overflow:hidden;background-color:#173050}
+.screen canvas{width:100%;height:100%;min-height:0;aspect-ratio:auto;position:absolute;inset:0;display:block;touch-action:none}
+.readout{position:absolute;top:8px;left:50%;transform:translateX(-50%);width:min(470px,calc(100% - 120px));z-index:3;pointer-events:none}
+.hud{margin:0;gap:4px}.hud>div{padding:3px 6px;background:#142841e6;text-align:center;border-color:#54779c}.hud>div>span{font-size:.60rem}.hud b{font-size:clamp(.96rem,2.6vw,1.35rem)}
+.chapter{padding:2px 3px;background:#132844b0;margin:2px 0 0;justify-content:space-between;gap:4px;min-height:22px}.chapter b{font-size:.62rem;color:#b5e7c1}.chapter #hearts{font-size:.74rem}
+.focus-toggle{position:absolute;right:max(9px,env(safe-area-inset-right,0px));top:8px;z-index:4;width:43px;height:42px;font-size:1.25rem;padding:0}
+.buffs{top:77px;left:9px;z-index:2}.banner,.buffs:not([hidden]) + canvas + .banner{top:78px;z-index:2}
+.panel{z-index:2}.card{max-width:min(380px,92%)}.panel[hidden]{display:none}
+.controls{display:grid;grid-template-columns:minmax(0,1fr) auto minmax(0,1fr);gap:7px;margin:0;padding:5px max(10px,env(safe-area-inset-right,0px)) calc(5px + env(safe-area-inset-bottom,0px)) max(10px,env(safe-area-inset-left,0px));background:#18273f;border-top:1px solid #527699}
+.controls button{min-height:52px;min-width:0;width:100%;background:#31577e}.controls p{grid-column:auto;grid-row:auto;margin:0}.controls #left,.controls #right{grid-column:auto}
+.footer{position:absolute;z-index:1;pointer-events:none;left:50%;transform:translateX(-50%);bottom:calc(64px + env(safe-area-inset-bottom,0px));margin:0;white-space:nowrap;font-size:.65rem;padding:2px 5px;background:#19344fd9;color:#f2efd6}
+.rules[hidden]{display:none}.rules{grid-column:2;margin:0;padding:12px 12px 18px;background:#182741;color:#fff1cb;border:0;border-left:1px solid #53779a;overflow:auto;z-index:6}
+.rail-head{display:flex;align-items:center;justify-content:space-between;gap:10px;padding-bottom:9px;border-bottom:1px solid #4d6f91;margin-bottom:13px}.rail-head h2{margin:0}.rail-head button{min-height:36px;min-width:38px;font-size:1.18rem}.rules .rule{margin:10px 0}
+@media(min-width:900px){.shell.help-open:not(.focus-view) .stage{grid-template-columns:minmax(0,1fr) 230px}}
+@media(max-width:899px){.rules{position:absolute;inset:0 0 auto auto;width:min(287px,100%);max-height:100%;box-shadow:-12px 15px 35px #0e1a2ebd}}
+.focus-view{grid-template-rows:minmax(0,1fr)}.focus-view .mast{display:none}
+.focus-view .screen .readout,.focus-view .screen .focus-toggle{top:calc(8px + env(safe-area-inset-top,0px))}
+.focus-view .screen .buffs,.focus-view .screen .banner{top:calc(78px + env(safe-area-inset-top,0px))}
+@media(max-width:620px){
+ .mast .brand{font-size:.80rem}.settings button{padding-inline:6px;font-size:.68rem}.settings .sense{font-size:.65rem}.settings .sense select{font-size:.67rem}
+ .readout{left:max(7px,env(safe-area-inset-left,0px));transform:none;width:calc(100% - 63px - env(safe-area-inset-right,0px) - env(safe-area-inset-left,0px));top:6px}
+ .hud>div{padding:3px 2px}.hud b span{font-size:.54em}.chapter #wind{font-size:.60rem}
+ .focus-toggle{top:6px;right:max(7px,env(safe-area-inset-right,0px))}
+ .buffs{top:71px;left:6px}.banner,.buffs:not([hidden]) + canvas + .banner{top:98px}
+ .controls{grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:8px;padding-top:4px;padding-bottom:calc(4px + env(safe-area-inset-bottom,0px))}
+ .controls #left{grid-column:1}.controls #right{grid-column:2}.controls p{display:none}.controls button{min-height:61px}
+ .footer{bottom:calc(74px + env(safe-area-inset-bottom,0px))}
+}
+@media(max-width:350px){.chapter b{display:none}.settings .sense{font-size:0}.settings .sense select{font-size:.7rem}.settings .sense::before{content:"灵敏度";font-size:.62rem}}
+@media(max-height:470px) and (orientation:landscape){.mast{min-height:34px;padding-top:calc(2px + env(safe-area-inset-top,0px));padding-bottom:2px}.controls button{min-height:45px}.footer{bottom:calc(57px + env(safe-area-inset-bottom,0px))}}

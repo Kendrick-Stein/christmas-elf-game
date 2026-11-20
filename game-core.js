@@ -9,6 +9,16 @@ const surface=s=>CART_Y-s.layers.length*s.spacing;
 const support=s=>s.layers[s.layers.length-1]||{x:0,w:TRAY};
 const receiving=s=>{const top=support(s);return {x:top.x,w:top.w+(s.buffs.wide>0?WIDE_EXTRA:0)};};
 const crossesSurface=(oldY,newY,oldSurface,newSurface=oldSurface)=>oldY<oldSurface&&newY>=newSurface;
+function viewport(pixelWidth,pixelHeight,worldWidth=640,baseHeight=420){
+ const scale=Math.min(pixelWidth/worldWidth,pixelHeight/baseHeight);
+ return {scale,worldHeight:pixelHeight/scale,insetX:(pixelWidth-worldWidth*scale)/2,extra:Math.max(0,pixelHeight/scale-baseHeight)};
+}
+function fall(y,dt,speed,skyLine,skySpeed){
+ if(y>=skyLine||skySpeed<=speed)return {y:y+speed*dt,normal:dt};
+ const until=(skyLine-y)/skySpeed;
+ if(dt<=until)return {y:y+skySpeed*dt,normal:0};
+ const normal=dt-until;return {y:skyLine+speed*normal,normal};
+}
 const worldTop=s=>Math.min(0,surface(s)-clamp(255-(s.level-5)*7,195,255));
 function overlap(parentX,parentW,childX,childW){
  return Math.max(0,Math.min(parentX+parentW/2,childX+childW/2)-Math.max(parentX-parentW/2,childX-childW/2));
@@ -69,6 +79,6 @@ function difficulty(s){
  const l=s.level,wind=clamp((l-3)*4.0,0,49);
  return {speed:clamp(98+l*7.3,98,276),width:totalWidth(l),wind};
 }
-const core={CART_Y,TRAY,LEVEL_HEIGHT,MIN_WIDTH,STAR_AT,HEARTS,STREAK,FESTIVAL,BUFF_DURATION,WIDE_EXTRA,MIN_SPACING,fresh,totalWidth,surface,support,receiving,worldTop,crossesSurface,overlap,classify,placement,land,miss,light,power,attract,tick,difficulty};
+const core={CART_Y,TRAY,LEVEL_HEIGHT,MIN_WIDTH,STAR_AT,HEARTS,STREAK,FESTIVAL,BUFF_DURATION,WIDE_EXTRA,MIN_SPACING,fresh,totalWidth,surface,support,receiving,viewport,fall,worldTop,crossesSurface,overlap,classify,placement,land,miss,light,power,attract,tick,difficulty};
 if(typeof module!=='undefined')module.exports=core;else global.ElfCore=core;
 })(globalThis);

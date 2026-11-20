@@ -1,16 +1,17 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const read=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
-function harness(width=640){
+function harness(width=640,height=420){
+ const size={width,height};
  const elements=new Map(),freshNode=()=>{const events=new Map(),classes=new Set(),attrs=new Map(),span={textContent:''};return {
-  addEventListener:(n,fn)=>events.set(n,fn),fire:(n,e={})=>events.get(n)?.({preventDefault(){},...e}),textContent:'',innerHTML:'',hidden:false,style:{setProperty(){}},focus(){},setPointerCapture(){},getBoundingClientRect:()=>({width,height:420,left:0,right:width}),querySelector:()=>span,
+  addEventListener:(n,fn)=>events.set(n,fn),fire:(n,e={})=>events.get(n)?.({preventDefault(){},...e}),textContent:'',innerHTML:'',hidden:false,style:{setProperty(){}},focus(){d.activeElement=this;},setPointerCapture(){},getBoundingClientRect:()=>({...size,left:0,right:size.width}),querySelector:()=>span,
   dataset:{},classList:{add:x=>classes.add(x),remove:x=>classes.delete(x),toggle:(x,b)=>b?classes.add(x):classes.delete(x),contains:x=>classes.has(x)},setAttribute:(n,v)=>attrs.set(n,v),getAttribute:n=>attrs.get(n)
  };};
  const d=freshNode(),w=freshNode(),stored=new Map();
  const $=id=>{if(!elements.has(id))elements.set(id,freshNode());return elements.get(id);};
  d.getElementById=$;d.hidden=false;
- const leaves=[],elves=[];
- $('field').getContext=()=>new Proxy({}, {get:(o,k)=>o[k]??(k==='clearRect'?()=>{leaves.length=0;elves.length=0;}:k==='drawImage'?(img,x,y,w,h)=>{if(img.src.includes('/pixel-leaf.svg'))leaves.push({x:x+w/2,y:y+h/2,w,h});if(img.src.includes('/pixel-sled.svg'))elves.push(x+w/2);}:()=>{})});
+ const leaves=[],elves=[];let transform=[];
+ $('field').getContext=()=>new Proxy({}, {get:(o,k)=>o[k]??(k==='setTransform'?((...args)=>{transform=args;}):k==='clearRect'?()=>{leaves.length=0;elves.length=0;}:k==='drawImage'?(img,x,y,w,h)=>{if(img.src.includes('/pixel-leaf.svg'))leaves.push({x:x+w/2,y:y+h/2,w,h});if(img.src.includes('/pixel-sled.svg'))elves.push(x+w/2);}:()=>{})});
  let raf,time=0;
  const c=vm.createContext({window:w,document:d,devicePixelRatio:1,matchMedia:()=>({matches:true}),Image:class{constructor(){this.complete=true;this.naturalWidth=160;}},requestAnimationFrame:fn=>{raf=fn;},localStorage:{getItem:k=>stored.get(k),setItem:(k,v)=>stored.set(k,v)}});
  Object.assign(c,{console});
@@ -20,7 +21,7 @@ function harness(width=640){
  vm.runInContext(read('game.js'),c);
  let tracking=false;
  const point=x=>{$('field').fire('pointerdown',{pointerId:1,clientX:x});$('field').fire('pointermove',{pointerId:1,clientX:x});$('field').fire('pointerup',{pointerId:1});};
- return {$,w,d,point,leaves,elves,stored,follow:b=>tracking=b,advance:ms=>{for(let i=0;i<ms;i+=16){
+ return {$,w,d,point,leaves,elves,stored,transform:()=>transform,setSize:(w,h)=>{size.width=w;size.height=h;},follow:b=>tracking=b,advance:ms=>{for(let i=0;i<ms;i+=16){
       if(tracking && leaves.length){const o=leaves.find(x=>x.h!==31&&x.y>0);if(o)point(o.x);}
       raf(time+=16);
  }}};
@@ -106,4 +107,23 @@ test('miss changes score when crossing top, is signalled while the foliage still
  assert.match($('banner').textContent,/−10 分/);assert(leaves.some(o=>o.h!==31));
  advance(750);
  assert.equal($('hearts').getAttribute('aria-label'),'生命 4');assert.equal($('score').textContent,'020');
+});
+test('focus and rail toggle without restarting; resize keeps one scale and centered pointer coordinates',()=>{
+ const {$,w,d,advance,setSize,transform,elves}=harness(320,460);
+ $('start').fire('click');advance(1200);
+ assert.equal(transform()[0],.5);assert.equal(transform()[0],transform()[3]);
+ $('focusToggle').fire('click');assert($('shell').classList.contains('focus-view'));assert.equal($('focusToggle').getAttribute('aria-pressed'),'true');
+ setSize(320,502);w.fire('resize');advance(1800);
+ assert.equal(transform()[0],.5);assert.equal(transform()[3],.5);
+ assert($('panel').hidden);assert.equal($('score').textContent,'000');
+ w.fire('keydown',{key:'Escape'});assert(!$('shell').classList.contains('focus-view'));assert($('panel').hidden);
+ assert.equal($('focusToggle').getAttribute('aria-label'),'打开放大模式');
+ if(!$('rules').hidden)$('helpToggle').fire('click');$('helpToggle').fire('click');assert(!$('rules').hidden);
+ assert.equal(d.activeElement,$('helpClose'));
+ $('helpClose').fire('click');assert($('rules').hidden);assert.equal(d.activeElement,$('helpToggle'));
+ setSize(1280,600);w.fire('resize');advance(16);
+ assert.equal(transform()[0],transform()[3]);assert(transform()[4]>0);
+ const inside=transform()[4]+440*transform()[0];
+ $('field').fire('pointerdown',{pointerId:19,clientX:inside});$('field').fire('pointerup',{pointerId:19});advance(16);
+ assert.equal(elves[0],440);assert($('panel').hidden);
 });

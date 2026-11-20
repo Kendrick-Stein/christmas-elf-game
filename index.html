@@ -1,26 +1,17 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#11162b"><meta name="description" content="推着小精灵的雪橇，在雪夜垒起一棵圣诞树。"><title>松针雪夜 · 垒树挑战</title><link rel="icon" href="./assets/pixel-leaf.svg" type="image/svg+xml"><link rel="stylesheet" href="./style.css?v=pixel-5"><script defer src="./game-core.js?v=pixel-5"></script><script defer src="./game.js?v=pixel-5"></script></head>
-<body><main class="shell">
-<header class="mast"><div class="brand">垒树挑战</div><div class="settings"><label class="sense" for="sensitivity">灵敏度 <select id="sensitivity"><option value="low">低</option><option value="medium" selected>标准</option><option value="high">高</option></select></label><button id="sound" class="sound" type="button" aria-pressed="false" aria-label="打开声音">♫ <span>静音</span></button></div></header>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#11162b"><meta name="description" content="推着小精灵的雪橇，在雪夜垒起一棵圣诞树。"><title>松针雪夜 · 垒树挑战</title><link rel="icon" href="./assets/pixel-leaf.svg" type="image/svg+xml"><link rel="stylesheet" href="./style.css?v=focus-6"><script defer src="./game-core.js?v=focus-6"></script><script defer src="./game.js?v=focus-6"></script></head>
+<body><main class="shell" id="shell">
+<header class="mast"><h1 class="brand">松针雪夜</h1><div class="settings"><button class="help-toggle" type="button" id="helpToggle" aria-expanded="false" aria-controls="rules">玩法</button><label class="sense" for="sensitivity">灵敏度 <select id="sensitivity"><option value="low">低</option><option value="medium" selected>标准</option><option value="high">高</option></select></label><button id="sound" class="sound" type="button" aria-pressed="false" aria-label="打开声音">♫ <span>静音</span></button></div></header>
 <section class="stage">
-<div class="intro">
-<h1>松针<span>雪夜</span></h1>
-<p class="dek">移动雪橇，让松叶落在树顶。<br>越对准，树越稳。</p>
-<div class="rules" id="rules">
-<h2>玩法</h2>
-<div class="rule"><span class="badge leaf">✿</span><span><b>树顶接叶</b><small>接得越准，得分越高</small></span></div>
-<div class="rule"><span class="badge coal">◒</span><span><b>别让树倒</b><small>松叶漏接 −10 分、−1 心</small></span></div>
-<div class="rule"><span class="badge light">✦</span><span><b>4 连准触发彩灯雨</b><small>彩灯加分、减晃；12 层点亮星星</small></span></div>
-<div class="rule"><span class="badge power-icon">◇</span><span><b>压缩 · 加宽 · 吸附</b><small>用树顶接住道具，漏接不扣分</small></span></div>
-</div>
-</div>
 <div class="play">
 <div class="frame">
-<div class="hud" aria-label="游戏状态"><div><span>分数</span><b id="score">000</b></div><div><span>连击</span><b id="combo">0<span> / 4</span></b></div><div><span>层数</span><b id="progress">0<span> 层</span></b></div><div><span>晃动</span><b id="risk">0<span>%</span></b></div></div>
-<div class="chapter"><b id="chapter">稳稳起步</b><span id="wind">无风</span><span id="hearts" aria-label="生命 5">♥♥♥♥♥</span></div>
 <div class="screen" id="screen">
+<div class="readout"><div class="hud" aria-label="游戏状态"><div><span>分数</span><b id="score">000</b></div><div><span>连击</span><b id="combo">0<span> / 4</span></b></div><div><span>层数</span><b id="progress">0<span> 层</span></b></div><div><span>晃动</span><b id="risk">0<span>%</span></b></div></div>
+<div class="chapter"><span id="hearts" aria-label="生命 5">♥♥♥♥♥</span><span id="wind">无风</span><b id="chapter">稳稳起步</b></div>
+</div>
+<button type="button" id="focusToggle" class="focus-toggle" aria-pressed="false" aria-label="打开放大模式">↗</button>
 <div class="buffs" id="buffs" hidden aria-hidden="true"></div>
-<canvas id="field" aria-label="游戏场地：左右拖动或按键，让树顶接住落叶" aria-describedby="rules" width="640" height="420"></canvas>
+<canvas id="field" aria-label="游戏场地：左右拖动或按键，让树顶接住落叶" width="640" height="420"></canvas>
 <div class="banner" id="banner" hidden aria-hidden="true"></div>
 <div class="panel" id="panel"><div class="card">
 <div id="panelIcon" class="panel-icon" hidden aria-hidden="true">✦</div>
@@ -32,4 +23,11 @@
 </div></div></div>
 <div class="controls"><button id="left" type="button" aria-label="向左移动"><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M2 7h2V5h2V3h2v4h6v3H8v4H6v-2H4v-2H2z"/></svg></button><p><span class="deskHint">键盘 <kbd>←</kbd> <kbd>→</kbd> 或 <kbd>A</kbd> <kbd>D</kbd></span><span class="touchHint">横向拖动树顶，或按住箭头</span></p><button id="right" type="button" aria-label="向右移动"><svg viewBox="0 0 16 16" aria-hidden="true"><path fill="currentColor" d="M14 7h-2V5h-2V3H8v4H2v3h6v4h2v-2h2v-2h2z"/></svg></button></div>
 </div><div class="footer"><span id="best">最高 0 层 · 最高 0 分</span></div><div id="announcer" class="sr" role="status"></div>
-</div></section></main></body></html>
+</div><aside class="rules" id="rules" hidden aria-labelledby="rulesTitle">
+<div class="rail-head"><h2 id="rulesTitle">玩法</h2><button type="button" id="helpClose" aria-label="收起玩法">×</button></div>
+<div class="rule"><span class="badge leaf">✿</span><span><b>树顶接叶</b><small>接得越准，得分越高</small></span></div>
+<div class="rule"><span class="badge coal">◒</span><span><b>别让树倒</b><small>松叶漏接 −10 分、−1 心</small></span></div>
+<div class="rule"><span class="badge light">✦</span><span><b>4 连准触发彩灯雨</b><small>彩灯加分、减晃；12 层点亮星星</small></span></div>
+<div class="rule"><span class="badge power-icon">◇</span><span><b>压缩 · 加宽 · 吸附</b><small>用树顶接住道具，漏接不扣分</small></span></div>
+</aside>
+</section></main></body></html>

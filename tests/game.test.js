@@ -88,3 +88,18 @@ test('camera starts following at level five, then tracks world surface independe
  a(C.worldTop(s)<five-70);a(C.surface(s)-C.worldTop(s)>=195);
  const savedCollisionSurface=C.surface(s);C.worldTop(s);a.equal(C.surface(s),savedCollisionSurface);
 });
+test('uniform scale extends portrait world sky and centers a wide short view without stretching',()=>{
+ const phone=C.viewport(320,460);
+ a.equal(phone.scale,.5);a.equal(phone.worldHeight,920);a.equal(phone.extra,500);a.equal(phone.insetX,0);
+ const desktop=C.viewport(1280,600);
+ a.equal(desktop.scale,600/420);a.equal(desktop.worldHeight,420);a(desktop.insetX>180);
+ a.equal(desktop.insetX*2+desktop.scale*640,1280);
+});
+test('extra sky flight does not change speed on the collision approach',()=>{
+ const high=C.fall(-220,.5,100,-20,400);
+ a.equal(high.y,-20);a.equal(high.normal,0);
+ const crossover=C.fall(-120,.7,100,-20,400);
+ a(Math.abs(crossover.y-25)<1e-8);a(Math.abs(crossover.normal-.45)<1e-8);
+ const near=C.fall(30,.4,100,-20,400);
+ a.equal(near.y,70);a.equal(near.normal,.4);
+});
