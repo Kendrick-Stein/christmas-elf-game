@@ -51,3 +51,21 @@ test('settled leaf retains landing offset and moves with the cart',()=>{
  assert.equal($('progress').innerHTML,'2<span> 层</span>');
  assert.equal($('score').textContent,'050');
 });
+test('visible drops activate compression, wide and attraction in order, then countdown and clear',()=>{
+ const {$,w,advance,follow,leaves}=harness();$('start').fire('click');follow(true);
+ const seen=new Set();let minSpacing=20,everBuffs=false;
+ for(let i=0;i<420;i++){
+   advance(185);
+   const text=$('banner').textContent;
+   if(!($('banner').hidden))for(const s of ['压缩','加宽','吸附'])if(text.includes(s))seen.add(s);
+   const t=leaves.filter(o=>o.h===31).sort((a,b)=>a.y-b.y);
+   for(let j=1;j<t.length;j++){const spacing=t[j].y-t[j-1].y;if(spacing>0)minSpacing=Math.min(minSpacing,spacing);}
+   everBuffs ||= !$('buffs').hidden;
+ }
+ assert.deepEqual([...seen].slice(0,3),['压缩','加宽','吸附']);
+ assert(minSpacing<19);assert(everBuffs);assert(parseInt($('progress').innerHTML,10)>16);
+ // Timed badges are frozen during pause and never remain visible on its overlay.
+ const badge=$('buffs').innerHTML;w.fire('keydown',{key:'Escape'});assert($('buffs').hidden);
+ advance(11000);assert.equal($('buffs').innerHTML,badge);w.fire('keydown',{key:'Escape'});
+ assert.equal($('buffs').innerHTML,badge);
+});

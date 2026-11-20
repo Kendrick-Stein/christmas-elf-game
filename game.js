@@ -7,7 +7,8 @@ const art={};for(const n of ['elf','leaf','bulb']){art[n]=new Image();art[n].src
 const snow=Array.from({length:42},(_,i)=>({x:(i*137.5)%W,y:(i*83.4)%H,r:1+i%3*.42,v:8+i%7*2}));
 const tones={bad:[176,132],nice:[523],bright:[659,784],festival:[523,659,784,1047]};
 const motion={keys:new Set(),buttons:new Map(),pointer:null};
-let mode='ready',state=C.fresh(),x=W/2,leaf=null,lights=[],effects=[],camera=0,wait=.4,last=0,flick=0,clock=0,wave=0,bulbWait=0,notice=0,display='',muted=true,audio=null;
+let mode='ready',state=C.fresh(),x=W/2,leaf=null,lights=[],pickup=null,effects=[],camera=0,wait=.4,last=0,flick=0,clock=0,wave=0,bulbWait=0,notice=0,display='',muted=true,audio=null;
+const POWERS=['compress','wide','magnet'],P_LABEL={compress:'压缩',wide:'加宽',magnet:'吸附'},P_ICON={compress:'⇣',wide:'↔',magnet:'∪'},P_COLOR={compress:'#f8b0b4',wide:'#ffde8a',magnet:'#a5f1df'};let nextPower=3,powerCount=0;
 let best={level:0,score:0};const recordKey='snow-pine-tower-v3';
 try{const raw=JSON.parse(localStorage.getItem(recordKey));if(raw&&Number.isFinite(raw.level)&&Number.isFinite(raw.score))best={level:Math.max(0,raw.level),score:Math.max(0,raw.score)};}catch{}
 function resize(){
@@ -47,7 +48,7 @@ function createBulb(){
  return {x:clamp(topX+(Math.random()-.5)*180,48,W-48),y:camera-16,vy:190,vx:wind()*.3};
 }
 function lose(){
- mode='lost';resetInput();leaf=null;lights=[];banner.hidden=true;
+ mode='lost';resetInput();leaf=null;lights=[];pickup=null;banner.hidden=true;
  const old=best;best={level:Math.max(old.level,state.level),score:Math.max(old.score,state.score)};
  const record=best.level>old.level||best.score>old.score;
  if(record)try{localStorage.setItem(recordKey,JSON.stringify(best));}catch{}
@@ -64,6 +65,12 @@ function onMiss(o){
  C.miss(state);label('没搭上 −10 · −1 心',o.x,clamp(o.y-camera,38,335),'#ffc0ba');tone('bad');wait=.29;
  if(state.status==='lost')lose();
 }
+function spawnPower(){
+ const type=POWERS[powerCount++%POWERS.length],target=x+C.support(state).x;
+ const y=camera-15,vy=151+Math.min(55,state.level*3),vx=wind()*.22;
+ const drift=vx*Math.max(.6,(C.surface(state)-y)/vy);
+ return {type,x:clamp(target-drift+(Math.random()-.5)*58,33,W-33),y,vy,vx};
+}
 function update(dt){
  C.tick(state,dt);const base=C.worldTop(state);
  camera+=(base-camera)*Math.min(1,dt*4.8);
@@ -74,28 +81,40 @@ function update(dt){
  if(leaf){
    const old=leaf.y,edge=leaf.w*.11;
    leaf.y+=leaf.vy*dt;leaf.phase+=dt;
-   leaf.x+=dt*(leaf.vx+leaf.wobble*Math.sin(leaf.phase*5));
+   leaf.x+=dt*(leaf.vx+leaf.wobble*Math.sin(leaf.phase*5)+(!leaf.goingPast?C.attract(state,x,leaf.x):0));
    if(leaf.x<leaf.w*.38||leaf.x>W-leaf.w*.38){leaf.x=clamp(leaf.x,leaf.w*.38,W-leaf.w*.38);leaf.vx=-leaf.vx;}
-   if(!leaf.goingPast&&old+edge<topY&&leaf.y+edge>=topY){
+   if(!leaf.goingPast&&C.crossesSurface(old+edge,leaf.y+edge,topY)){
      const o=leaf,p=C.land(state,x,o.x,o.w);
      if(p.rating==='miss'){leaf.goingPast=true;}
      else{
        leaf=null;wait=Math.max(.15,.34-state.level*.008);flick=1;
        label(p.rating==='perfect'?'稳稳的 +30':p.rating==='close'?'靠中 +20':'悬边 +10',o.x,topY-camera-24,p.rating==='catch'?'#ffc78b':'#d2f5c0');
        tone(p.festival?'festival':p.rating==='perfect'?'bright':'nice');
-       if(p.star)show('✦ 第 12 层！星星亮了，继续往上');
-       else if(p.festival){bulbWait=0;show('✦ 彩灯雨！接灯加分、减晃');}
-       else if(state.risk>=68&&notice<=0)show('小心！树快倒了，下一片尽量对中');
+       if(!pickup&&state.level>=nextPower){pickup=spawnPower();nextPower=state.level+4;wait=Math.max(wait,.52);}
+       if(p.star)show('✦ 星星亮了！');
+       else if(p.festival){bulbWait=0;show('✦ 彩灯雨');}
+       else if(state.risk>=68&&notice<=0)show('快倒了！对准树顶');
        if(state.status==='lost'){lose();return;}
      }
    }
    if(leaf&&leaf.y+40>=camera+H){const o=leaf;leaf=null;onMiss(o);if(mode==='lost')return;}
  }
+ if(pickup){
+   const p=pickup,old=p.y,top=C.receiving(state),y=C.surface(state);
+   p.y+=p.vy*dt;p.x=clamp(p.x+p.vx*dt,26,W-26);
+   if(C.crossesSurface(old,p.y,topY,y)&&Math.abs(p.x-(x+top.x))<=top.w*.5+14){
+     pickup=null;
+     if(C.power(state,p.type)){
+       show(p.type==='compress'?'⇣ 压缩 · 降低晃动':P_ICON[p.type]+' '+P_LABEL[p.type]+' · '+C.BUFF_DURATION+' 秒');
+       tone('bright');
+     }
+   }else if(p.y>camera+H+25)pickup=null;
+ }
  if(state.festival>0){bulbWait-=dt;if(bulbWait<=0){lights.push(createBulb());bulbWait=.72;}}
  for(let i=lights.length-1;i>=0;i--){
    const o=lights[i],old=o.y;o.y+=o.vy*dt;o.x=clamp(o.x+o.vx*dt,28,W-28);
-   const y=C.surface(state);
-   if(old<y&&o.y>=y&&Math.abs(o.x-(x+C.support(state).x))<C.support(state).w*.55+12){
+   const y=C.surface(state),top=C.receiving(state);
+   if(C.crossesSurface(old,o.y,topY,y)&&Math.abs(o.x-(x+top.x))<top.w*.55+12){
      lights.splice(i,1);C.light(state);label('彩灯 +30 · 减晃',o.x,y-camera-29,'#ffd47e');tone('bright');
    }else if(o.y>camera+H+24)lights.splice(i,1);
  }
@@ -117,6 +136,7 @@ function frame(t){
  const collapse=mode==='lost'&&state.reason==='tilt',offset=collapse?Math.min(1,Math.max(0,(t-clock)/650)):0;
  const cartY=C.CART_Y-camera;
  const s=C.support(state),tipY=C.surface(state)-camera,topX=x+s.x;
+ const recv=C.receiving(state);
  const color=state.risk>=68?'#ffbbab':state.risk>=35?'#ffdc91':'#d6f4c9';
  if(cartY<H+80){
   ellipse(x,cartY+52,76,8,'#051c1c9c');
@@ -126,7 +146,7 @@ function frame(t){
   if(!sprite('elf',x+67,cartY+10,71,67))ellipse(x+73,cartY+15,19,25,'#d27158');
  }
  for(let i=0;i<state.layers.length;i++){
-   const l=state.layers[i],y=C.CART_Y-i*C.LEVEL_HEIGHT-camera-9;
+   const l=state.layers[i],y=C.CART_Y-i*state.spacing-camera-state.spacing/2;
    if(y < -35||y>H+50)continue;
    const wobble=reduce?0:Math.sin(time*7+i*.22)*state.risk*.018*(i/3);
    const shift=offset*Math.sign(s.x||1)*i*i*.8;
@@ -136,6 +156,13 @@ function frame(t){
  }
  if(state.level>=C.STAR_AT&&!collapse){g.shadowColor='#ffd274';g.shadowBlur=13;star(topX,tipY-19,12,'#ffd78b');g.shadowBlur=0;}
  if(!collapse&&mode!=='lost'){
+   if(state.buffs.wide>0){
+     g.fillStyle='#ffdb8b80';g.fillRect(topX-recv.w*.5,tipY-3,recv.w,5);
+     g.fillStyle='#ffeab2';g.fillRect(topX-recv.w*.5,tipY-7,3,8);g.fillRect(topX+recv.w*.5-3,tipY-7,3,8);
+   }
+   if(state.buffs.magnet>0){
+     g.strokeStyle='#a9f3db85';g.lineWidth=1.5;g.beginPath();g.arc(topX,tipY,radiusMagnet(state),Math.PI,Math.PI*2);g.stroke();
+   }
    g.lineWidth=1.5;g.strokeStyle=color;g.setLineDash([4,4]);g.beginPath();g.moveTo(topX-s.w*.52,tipY-1);g.lineTo(topX+s.w*.52,tipY-1);g.stroke();g.setLineDash([]);
    g.fillStyle=color;g.fillRect(topX-1,tipY-8,2,10);
  }
@@ -146,13 +173,24 @@ function frame(t){
    }
    if(!sprite('leaf',leaf.x,py,leaf.w,leaf.w*.26))ellipse(leaf.x,py,leaf.w*.5,leaf.w*.13,'#78d49d');
  }
+ if(pickup){
+   const px=pickup.x,py=pickup.y-camera,r=15,kind=pickup.type;
+   g.save();g.shadowColor=P_COLOR[kind];g.shadowBlur=13;g.fillStyle='#123d39';g.strokeStyle=P_COLOR[kind];g.lineWidth=2.6;
+   g.beginPath();
+   if(kind==='compress')g.rect(px-r,py-r,2*r,2*r);
+   else if(kind==='wide'){g.moveTo(px-r-3,py);g.lineTo(px,py-r);g.lineTo(px+r+3,py);g.lineTo(px,py+r);g.closePath();}
+   else g.arc(px,py,r,0,Math.PI*2);
+   g.fill();g.stroke();g.shadowBlur=0;
+   g.font='900 20px system-ui';g.textAlign='center';g.fillStyle=P_COLOR[kind];g.fillText(P_ICON[kind],px,py+7);g.restore();
+ }
  for(const o of lights){if(!sprite('bulb',o.x,o.y-camera,26,31))star(o.x,o.y-camera,11,'#ffcc76');}
  for(const f of effects){
   g.save();g.globalAlpha=clamp(f.ttl*1.5,0,1);g.font='800 16px system-ui';g.textAlign='center';g.lineWidth=4;g.strokeStyle='#162c29';g.strokeText(f.text,f.x,f.y);g.fillStyle=f.color;g.fillText(f.text,f.x,f.y);g.restore();
  }
 }
+function radiusMagnet(s){return Math.min(44,25+s.level);}
 function hud(){
- const r=Math.round(state.risk),windNow=wind(),tag=[state.score,state.level,state.combo,state.hearts,r,windNow,best.level,best.score].join(':');
+ const r=Math.round(state.risk),windNow=wind(),tag=[state.score,state.level,state.combo,state.hearts,r,windNow,best.level,best.score,mode,Math.ceil(state.buffs.wide),Math.ceil(state.buffs.magnet)].join(':');
  if(display===tag)return;display=tag;
  $('score').textContent=String(state.score).padStart(3,'0');$('combo').innerHTML=state.combo+'<span> / 4</span>';
  $('progress').innerHTML=state.level+'<span> 层</span>';$('risk').innerHTML=r+'<span>%</span>';
@@ -160,17 +198,20 @@ function hud(){
  $('chapter').textContent=state.level>=C.STAR_AT?'✦ 星树已点亮':state.level>=7?'紧张的风雪':'稳稳起步';
  $('wind').textContent=windNow===0?'无风':(windNow>0?'来风 →':'← 来风')+(Math.abs(windNow)>30?' · 强风':'');
  $('hearts').textContent='♥'.repeat(state.hearts)+'♡'.repeat(C.HEARTS-state.hearts);$('hearts').setAttribute('aria-label','生命 '+state.hearts);
+ const active=['wide','magnet'].filter(k=>state.buffs[k]>0),buffs=$('buffs');
+ buffs.hidden=!active.length||mode!=='playing';
+ buffs.innerHTML=active.map(k=>'<span class="'+k+'">'+P_ICON[k]+' '+P_LABEL[k]+' '+Math.ceil(state.buffs[k])+'s</span>').join('');
  $('best').textContent='最高 '+best.level+' 层 · 最高 '+best.score+' 分';screen.dataset.stage=Math.min(3,Math.floor(state.level/4));
 }
 function button(text){start.innerHTML=text+' <span aria-hidden="true">↗</span>';}
 function resetInput(){motion.keys.clear();motion.buttons.clear();motion.pointer=null;left.classList.remove('held');right.classList.remove('held');}
 function begin(){
- if(mode==='paused'){mode='playing';panel.hidden=true;canvas.focus({preventScroll:true});return;}
- mode='playing';state=C.fresh();x=W/2;leaf=null;lights=[];effects=[];wait=.44;camera=0;wave=0;bulbWait=0;notice=0;resetInput();banner.hidden=true;panel.hidden=true;hud();canvas.focus({preventScroll:true});tone('nice');
+ if(mode==='paused'){mode='playing';panel.hidden=true;hud();canvas.focus({preventScroll:true});return;}
+ mode='playing';state=C.fresh();x=W/2;leaf=null;lights=[];pickup=null;nextPower=3;powerCount=0;effects=[];wait=.44;camera=0;wave=0;bulbWait=0;notice=0;resetInput();banner.hidden=true;panel.hidden=true;hud();canvas.focus({preventScroll:true});tone('nice');
 }
 function pause(){
  if(mode!=='playing')return;mode='paused';resetInput();panel.hidden=false;
- $('panelIcon').textContent='❄';$('panelTag').textContent='SNOW BREAK';$('panelTitle').textContent='雪夜暂停';$('panelText').textContent='等你回来继续垒。';$('panelFine').textContent='也可以按 Esc 继续';button('继续垒树');start.focus({preventScroll:true});
+ $('panelIcon').textContent='❄';$('panelTag').textContent='SNOW BREAK';$('panelTitle').textContent='雪夜暂停';$('panelText').textContent='等你回来继续垒。';$('panelFine').textContent='也可以按 Esc 继续';button('继续垒树');hud();start.focus({preventScroll:true});
 }
 $('sound').addEventListener('click',()=>{
  muted=!muted;if(!muted){try{audio||=new(window.AudioContext||window.webkitAudioContext)();audio.resume().catch(()=>{});}catch{muted=true;}}

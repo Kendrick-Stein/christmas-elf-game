@@ -1,36 +1,35 @@
 <!doctype html>
 <html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#102f2c"><meta name="description" content="推着小精灵的雪橇，在雪夜垒起一棵圣诞树。"><title>松针雪夜 · 垒树挑战</title><link rel="icon" href="./assets/leaf.svg" type="image/svg+xml"><link rel="stylesheet" href="./style.css"><script defer src="./game-core.js"></script><script defer src="./game.js"></script></head>
 <body><main class="shell">
-<header class="mast"><div class="brand"><span aria-hidden="true">✧</span> 雪夜游戏社</div><div class="edition">HOLIDAY ARCADE <b>01</b></div><button id="sound" class="sound" type="button" aria-pressed="false" aria-label="打开声音">♫ <span>静音</span></button></header>
+<header class="mast"><div class="brand">垒树挑战</div><button id="sound" class="sound" type="button" aria-pressed="false" aria-label="打开声音">♫ <span>静音</span></button></header>
 <section class="stage">
 <div class="intro">
-<p class="kicker"><span></span> 圣诞特别篇 · 垒树挑战</p>
-<h1>松针<span>雪夜</span><i aria-hidden="true">✦</i></h1>
-<p class="dek">推着小精灵的雪橇，把松叶一层层垒高。<br>树会长歪，也会倒下。你能垒到第几层？</p>
-<div class="stamp" aria-hidden="true"><span>❄</span><small>WINTER<br>EDITION</small></div>
+<h1>松针<span>雪夜</span></h1>
+<p class="dek">移动雪橇，让松叶落在树顶。<br>越对准，树越稳。</p>
 <div class="rules" id="rules">
-<h2>雪夜手册 <span>HOW TO PLAY</span></h2>
-<div class="rule"><span class="badge leaf">✿</span><span><b>用树顶接，不是用雪橇接</b><small>整棵树跟着走；落在哪，就叠在哪</small></span></div>
-<div class="rule"><span class="badge coal">◒</span><span><b>偏得太多，树会倒</b><small>普通／靠中／精准 +10／20／30，精准能减晃</small></span></div>
-<div class="rule"><span class="badge light">✦</span><span><b>连续 4 次精准，开启彩灯雨</b><small>彩灯 +30，且能减晃；第 12 层点亮星星，继续往上！</small></span></div>
-<div class="rule"><span class="badge coal">♥</span><span><b>没搭上：−10 分、−1 心</b><small>用完 5 颗心或晃动满格，即结算</small></span></div>
+<h2>玩法</h2>
+<div class="rule"><span class="badge leaf">✿</span><span><b>树顶接叶</b><small>接得越准，得分越高</small></span></div>
+<div class="rule"><span class="badge coal">◒</span><span><b>别让树倒</b><small>漏接失 1 心；悬边加晃动</small></span></div>
+<div class="rule"><span class="badge light">✦</span><span><b>4 连准触发彩灯雨</b><small>彩灯加分、减晃；12 层点亮星星</small></span></div>
+<div class="rule"><span class="badge power-icon">◇</span><span><b>压缩 · 加宽 · 吸附</b><small>用树顶接住道具，漏接不扣分</small></span></div>
 </div>
 </div>
 <div class="play">
 <div class="frame">
-<div class="hud" aria-label="游戏状态"><div><span>雪夜分数</span><b id="score">000</b></div><div><span>精准连击</span><b id="combo">0<span> / 4</span></b></div><div><span>树高</span><b id="progress">0<span> 层</span></b></div><div><span>晃动</span><b id="risk">0<span>%</span></b></div></div>
+<div class="hud" aria-label="游戏状态"><div><span>分数</span><b id="score">000</b></div><div><span>连击</span><b id="combo">0<span> / 4</span></b></div><div><span>树高</span><b id="progress">0<span> 层</span></b></div><div><span>晃动</span><b id="risk">0<span>%</span></b></div></div>
 <div class="chapter"><b id="chapter">稳稳起步</b><span id="wind">无风</span><span id="hearts" aria-label="生命 5">♥♥♥♥♥</span></div>
 <div class="screen" id="screen">
+<div class="buffs" id="buffs" hidden aria-hidden="true"></div>
 <canvas id="field" aria-label="游戏场地：左右拖动或按键，让树顶接住落叶" aria-describedby="rules" width="640" height="420"></canvas>
 <div class="banner" id="banner" hidden aria-hidden="true"></div>
 <div class="panel" id="panel"><div class="card">
-<div id="panelIcon" class="panel-icon" aria-hidden="true">✦</div>
-<p id="panelTag" class="panel-tag">THE FIRST SNOW</p>
-<h2 id="panelTitle">雪橇就位了吗？</h2>
-<p id="panelText">在雪夜垒一棵会长歪的圣诞树。<br>落得稳，才垒得高。</p>
+<div id="panelIcon" class="panel-icon" hidden aria-hidden="true">✦</div>
+<p id="panelTag" class="panel-tag" hidden></p>
+<h2 id="panelTitle">垒得越高越好</h2>
+<p id="panelText">移动树顶，对准落下的松叶。</p>
 <button id="start" type="button">开始垒树 <span aria-hidden="true">↗</span></button>
-<p id="panelFine" class="panel-fine">无限层数 · 本机纪录</p>
+<p id="panelFine" class="panel-fine"></p>
 </div></div></div>
 <div class="controls"><button id="left" type="button" aria-label="向左移动">←</button><p><span class="deskHint">键盘 <kbd>←</kbd> <kbd>→</kbd> 或 <kbd>A</kbd> <kbd>D</kbd></span><span class="touchHint">横向拖动树顶，或按住箭头</span></p><button id="right" type="button" aria-label="向右移动">→</button></div>
-</div><div class="footer"><span><i></i> 圣诞树农场 · 雪夜限定</span><span id="best">最高 0 层 · 最高 0 分</span></div><div id="announcer" class="sr" role="status"></div>
+</div><div class="footer"><span id="best">最高 0 层 · 最高 0 分</span></div><div id="announcer" class="sr" role="status"></div>
 </div></section></main></body></html>
