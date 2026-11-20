@@ -12,10 +12,10 @@ function harness(width=640,height=420,reduced=true,eventPick=null,random=.50,opt
  const $=id=>{if(!elements.has(id))elements.set(id,freshNode());return elements.get(id);};
  d.getElementById=$;d.hidden=false;d.documentElement={};d.querySelectorAll=()=>[];d.querySelector=()=>null;
  const picker=$('languagePicker');picker.showModal=()=>{picker.open=true;};picker.close=()=>{picker.open=false;};
- const leaves=[],elves=[],pixels=[],labels=[],paints=[];let transform=[],airborne=false;
- $('field').getContext=()=>new Proxy({}, {get:(o,k)=>o[k]??(k==='setTransform'?((...args)=>{transform=args;}):k==='clearRect'?()=>{leaves.length=0;elves.length=0;pixels.length=0;labels.length=0;paints.length=0;airborne=false;}:
+ const leaves=[],elves=[],pixels=[],labels=[],paints=[],actors=[],rings=[];let transform=[],airborne=false;
+ $('field').getContext=()=>new Proxy({}, {get:(o,k)=>o[k]??(k==='setTransform'?((...args)=>{transform=args;}):k==='clearRect'?()=>{leaves.length=0;elves.length=0;pixels.length=0;labels.length=0;paints.length=0;actors.length=0;rings.length=0;airborne=false;}:
  k==='setLineDash'?a=>{if(a.length)airborne=true;}:k==='fillRect'?(...pos)=>pixels.push({pos,color:o.fillStyle,alpha:o.globalAlpha}):
- k==='stroke'?()=>paints.push(o.strokeStyle):k==='fillText'?t=>labels.push(t):k==='drawImage'?(img,x,y,w,h)=>{if(img.src.includes('/pixel-branch-')){paints.push(airborne?'air-branch':'branch');leaves.push({x:x+w/2,y:y+h/2,w,h:airborne?0:31,actualHeight:h,src:img.src});}if(img.src.includes('/pixel-sled.svg'))elves.push(x+w/2);if(img.src.includes('/pixel-bell.svg'))paints.push(airborne?'air-bell':'bell');if(img.src.includes('/pixel-cane.svg'))paints.push(airborne?'air-cane':'cane');}:()=>{})});
+ k==='ellipse'?(...args)=>rings.push({args,color:o.strokeStyle,alpha:o.globalAlpha}):k==='stroke'?()=>paints.push(o.strokeStyle):k==='fillText'?t=>labels.push(t):k==='drawImage'?(img,x,y,w,h)=>{if(img.src.includes('/pixel-branch-')){paints.push(airborne?'air-branch':'branch');leaves.push({x:x+w/2,y:y+h/2,w,h:airborne?0:31,actualHeight:h,src:img.src});}if(img.src.includes('/pixel-sled.svg'))elves.push(x+w/2);if(img.src.includes('/sprite-'))actors.push({name:img.src.split('/sprite-')[1].split('.')[0],x:x+w/2,y:y+h/2});if(img.src.includes('/pixel-bell.svg'))paints.push(airborne?'air-bell':'bell');if(img.src.includes('/pixel-cane.svg'))paints.push(airborne?'air-cane':'cane');}:()=>{})});
  let raf,time=0;
  const c=vm.createContext({window:w,document:d,devicePixelRatio:1,matchMedia:q=>({matches:q.includes("reduced-motion")?reduced:true}),Image:class{constructor(){this.complete=true;this.naturalWidth=160;}},requestAnimationFrame:fn=>{raf=fn;},localStorage:{getItem:k=>{if(options.denyStorage&&k==='snow-pine-language-v1')throw Error('denied');return stored.get(k);},setItem:(k,v)=>{if(options.denyStorage&&k==='snow-pine-language-v1')throw Error('denied');stored.set(k,v);}}});
  Object.assign(c,{console});
@@ -28,7 +28,7 @@ function harness(width=640,height=420,reduced=true,eventPick=null,random=.50,opt
  vm.runInContext(read('game.js'),c);
  let tracking=false;
  const point=x=>{$('field').fire('pointerdown',{pointerId:1,clientX:x});$('field').fire('pointermove',{pointerId:1,clientX:x});$('field').fire('pointerup',{pointerId:1});};
- return {$,w,d,point,leaves,elves,pixels,labels,paints,stored,transform:()=>transform,setSize:(w,h)=>{size.width=w;size.height=h;},follow:b=>tracking=b,advance:ms=>{for(let i=0;i<ms;i+=16){
+ return {$,w,d,point,leaves,elves,pixels,labels,paints,actors,rings,stored,transform:()=>transform,setSize:(w,h)=>{size.width=w;size.height=h;},follow:b=>tracking=b,advance:ms=>{for(let i=0;i<ms;i+=16){
       if(tracking && leaves.length){const o=leaves.find(x=>x.h!==31&&x.y>0);if(o)point(o.x*transform[0]+transform[4]);}
       raf(time+=16);
  }}};
@@ -338,4 +338,54 @@ test('focus-mode language switch freezes only the modal time and preserves live 
  assert.equal($('panelTitle').textContent,'Paused');
  $('languageToggle').fire('click');$('languageZH').fire('click');
  assert.equal($('panelTitle').textContent,'雪夜暂停');assert.equal($('score').textContent,score);
+});
+
+test('visitor cue phases animate to the sled, then reverse only on the existing countdown',()=>{
+ const h=harness(390,650,false,.01,.5),{$,actors,paints,elves,w}=h;
+ waitForEvent(h,'green');
+ const start=actors[0].x;
+ const tap=()=>{$('right').fire('pointerdown',{pointerId:7,pointerType:'touch'});$('right').fire('pointerup',{pointerId:7,pointerType:'touch'});h.advance(16);};
+ const cart=elves[0];tap();assert(elves[0]>cart);
+ h.advance(600);
+ assert(actors[0].x<start-15);assert(!paints.includes('#b5df81'));
+ $('focusToggle').fire('click');$('focusLanguageToggle').fire('click');
+ const pose={...actors[0]};h.advance(7000);assert.deepEqual(actors[0],pose);
+ $('languageEN').fire('click');assert.match($('eventHud').textContent,/will reverse/);
+ for(let i=0;i<112&&!paints.includes('#b5df81');i++)h.advance(16);
+ assert.match($('eventHud').textContent,/reversed · 4s/);assert(paints.includes('#b5df81'));
+ const reversed=elves[0];tap();assert(elves[0]<reversed);
+ w.fire('keydown',{key:'Escape'});assert(!$('shell').classList.contains('focus-view'));
+});
+test('Santa lands beside the sled and presents a bounded expanding ring; reduced motion stays static',()=>{
+ for(const reduced of [false,true]){
+   const h=harness(390,650,reduced,.5,.5);
+   waitForEvent(h,'santa');
+   const initial=h.actors[0].y;h.advance(650);
+   const current=h.actors[0].y;
+   if(reduced)assert(Math.abs(initial-current)<3);
+   else assert(current>initial+15);
+   for(let i=0;i<90&&!h.rings.length;i++)h.advance(16);
+   assert(h.rings.length);const first=h.rings[0];h.advance(240);const later=h.rings[0];
+   assert(later);assert.equal(later.color,'#ffd499');
+   if(reduced)assert.equal(first.args[2],later.args[2]);
+   else assert(later.args[2]>first.args[2]+10&&later.alpha<first.alpha);
+   h.advance(800);assert.equal(h.rings.length,0);
+ }
+});
+test('both reindeer fly toward the same existing target and icy lane stays marked and fixed',()=>{
+ for(const [name,random,color] of [['gold',.49,'#ffda83'],['blue',.5,'#b5e1ff']]){
+   const h=harness(640,420,false,.99,random);
+   waitForEvent(h,name);
+   const start=h.actors[0].x;
+   const lane=()=>h.pixels.find(p=>p.color==='#98c9fa38')?.pos[0];
+   const fixed=lane();if(name==='blue')assert(Number.isFinite(fixed));
+   h.advance(590);assert(h.actors[0].x>start+40);
+   assert(h.pixels.some(p=>p.color===color));
+   if(name==='blue'){assert.equal(lane(),fixed);h.point(555);h.advance(500);assert.equal(lane(),fixed);}
+   const still=harness(640,420,true,.99,random);
+   waitForEvent(still,name);const old=still.actors[0].x;
+   still.advance(550);assert.equal(still.actors[0].x,old);
+   assert(!still.pixels.some(p=>p.color===color));
+   if(name==='blue')assert(still.pixels.some(p=>p.color==='#98c9fa38'));
+ }
 });

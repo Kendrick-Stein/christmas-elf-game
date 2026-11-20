@@ -16,7 +16,7 @@ try{const previous=localStorage.getItem(sensitivityKey);if(Object.hasOwn(sensiti
 $('sensitivity').value=sensitivity;
 $('sensitivity').addEventListener('change',e=>{const key=e.target.value;if(Object.hasOwn(sensitivityScale,key)){sensitivity=key;try{localStorage.setItem(sensitivityKey,key);}catch{}}});
 const layoutCache=new WeakMap();
-const eventHud=$('eventHud');let events=C.newEvents(),reversed=false,eventText='';
+const eventHud=$('eventHud');let events=C.newEvents(),reversed=false,eventText='',santaRingAt=-Infinity;
 let ornaments=new Map(),stringWait=7.4,lightSerial=0,ordinaryIndex=0,lastCart=W/2;
 let newRecord=false;
 let mode='ready',state=C.fresh(),x=W/2,leaf=null,lights=[],pickup=null,effects=[],camera=0,wait=.4,last=0,clock=0,wave=0,bulbWait=0,notice=0,display='',muted=true,audio=null;
@@ -90,7 +90,7 @@ function createBulb(kind){
  return {kind,seed:lightSerial++,x:clamp(topX-drift+(Math.random()-.5)*(festival?180:118),48,W-48),...enterSky(camera-16,vy),vy,vx};
 }
 function lose(){
- mode='lost';events.active=null;setReverse(false);resetInput();leaf=null;lights=[];pickup=null;banner.hidden=true;
+ mode='lost';events.active=null;santaRingAt=-Infinity;setReverse(false);resetInput();leaf=null;lights=[];pickup=null;banner.hidden=true;
  const old=best;best={level:Math.max(old.level,state.level),score:Math.max(old.score,state.score)};
  newRecord=best.level>old.level||best.score>old.score;
  if(newRecord)try{localStorage.setItem(recordKey,JSON.stringify(best));}catch{}
@@ -214,6 +214,7 @@ function eventStatus(){
 function updateEvent(dt,oldCart){
  const time=state.elapsed;
  const startEvent=C.nextEvent(events,state.score,time);
+ if(startEvent)startEvent.visualAt=time;
  if(startEvent?.type==='deer'){
    startEvent.kind=Math.random()<.50?'gold':'blue';
    startEvent.lane=clamp(x+C.support(state).x,27,W-27);
@@ -222,15 +223,16 @@ function updateEvent(dt,oldCart){
  if(e.phase==='warn'&&time>=e.end){
    if(e.type==='green'){e.phase='run';e.end=time+4;setReverse(true);}
    else if(e.type==='santa'){
-      const moved=C.realignBase(state);
+      const moved=C.realignBase(state);santaRingAt=time;
       show(moved?'santaMoved':'santaFine');
       C.finishEvent(events,time);
    }else{
       if(e.kind==='gold'){
         const vy=177;
-        lights.push({kind:'gift',seed:lightSerial++,x:e.lane,...enterSky(camera-14,vy),vy,vx:0});
+        e.giftCue={kind:'gift',seed:lightSerial++,x:e.lane,...enterSky(camera-14,vy),vy,vx:0};
+        lights.push(e.giftCue);
       }
-      e.phase='run';e.end=time+(e.kind==='blue'?3.45:3);e.y=camera-36;
+      e.phase='run';e.visualRunAt=time;e.end=time+(e.kind==='blue'?3.45:3);e.y=camera-36;
    }
  }else if(e.phase==='run'){
    if(e.type==='deer'){
@@ -260,24 +262,85 @@ function updateEvent(dt,oldCart){
    if(time>=e.end){setReverse(false);C.finishEvent(events,time);}
  }
 }
+const ease=u=>u*u*(3-2*u);
+const progress=(age,duration)=>clamp(age/duration,0,1);
+const lerp=(a,b,u)=>a+(b-a)*u;
+function spark(px,py,color,size=3){
+ const x=Math.round(px),y=Math.round(py);
+ g.fillStyle=color;g.fillRect(x-size,y-1,2*size+1,2);g.fillRect(x-1,y-size,2,2*size+1);
+}
 function drawEvent(viewY,tipY){
- const e=events.active;if(!e)return;
- const top=x+C.support(state).x;
+ const e=events.active,now=state.elapsed,bottom=view.worldHeight-28,cartY=C.CART_Y-viewY;
+ // Cue stays at the visible lower edge if the camera has already left the actual sled.
+ const baseY=clamp(cartY,100,bottom),baseVisible=cartY<view.worldHeight+3;
+ if(now-santaRingAt<.66){
+   const u=reduce?1:progress(now-santaRingAt,.66);
+   g.save();g.globalAlpha=reduce?.55:.88*(1-u);
+   g.strokeStyle='#ffd499';g.lineWidth=2;g.beginPath();
+   if(baseVisible){
+     g.ellipse(Math.round(x),Math.round(baseY+8),lerp(22,96,u),lerp(5,15,u),0,.14,Math.PI*1.98);
+     g.stroke();spark(x+lerp(23,95,u),baseY-2,'#ffe7af',3);
+   }else{
+     // The ring happened off-camera; a small bottom chevron points to the base.
+     g.moveTo(x-9,bottom-1);g.lineTo(x,bottom+6);g.lineTo(x+9,bottom-1);g.stroke();
+   }
+   g.restore();
+ }
+ if(!e)return;
+ const age=Math.max(0,now-e.visualAt),top=x+C.support(state).x;
  if(e.type==='green'){
-   sprite('green-mischief',clamp(top+54,35,W-35),Math.min(view.worldHeight-45,tipY+43),50,48);
+   const side=x<510?1:-1,goal=clamp(x+side*55,30,W-30);
+   const u=reduce?1:progress(age-.10,1.04),p=ease(u);
+   const px=e.phase==='run'?goal:lerp(side>0?W+30:-30,goal,p);
+   const py=baseY-27-(reduce?0:22*Math.sin(Math.PI*u));
+   if(e.phase==='run'){
+     g.strokeStyle='#b5df81';g.lineWidth=3;g.beginPath();
+     g.moveTo(goal-side*14,py+12);g.lineTo(x+side*27,baseVisible?baseY-8:bottom+4);g.stroke();
+     spark(x+side*29,baseVisible?baseY-13:bottom+3,'#d7ed9f',3);
+   }
+   sprite('green-mischief',Math.round(px),Math.round(py),48,51);
  }else if(e.type==='santa'){
-   sprite('santa',clamp(top-55,35,W-35),Math.min(view.worldHeight-45,tipY+39),51,52);
+   const side=top>100?-1:1;
+   const px=clamp(lerp(top,x,.45)+side*61,32,W-32);
+   const p=reduce?1:ease(progress(age-.08,1.13));
+   const sy=lerp(Math.min(83,baseY-47),baseY-37,p);
+   if(!reduce&&p<.97){
+     g.save();g.globalAlpha=.60;
+     for(let i=0;i<3;i++){g.fillStyle='#ffd499';g.fillRect(Math.round(px)-7+i*7,Math.round(sy)-32-(i%2)*4,2,6);}
+     g.restore();
+   }
+   sprite('santa',Math.round(px),Math.round(sy),45,52);
  }else if(e.type==='deer'){
-   const blue=e.kind==='blue',lane=e.lane;
-   const sy=e.phase==='warn'?Math.max(58,tipY-106):e.y-viewY;
+   const blue=e.kind==='blue',lane=e.lane,sky=Math.max(61,Math.min(144,tipY-103)),color=blue?'#b5e1ff':'#ffda83';
    if(blue&&!e.checked){
      g.fillStyle='#98c9fa38';g.fillRect(Math.round(lane)-14,43,28,Math.max(0,tipY-43));
      g.strokeStyle='#b5dafd';g.lineWidth=2;g.setLineDash([6,6]);
      g.beginPath();g.moveTo(lane,43);g.lineTo(lane,tipY+13);g.stroke();g.setLineDash([]);
      g.fillStyle='#baddff';g.fillRect(lane-13,tipY+12,26,3);
    }
-   g.save();g.shadowBlur=blue?13:16;g.shadowColor=blue?'#98d0ff':'#ffd57c';
-   sprite('reindeer',lane,sy,58,45);g.restore();
+   const u=progress(age-.12,1.18),p=ease(u),runAge=now-(e.visualRunAt??now);
+   let px=lane,py=sky;
+   if(e.phase==='warn'&&!reduce){px=lerp(-60,lane,p);py=sky-20*Math.sin(Math.PI*u);}
+   if(e.phase==='run'){
+     if(blue){
+       if(!reduce){
+         py=Math.max(sky,e.y-viewY);
+         if(e.checked)px=lane+Math.max(0,py-tipY)*.63;
+       }
+     }else{
+       if(runAge>(reduce?.48:.78))return;
+       if(!reduce){const exit=progress(runAge,.78);px=lerp(lane,W+55,ease(exit));py=sky-23*Math.sin(Math.PI*exit/2);}
+       // Mark the real gift as soon as it enters view; never move its spawn or hitbox.
+       const giftY=e.giftCue?.y-viewY;
+       if(giftY>=42)spark(lane+13,Math.min(giftY,sky+28),color,3);
+     }
+   }
+   if(!reduce){
+     g.save();
+     for(let i=1;i<6;i++){g.globalAlpha=.78-i*.10;spark(px-37-i*8,py+3+i*2,color,i%2?2:1);}
+     g.restore();
+   }
+   sprite('reindeer',Math.round(px),Math.round(py),76,38);
  }
 }
 function frame(stamp){
@@ -319,6 +382,7 @@ function frame(stamp){
  if(!collapse)for(let i=visibleLo;i<=visibleHi;i++){
    drawDecorations(g,ornaments.get(i)||[],i,state.level,rowX(i),rowY(i),state.layers[i].w,time,reduce);
  }
+ drawEvent(viewY,tipY);
  if(state.level>=C.STAR_AT&&!collapse){g.shadowColor='#ffd274';g.shadowBlur=13;star(topX,tipY-19,12,'#ffd78b');g.shadowBlur=0;}
  if(!collapse&&mode!=='lost'){
    if(state.buffs.wide>0){
@@ -348,7 +412,6 @@ function frame(stamp){
    g.fill();g.stroke();g.shadowBlur=0;
    g.font='900 20px system-ui';g.textAlign='center';g.fillStyle=P_COLOR[kind];g.fillText(P_ICON[kind],px,py+7);g.restore();
  }
- drawEvent(viewY,tipY);
  for(const o of lights)drawOrnament(g,o.kind,o.x,o.y-viewY,34,o.seed,time,reduce,true);
  for(const f of effects){
   g.save();g.globalAlpha=clamp(f.ttl*1.5,0,1);g.font='800 16px system-ui';g.textAlign='center';g.lineWidth=4;g.strokeStyle='#162c29';const text=t(f.key,f.vars?.kind?{name:t('orn_'+f.vars.kind),points:f.vars.points}:f.vars);g.strokeText(text,f.x,f.y+view.extra,175);g.fillStyle=f.color;g.fillText(text,f.x,f.y+view.extra,175);g.restore();
@@ -529,7 +592,7 @@ function resetInput(){motion.keys.clear();motion.buttons.clear();motion.pointer=
 function begin(){
  if(locale.blocking())return;
  if(mode==='paused'){mode='playing';panel.hidden=true;hud();canvas.focus({preventScroll:true});return;}
- mode='playing';state=C.fresh();events=C.newEvents();setReverse(false);x=W/2;leaf=null;lights=[];pickup=null;nextPower=3;powerCount=0;ornaments=new Map();stringWait=7.4;lightSerial=0;ordinaryIndex=0;lastCart=x;effects=[];wait=.44;camera=0;wave=0;bulbWait=0;notice=0;resetInput();banner.hidden=true;panel.hidden=true;hud();canvas.focus({preventScroll:true});tone('nice');emitShare('reset');
+ mode='playing';state=C.fresh();events=C.newEvents();santaRingAt=-Infinity;setReverse(false);x=W/2;leaf=null;lights=[];pickup=null;nextPower=3;powerCount=0;ornaments=new Map();stringWait=7.4;lightSerial=0;ordinaryIndex=0;lastCart=x;effects=[];wait=.44;camera=0;wave=0;bulbWait=0;notice=0;resetInput();banner.hidden=true;panel.hidden=true;hud();canvas.focus({preventScroll:true});tone('nice');emitShare('reset');
 }
 function pause(){
  if(mode!=='playing')return;mode='paused';resetInput();panel.hidden=false;
