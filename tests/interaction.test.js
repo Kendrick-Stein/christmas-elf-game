@@ -54,7 +54,7 @@ test('settled leaf retains landing offset and moves with the cart',()=>{
 });
 test('visible drops activate compression, wide and attraction in order, then countdown and clear',()=>{
  const {$,w,advance,follow,leaves}=harness();$('start').fire('click');follow(true);
- const seen=new Set();let minSpacing=20,everBuffs=false;
+ const seen=new Set();let minSpacing=20,everBuffs=false,stableSeen=false;
  for(let i=0;i<420;i++){
    advance(185);
    const text=$('banner').textContent;
@@ -62,9 +62,10 @@ test('visible drops activate compression, wide and attraction in order, then cou
    const t=leaves.filter(o=>o.h===31).sort((a,b)=>a.y-b.y);
    for(let j=1;j<t.length;j++){const spacing=t[j].y-t[j-1].y;if(spacing>0)minSpacing=Math.min(minSpacing,spacing);}
    everBuffs ||= !$('buffs').hidden;
+   stableSeen ||= !$('buffs').hidden && /稳固 [1-6]s/.test($('buffs').innerHTML);
  }
  assert.deepEqual([...seen].slice(0,3),['压缩','加宽','吸附']);
- assert(minSpacing<19);assert(everBuffs);assert(parseInt($('progress').innerHTML,10)>16);
+ assert(minSpacing<19);assert(everBuffs);assert(stableSeen);assert(parseInt($('progress').innerHTML,10)>16);
  // Timed badges are frozen during pause and never remain visible on its overlay.
  const badge=$('buffs').innerHTML;w.fire('keydown',{key:'Escape'});assert($('buffs').hidden);
  advance(11000);assert.equal($('buffs').innerHTML,badge);w.fire('keydown',{key:'Escape'});
@@ -126,4 +127,15 @@ test('focus and rail toggle without restarting; resize keeps one scale and cente
  const inside=transform()[4]+440*transform()[0];
  $('field').fire('pointerdown',{pointerId:19,clientX:inside});$('field').fire('pointerup',{pointerId:19});advance(16);
  assert.equal(elves[0],440);assert($('panel').hidden);
+});
+test('actual rendered late falling leaves keep getting wider and narrower while replayable',()=>{
+ const {$,advance,leaves,follow}=harness();$('start').fire('click');follow(true);
+ const all=[];
+ for(let i=0;i<365;i++){
+  advance(195);
+  const o=leaves.find(o=>o.h!==31&&o.y>3);
+  if(o&&o.w!==all[all.length-1])all.push(o.w);
+ }
+ const late=all.slice(12);
+ assert(late.length>10);assert(late.some((w,i)=>i&&w>late[i-1]+1));assert(late.some((w,i)=>i&&w<late[i-1]-1));assert($('panel').hidden);
 });

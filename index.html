@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#11162b"><meta name="description" content="推着小精灵的雪橇，在雪夜垒起一棵圣诞树。"><title>松针雪夜 · 垒树挑战</title><link rel="icon" href="./assets/pixel-leaf.svg" type="image/svg+xml"><link rel="stylesheet" href="./style.css?v=focus-6"><script defer src="./game-core.js?v=focus-6"></script><script defer src="./game.js?v=focus-6"></script></head>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#11162b"><meta name="description" content="推着小精灵的雪橇，在雪夜垒起一棵圣诞树。"><title>松针雪夜 · 垒树挑战</title><link rel="icon" href="./assets/pixel-leaf.svg" type="image/svg+xml"><link rel="stylesheet" href="./style.css?v=stable-7"><script defer src="./game-core.js?v=stable-7"></script><script defer src="./game.js?v=stable-7"></script></head>
 <body><main class="shell" id="shell">
 <header class="mast"><h1 class="brand">松针雪夜</h1><div class="settings"><button class="help-toggle" type="button" id="helpToggle" aria-expanded="false" aria-controls="rules">玩法</button><label class="sense" for="sensitivity">灵敏度 <select id="sensitivity"><option value="low">低</option><option value="medium" selected>标准</option><option value="high">高</option></select></label><button id="sound" class="sound" type="button" aria-pressed="false" aria-label="打开声音">♫ <span>静音</span></button></div></header>
 <section class="stage">
@@ -25,9 +25,9 @@
 </div><div class="footer"><span id="best">最高 0 层 · 最高 0 分</span></div><div id="announcer" class="sr" role="status"></div>
 </div><aside class="rules" id="rules" hidden aria-labelledby="rulesTitle">
 <div class="rail-head"><h2 id="rulesTitle">玩法</h2><button type="button" id="helpClose" aria-label="收起玩法">×</button></div>
-<div class="rule"><span class="badge leaf">✿</span><span><b>树顶接叶</b><small>接得越准，得分越高</small></span></div>
+<div class="rule"><span class="badge leaf">✿</span><span><b>树顶接叶</b><small>叶片随机大小；接得越准，得分越高</small></span></div>
 <div class="rule"><span class="badge coal">◒</span><span><b>别让树倒</b><small>松叶漏接 −10 分、−1 心</small></span></div>
-<div class="rule"><span class="badge light">✦</span><span><b>4 连准触发彩灯雨</b><small>彩灯加分、减晃；12 层点亮星星</small></span></div>
+<div class="rule"><span class="badge light">✦</span><span><b>4 连准触发彩灯雨</b><small>彩灯加分、减晃，并短暂稳固树身</small></span></div>
 <div class="rule"><span class="badge power-icon">◇</span><span><b>压缩 · 加宽 · 吸附</b><small>用树顶接住道具，漏接不扣分</small></span></div>
 </aside>
 </section></main></body></html>

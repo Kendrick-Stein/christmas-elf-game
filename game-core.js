@@ -1,12 +1,22 @@
 (function (global) {
 'use strict';
-const CART_Y=345,TRAY=112,LEVEL_HEIGHT=19,MIN_WIDTH=44,STAR_AT=12,HEARTS=5,STREAK=4,FESTIVAL=5;
-const BUFF_DURATION=8,WIDE_EXTRA=46,MIN_SPACING=10;
+const CART_Y=345,TRAY=112,LEVEL_HEIGHT=19,MIN_WIDTH=48,MAX_WIDTH=128,STAR_AT=12,HEARTS=5,STREAK=4,FESTIVAL=5;
+const BUFF_DURATION=8,WIDE_EXTRA=46,MIN_SPACING=10,STABLE_DURATION=6,STABLE_SCALE=.67;
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
-const fresh=()=>({score:0,combo:0,bestCombo:0,level:0,lights:0,perfect:0,festival:0,hearts:HEARTS,risk:0,spacing:LEVEL_HEIGHT,buffs:{wide:0,magnet:0},layers:[],status:'playing',reason:null,elapsed:0});
-const totalWidth=level=>Math.max(MIN_WIDTH,118-level*6.55);
+const fresh=()=>({score:0,combo:0,bestCombo:0,level:0,lights:0,perfect:0,festival:0,hearts:HEARTS,risk:0,narrowRun:0,sinceBroad:0,spacing:LEVEL_HEIGHT,buffs:{wide:0,magnet:0,stable:0},layers:[],status:'playing',reason:null,elapsed:0});
 const surface=s=>CART_Y-s.layers.length*s.spacing;
 const support=s=>s.layers[s.layers.length-1]||{x:0,w:TRAY};
+function nextWidth(s,random=Math.random()){
+ const parent=support(s).w,r=clamp(random,0,1);
+ const lo=Math.max(MIN_WIDTH,parent*.70),hi=Math.min(MAX_WIDTH,parent/.88);
+ const sample=(a,b,t)=>a+(b-a)*t;
+ // Draws are random at every height, with bias toward recovery after small tops.
+ // Even the widest possible draw remains precisely catchable on the actual top.
+ if((parent<66&&s.narrowRun>=3)||(parent<93&&s.sinceBroad>=12))return sample(Math.min(hi,parent*1.09),hi,r);
+ const growth=parent<72?.74:parent>107?.25:.53;
+ if(r<growth)return sample(Math.min(hi,parent+1),hi,r/growth);
+ return sample(lo,Math.max(lo,parent-1),(r-growth)/(1-growth));
+}
 const receiving=s=>{const top=support(s);return {x:top.x,w:top.w+(s.buffs.wide>0?WIDE_EXTRA:0)};};
 const crossesSurface=(oldY,newY,oldSurface,newSurface=oldSurface)=>oldY<oldSurface&&newY>=newSurface;
 function viewport(pixelWidth,pixelHeight,worldWidth=640,baseHeight=420){
@@ -39,10 +49,13 @@ function balance(s,p){
  const overhang=1-p.covered,edge=Math.abs(p.offset)/Math.max(1,(support(s).w+p.w)*.5);
  const old=s.layers.slice(-9),weight=old.reduce((sum,l)=>sum+l.x,0),lean=Math.abs((weight+p.x)/(old.length+1));
  const tilt=Math.max(0,lean-21)*.45;
- if(p.assisted)return clamp(s.risk+9+(1-p.effectiveCovered)*11+Math.min(14,tilt),0,100);
- if(p.rating==='perfect')return Math.max(0,s.risk-13+Math.min(9,tilt));
- if(p.rating==='close')return clamp(s.risk+overhang*16+edge*4+tilt-5,0,100);
- return clamp(s.risk+7+overhang*20+edge*7+tilt,0,100);
+ let gain;
+ if(p.assisted)gain=9+(1-p.effectiveCovered)*11+Math.min(14,tilt);
+ else if(p.rating==='perfect')gain=-13+Math.min(9,tilt);
+ else if(p.rating==='close')gain=overhang*16+edge*4+tilt-5;
+ else gain=7+overhang*20+edge*7+tilt;
+ if(gain>0&&s.buffs.stable>0)gain*=STABLE_SCALE;
+ return clamp(s.risk+gain,0,100);
 }
 function collapse(s,reason){s.status='lost';s.reason=reason;}
 function miss(s){
@@ -53,7 +66,7 @@ function miss(s){
 function land(s,cartX,itemX,w){
  const p=placement(s,cartX,itemX,w),result={...p,festival:false,star:false};
  if(s.status!=='playing'||p.rating==='miss')return result;
- s.risk=balance(s,p);s.layers.push({x:p.x,w:p.w});s.level++;
+ s.risk=balance(s,p);s.layers.push({x:p.x,w:p.w});s.level++;s.narrowRun=p.w<66?s.narrowRun+1:0;s.sinceBroad=p.w<93?s.sinceBroad+1:0;
  if(p.rating==='perfect'){
   s.combo++;s.perfect++;s.bestCombo=Math.max(s.bestCombo,s.combo);s.score+=30;
   if(s.combo%STREAK===0){s.festival=FESTIVAL;result.festival=true;s.hearts=Math.min(HEARTS,s.hearts+1);}
@@ -62,7 +75,7 @@ function land(s,cartX,itemX,w){
  if(s.risk>=100)collapse(s,'tilt');
  return result;
 }
-function light(s){if(s.status!=='playing')return;s.score+=30;s.lights++;s.risk=Math.max(0,s.risk-4);}
+function light(s){if(s.status!=='playing')return;s.score+=30;s.lights++;s.risk=Math.max(0,s.risk-4);s.buffs.stable=STABLE_DURATION;}
 function power(s,kind){
  if(s.status!=='playing')return false;
  if(kind==='compress'){s.spacing=Math.max(MIN_SPACING,s.spacing-3);s.risk=Math.max(0,s.risk-27);return true;}
@@ -74,11 +87,11 @@ function attract(s,cartX,itemX){
  const dx=cartX+support(s).x-itemX,dist=Math.abs(dx);
  return dist<=14||dist>116?0:Math.sign(dx)*Math.min(91,(dist-14)*1.25);
 }
-function tick(s,dt){if(s.status!=='playing')return;s.elapsed+=dt;s.festival=Math.max(0,s.festival-dt);for(const k of ['wide','magnet'])s.buffs[k]=Math.max(0,s.buffs[k]-dt);}
+function tick(s,dt){if(s.status!=='playing')return;s.elapsed+=dt;s.festival=Math.max(0,s.festival-dt);for(const k of ['wide','magnet','stable'])s.buffs[k]=Math.max(0,s.buffs[k]-dt);}
 function difficulty(s){
  const l=s.level,wind=clamp((l-3)*4.0,0,49);
- return {speed:clamp(98+l*7.3,98,276),width:totalWidth(l),wind};
+ return {speed:clamp(98+l*7.3,98,276),wind};
 }
-const core={CART_Y,TRAY,LEVEL_HEIGHT,MIN_WIDTH,STAR_AT,HEARTS,STREAK,FESTIVAL,BUFF_DURATION,WIDE_EXTRA,MIN_SPACING,fresh,totalWidth,surface,support,receiving,viewport,fall,worldTop,crossesSurface,overlap,classify,placement,land,miss,light,power,attract,tick,difficulty};
+const core={CART_Y,TRAY,LEVEL_HEIGHT,MIN_WIDTH,MAX_WIDTH,STAR_AT,HEARTS,STREAK,FESTIVAL,BUFF_DURATION,WIDE_EXTRA,MIN_SPACING,STABLE_DURATION,STABLE_SCALE,fresh,nextWidth,surface,support,receiving,viewport,fall,worldTop,crossesSurface,overlap,classify,placement,land,miss,light,power,attract,tick,difficulty};
 if(typeof module!=='undefined')module.exports=core;else global.ElfCore=core;
 })(globalThis);

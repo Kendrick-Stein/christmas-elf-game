@@ -13,7 +13,7 @@ try{const previous=localStorage.getItem(sensitivityKey);if(Object.hasOwn(sensiti
 $('sensitivity').value=sensitivity;
 $('sensitivity').addEventListener('change',e=>{const key=e.target.value;if(Object.hasOwn(sensitivityScale,key)){sensitivity=key;try{localStorage.setItem(sensitivityKey,key);}catch{}}});
 let mode='ready',state=C.fresh(),x=W/2,leaf=null,lights=[],pickup=null,effects=[],camera=0,wait=.4,last=0,flick=0,clock=0,wave=0,bulbWait=0,notice=0,display='',muted=true,audio=null;
-const POWERS=['compress','wide','magnet'],P_LABEL={compress:'压缩',wide:'加宽',magnet:'吸附'},P_ICON={compress:'⇣',wide:'↔',magnet:'∪'},P_COLOR={compress:'#f8b0b4',wide:'#ffde8a',magnet:'#a5f1df'};let nextPower=3,powerCount=0;
+const POWERS=['compress','wide','magnet'],P_LABEL={compress:'压缩',wide:'加宽',magnet:'吸附',stable:'稳固'},P_ICON={compress:'⇣',wide:'↔',magnet:'∪',stable:'✦'},P_COLOR={compress:'#f8b0b4',wide:'#ffde8a',magnet:'#a5f1df'};let nextPower=3,powerCount=0;
 let best={level:0,score:0};const recordKey='snow-pine-tower-v3';
 try{const raw=JSON.parse(localStorage.getItem(recordKey));if(raw&&Number.isFinite(raw.level)&&Number.isFinite(raw.score))best={level:Math.max(0,raw.level),score:Math.max(0,raw.score)};}catch{}
 const shell=$('shell'),rules=$('rules'),focusToggle=$('focusToggle'),helpToggle=$('helpToggle'),helpClose=$('helpClose');
@@ -72,7 +72,7 @@ function createLeaf(){
  const reachableEnd=clamp(supportX+distance,Math.max(116,CL+top.x-12),Math.min(W-116,CR+top.x+12));
  const startX=clamp(reachableEnd-wind()*flight*.8,42,W-42);
  const sign=Math.random()<.5?-1:1, wobble=state.level>7?sign*(7+Math.random()*15):0;
- const vy=d.speed+Math.random()*9;leaf={x:startX,...enterSky(y0,vy),w:Math.max(C.MIN_WIDTH,d.width+(Math.random()-.5)*10),vy,vx:wind(),wobble,phase:0,goingPast:false};
+ const vy=d.speed+Math.random()*9;leaf={x:startX,...enterSky(y0,vy),w:C.nextWidth(state),vy,vx:wind(),wobble,phase:0,goingPast:false};
  wave++;
 }
 function createBulb(){
@@ -159,7 +159,7 @@ function update(dt){
    const o=lights[i],old=o.y;const driftDt=falling(o,dt);o.x=clamp(o.x+o.vx*driftDt,28,W-28);
    const y=C.surface(state),top=C.receiving(state);
    if(C.crossesSurface(old,o.y,topY,y)&&Math.abs(o.x-(x+top.x))<top.w*.55+12){
-     lights.splice(i,1);C.light(state);label('彩灯 +30 · 减晃',o.x,y-camera-29,'#ffd47e');tone('bright');
+     lights.splice(i,1);C.light(state);label('彩灯 +30 · 稳固',o.x,y-camera-29,'#ffd47e');tone('bright');
    }else if(o.y>camera+H+24)lights.splice(i,1);
  }
  flick=Math.max(0,flick-dt*3);
@@ -237,7 +237,7 @@ function frame(t){
 }
 function radiusMagnet(s){return Math.min(44,25+s.level);}
 function hud(){
- const r=Math.round(state.risk),windNow=wind(),tag=[state.score,state.level,state.combo,state.hearts,r,windNow,best.level,best.score,mode,Math.ceil(state.buffs.wide),Math.ceil(state.buffs.magnet)].join(':');
+ const r=Math.round(state.risk),windNow=wind(),tag=[state.score,state.level,state.combo,state.hearts,r,windNow,best.level,best.score,mode,Math.ceil(state.buffs.wide),Math.ceil(state.buffs.magnet),Math.ceil(state.buffs.stable)].join(':');
  if(display===tag)return;display=tag;
  $('score').textContent=String(state.score).padStart(3,'0');$('combo').innerHTML=state.combo+'<span> / 4</span>';
  $('progress').innerHTML=state.level+'<span> 层</span>';$('risk').innerHTML=r+'<span>%</span>';
@@ -245,7 +245,7 @@ function hud(){
  $('chapter').textContent=state.level>=C.STAR_AT?'✦ 星树已点亮':state.level>=7?'紧张的风雪':'稳稳起步';
  $('wind').textContent=windNow===0?'无风':(windNow>0?'来风 →':'← 来风')+(Math.abs(windNow)>30?' · 强风':'');
  $('hearts').textContent='♥'.repeat(state.hearts)+'♡'.repeat(C.HEARTS-state.hearts);$('hearts').setAttribute('aria-label','生命 '+state.hearts);
- const active=['wide','magnet'].filter(k=>state.buffs[k]>0),buffs=$('buffs');
+ const active=['stable','wide','magnet'].filter(k=>state.buffs[k]>0),buffs=$('buffs');
  buffs.hidden=!active.length||mode!=='playing';
  buffs.innerHTML=active.map(k=>'<span class="'+k+'">'+P_ICON[k]+' '+P_LABEL[k]+' '+Math.ceil(state.buffs[k])+'s</span>').join('');
  $('best').textContent='最高 '+best.level+' 层 · 最高 '+best.score+' 分';screen.dataset.stage=Math.min(3,Math.floor(state.level/4));
