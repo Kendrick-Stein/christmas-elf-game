@@ -152,3 +152,24 @@ test('stability dampens wide-assisted risk and cannot hide a true collapse above
  C.light(mayfall);mayfall.risk=99;C.land(mayfall,320,shifted,100);
  a.equal(mayfall.risk,100);a.equal(mayfall.status,'lost');
 });
+test('ordinary lights are smaller rewards and never shorten festival stability',()=>{
+ const s=C.fresh();s.risk=14;
+ a.equal(C.light(s,'string'),12);
+ a.deepEqual([s.score,s.risk,s.lights,s.buffs.stable,s.hearts],[12,12,1,2.5,5]);
+ C.tick(s,2.5);a.equal(s.buffs.stable,0);
+ C.light(s);C.tick(s,1);C.light(s,'string');
+ a.deepEqual([s.score,s.risk,s.lights,s.buffs.stable,s.hearts],[54,6,3,5,5]);
+});
+test('active clock restores one heart on 30-second boundaries, not repeatedly or after banking',()=>{
+ const s=C.fresh();s.hearts=2;
+ a.equal(C.tick(s,29.999),false);a.equal(s.hearts,2);
+ a.equal(C.tick(s,.001),true);a.equal(s.hearts,3);
+ a.equal(C.tick(s,.001),false);a.equal(s.hearts,3);
+ a.equal(C.tick(s,30),true);a.equal(s.hearts,4);
+ a.equal(C.tick(s,30),true);a.equal(s.hearts,5);
+ a.equal(C.tick(s,30),false);a.equal(s.hearts,5);
+ s.hearts--;a.equal(C.tick(s,29),false);a.equal(s.hearts,4);
+ a.equal(C.tick(s,1),true);a.equal(s.hearts,5);
+ s.status='lost';s.hearts=0;a.equal(C.tick(s,90),false);a.equal(s.hearts,0);
+ const replay=C.fresh();replay.hearts=4;a.equal(C.tick(replay,29),false);a.equal(replay.hearts,4);
+});

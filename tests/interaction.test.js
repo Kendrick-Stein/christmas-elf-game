@@ -1,7 +1,7 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const read=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
-function harness(width=640,height=420){
+function harness(width=640,height=420,reduced=true){
  const size={width,height};
  const elements=new Map(),freshNode=()=>{const events=new Map(),classes=new Set(),attrs=new Map(),span={textContent:''};return {
   addEventListener:(n,fn)=>events.set(n,fn),fire:(n,e={})=>events.get(n)?.({preventDefault(){},...e}),textContent:'',innerHTML:'',hidden:false,style:{setProperty(){}},focus(){d.activeElement=this;},setPointerCapture(){},getBoundingClientRect:()=>({...size,left:0,right:size.width}),querySelector:()=>span,
@@ -10,10 +10,12 @@ function harness(width=640,height=420){
  const d=freshNode(),w=freshNode(),stored=new Map();
  const $=id=>{if(!elements.has(id))elements.set(id,freshNode());return elements.get(id);};
  d.getElementById=$;d.hidden=false;
- const leaves=[],elves=[];let transform=[];
- $('field').getContext=()=>new Proxy({}, {get:(o,k)=>o[k]??(k==='setTransform'?((...args)=>{transform=args;}):k==='clearRect'?()=>{leaves.length=0;elves.length=0;}:k==='drawImage'?(img,x,y,w,h)=>{if(img.src.includes('/pixel-leaf.svg'))leaves.push({x:x+w/2,y:y+h/2,w,h});if(img.src.includes('/pixel-sled.svg'))elves.push(x+w/2);}:()=>{})});
+ const leaves=[],elves=[],pixels=[],labels=[];let transform=[],airborne=false;
+ $('field').getContext=()=>new Proxy({}, {get:(o,k)=>o[k]??(k==='setTransform'?((...args)=>{transform=args;}):k==='clearRect'?()=>{leaves.length=0;elves.length=0;pixels.length=0;labels.length=0;airborne=false;}:
+ k==='setLineDash'?a=>{if(a.length)airborne=true;}:k==='fillRect'?(...pos)=>pixels.push({pos,color:o.fillStyle,alpha:o.globalAlpha}):
+ k==='fillText'?t=>labels.push(t):k==='drawImage'?(img,x,y,w,h)=>{if(img.src.includes('/pixel-branch-'))leaves.push({x:x+w/2,y:y+h/2,w,h:airborne?0:31,actualHeight:h,src:img.src});if(img.src.includes('/pixel-sled.svg'))elves.push(x+w/2);}:()=>{})});
  let raf,time=0;
- const c=vm.createContext({window:w,document:d,devicePixelRatio:1,matchMedia:()=>({matches:true}),Image:class{constructor(){this.complete=true;this.naturalWidth=160;}},requestAnimationFrame:fn=>{raf=fn;},localStorage:{getItem:k=>stored.get(k),setItem:(k,v)=>stored.set(k,v)}});
+ const c=vm.createContext({window:w,document:d,devicePixelRatio:1,matchMedia:q=>({matches:q.includes("reduced-motion")?reduced:true}),Image:class{constructor(){this.complete=true;this.naturalWidth=160;}},requestAnimationFrame:fn=>{raf=fn;},localStorage:{getItem:k=>stored.get(k),setItem:(k,v)=>stored.set(k,v)}});
  Object.assign(c,{console});
  vm.runInContext('globalThis.Math.random=()=>.50',c);
  vm.runInContext(read('game-core.js'),c);
@@ -21,7 +23,7 @@ function harness(width=640,height=420){
  vm.runInContext(read('game.js'),c);
  let tracking=false;
  const point=x=>{$('field').fire('pointerdown',{pointerId:1,clientX:x});$('field').fire('pointermove',{pointerId:1,clientX:x});$('field').fire('pointerup',{pointerId:1});};
- return {$,w,d,point,leaves,elves,stored,transform:()=>transform,setSize:(w,h)=>{size.width=w;size.height=h;},follow:b=>tracking=b,advance:ms=>{for(let i=0;i<ms;i+=16){
+ return {$,w,d,point,leaves,elves,pixels,labels,stored,transform:()=>transform,setSize:(w,h)=>{size.width=w;size.height=h;},follow:b=>tracking=b,advance:ms=>{for(let i=0;i<ms;i+=16){
       if(tracking && leaves.length){const o=leaves.find(x=>x.h!==31&&x.y>0);if(o)point(o.x);}
       raf(time+=16);
  }}};
@@ -138,4 +140,60 @@ test('actual rendered late falling leaves keep getting wider and narrower while 
  }
  const late=all.slice(12);
  assert(late.length>10);assert(late.some((w,i)=>i&&w>late[i-1]+1));assert(late.some((w,i)=>i&&w<late[i-1]-1));assert($('panel').hidden);
+});
+test('same immutable branch art and dimensions in flight and after landing; actual landing offsets survive',()=>{
+ const {$,point,advance,leaves}=harness();$('start').fire('click');
+ advance(1300);
+ const falling=leaves.find(o=>o.h!==31);
+ assert(falling);assert.equal(falling.actualHeight,26);
+ point(297);
+ advance(2700);
+ const placed=leaves.find(o=>o.h===31);
+ assert(placed);assert.equal(placed.src,falling.src);
+ assert.equal(placed.w,falling.w);assert.equal(placed.actualHeight,falling.actualHeight);
+ assert.equal(placed.x,falling.x);assert.notEqual(placed.x,297);
+ point(340);advance(16);assert.equal(leaves.find(o=>o.h===31).x,340);
+});
+test('ordinary strings arrive before a four-catch streak, attach and reward a smaller bonus, optional miss does not drain hearts',()=>{
+ const get=harness();get.$('start').fire('click');
+ get.advance(7550);
+ assert(get.pixels.some(o=>o.color==='#98aebb')); // airborne cord
+ assert(parseInt(get.$('progress').innerHTML,10)<4);
+ let caught=false,cabled=false;
+ for(let i=0;i<150;i++){
+   get.advance(16);caught ||= get.labels.some(t=>t.includes('灯串 +12')); cabled ||= get.pixels.some(o=>o.color==='#214739');
+ }
+ assert(caught);assert(cabled);assert.equal(get.$('hearts').getAttribute('aria-label'),'生命 5');
+ const miss=harness();miss.$('start').fire('click');miss.advance(7800);
+ miss.point(409);miss.advance(1600);
+ assert.equal(miss.$('hearts').getAttribute('aria-label'),'生命 5');
+ assert.equal(miss.$('score').textContent,'060');assert(!miss.pixels.some(o=>o.color==='#214739'));
+});
+test('late ornaments shimmer with differing phases and are static for reduced motion',()=>{
+ function phases(reduced){
+   const h=harness(640,420,reduced);h.$('start').fire('click');h.follow(true);h.advance(36000);
+   assert.match(h.$('chapter').textContent,/星树已点亮/);
+   h.follow(false);h.w.fire('keydown',{key:'Escape'});
+   const read=()=>h.pixels.filter(o=>['#ffd979','#ff849b','#88edcf','#9bb9ff'].includes(o.color)&&o.pos[2]===5).map(o=>o.alpha);
+   h.advance(16);const first=read();h.advance(432);
+   assert(first.length>=5);return [first,read()];
+ }
+ const [first,next]=phases(false),[fixed,later]=phases(true);
+ assert.equal(first.length,next.length);
+ assert(first.some((v,i)=>v<next[i])&&first.some((v,i)=>v>next[i]));
+ assert.deepEqual(fixed,later);
+});
+test('timed heal waits for active play after pausing or hiding and supplies visible feedback',()=>{
+ const h=harness(),{$,d,w}=h;const hearts=()=>$('hearts').getAttribute('aria-label');
+ $('start').fire('click');h.follow(true);h.advance(24000);
+ h.follow(false);h.point(590);
+ let spent=24000;
+ while(hearts()==='生命 5'&&spent<28700){h.advance(16);spent+=16;}
+ assert.equal(hearts(),'生命 4');
+ d.hidden=true;d.fire('visibilitychange');assert.equal($('panelTitle').textContent,'雪夜暂停');
+ h.advance(42000);assert.equal(hearts(),'生命 4');assert(!$('panel').hidden);
+ d.hidden=false;w.fire('keydown',{key:'Escape'});h.follow(true);
+ let feedback=false;
+ while(spent<31000&&!feedback){h.advance(16);spent+=16;feedback=h.labels.includes('+1 心');}
+ assert(feedback);assert(spent>=29960);assert.equal(hearts(),'生命 5');
 });
