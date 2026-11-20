@@ -9,22 +9,22 @@ function context(){
   fillText(t){labels.push(t);},createLinearGradient(){return {addColorStop(){}};},
   save(){},restore(){}};
 }
-function harness({nav={},toBlob=cb=>cb(artifact),sourceReady=()=>null}={}){
- const elements=new Map(),downloads=[],urls=[],revoked=[],timers=[],winEvents=new Map(),draw=[];
+function harness({nav={},toBlob=cb=>cb(artifact),sourceReady=()=>null,language='zh'}={}){
+ const elements=new Map(),downloads=[],urls=[],revoked=[],timers=[],winEvents=new Map(),draw=[],contexts=[],localeListeners=[];
  function el(){
   const events=new Map(),attrs=new Map(),classes=new Set();
-  return {style:{},attrs,classes,hidden:false,events,called:0,classList:{add:x=>classes.add(x),remove:x=>classes.delete(x)},
+  return {firstChild:{nodeType:3,nodeValue:""},style:{},attrs,classes,hidden:false,events,called:0,classList:{add:x=>classes.add(x),remove:x=>classes.delete(x)},
    addEventListener:(n,f)=>events.set(n,f),fire:n=>events.get(n)?.(),focus(){this.focused=true;},select(){this.selected=true;},
    setAttribute:(k,v)=>attrs.set(k,v),click(){downloads.push([this.href,this.download]);},remove(){this.removed=true;},
-   getBoundingClientRect:()=>({width:300,height:160}),getContext:context,toBlob};
+   getBoundingClientRect:()=>({width:300,height:160}),getContext(){const c=context();contexts.push(c);return c;},toBlob};
  }
  const $=id=>{if(!elements.has(id))elements.set(id,el());return elements.get(id);};
  const document={getElementById:$,createElement:el,body:{appendChild(){}}};
- const win={document,navigator:nav,File:class{constructor(parts,name,o){Object.assign(this,{parts,name,type:o.type});}},
+ const win={document,navigator:nav,ElfLocale:{lang:()=>language,onChange:fn=>localeListeners.push(fn)},File:class{constructor(parts,name,o){Object.assign(this,{parts,name,type:o.type});}},
   URL:{createObjectURL(blob){assert.equal(blob,artifact);const url='blob:poster/'+(urls.length+1);urls.push(url);return url;},revokeObjectURL:u=>revoked.push(u)},
   setTimeout:f=>timers.push(f),addEventListener:(n,f)=>winEvents.set(n,f),
   ElfShareSource:{ready:sourceReady,snapshot:()=>tall,draw:(_ctx,s,g)=>draw.push({s,g})}};
- return {$,api:S.init(win),downloads,timers,revoked,draw,event:n=>winEvents.get(n)?.({})};
+ return {$,api:S.init(win),downloads,timers,revoked,draw,contexts,switchLanguage:next=>{language=next;localeListeners.forEach(fn=>fn(next));},event:n=>winEvents.get(n)?.({})};
 }
 const tall=Object.freeze({score:358,level:89,spacing:19,layers:Array.from({length:89},(_,i)=>({x:i*6-100,w:80}))});
 test('poster 1080 square; authentic tilted/tall snapshot fits, with stable QR and actual stats',()=>{
@@ -76,4 +76,32 @@ test('null PNG is recoverable; stale async preparation cannot leak into replay',
  const slow=harness({sourceReady:()=>new Promise(res=>done=res)});
  slow.api.settle(tall);await flush();slow.api.reset();done();await flush();
  assert(slow.$('shareActions').hidden);assert.equal(slow.draw.length,0);
+});
+
+test('English settlement localizes PNG, native file title, controls and file download; effective language can switch',async()=>{
+ let shared;
+ const h=harness({language:'en',nav:{canShare:()=>true,share:data=>{shared=data;return Promise.resolve();}}});
+ assert.equal(h.$('saveTree').textContent,'Save my tree');assert.equal(h.$('shareTree').textContent,'Share');
+ assert.equal(h.$('shareLinkLabel').firstChild.nodeValue,'Copy game link ');
+ assert.equal(h.$('shareLink').attrs.get('aria-label'),'Copy game link');
+ h.api.settle(tall);assert.equal(h.$('shareStatus').textContent,'Preparing your image…');await flush();
+ let labels=h.contexts.at(-1).labels;
+ assert(labels.includes('My Christmas Tree'));assert(labels.includes('89 layers'));assert(!labels.some(x=>/[\u4e00-\u9fff]/.test(x)));
+ h.$('saveTree').fire('click');assert.match(h.downloads[0][1],/^My-Christmas-Tree\.png$/);
+ h.$('shareTree').fire('click');assert.equal(shared.title,'My Christmas Tree');assert.equal(shared.files[0].name,'My-Christmas-Tree.png');
+ await flush();assert.equal(h.$('shareStatus').textContent,'Sharing completed.');
+ h.switchLanguage('zh');assert.equal(h.$('saveTree').attrs.get('aria-disabled'),'true');
+ await flush();labels=h.contexts.at(-1).labels;assert(labels.includes('我的圣诞树'));assert(labels.includes('89 层'));
+ h.$('saveTree').fire('click');assert.equal(h.downloads[1][1],S.FILE_NAME);
+});
+test('settlement language rebuild ignores older PNG work and manual fallback localization follows active language',async()=>{
+ const encoding=[];const h=harness({toBlob:cb=>encoding.push(cb)});
+ h.api.settle(tall);await flush();assert.equal(encoding.length,1);
+ h.switchLanguage('en');await flush();assert.equal(encoding.length,2);
+ encoding[0](artifact);await flush();assert.equal(h.$('saveTree').attrs.get('aria-disabled'),'true');
+ assert.equal(h.$('shareStatus').textContent,'Preparing your image…');
+ encoding[1](artifact);await flush();
+ h.$('shareTree').fire('click');assert(!h.$('shareLinkLabel').hidden);
+ assert.match(h.$('shareStatus').textContent,/Automatic copy/);
+ h.$('saveTree').fire('click');assert.equal(h.downloads[0][1],'My-Christmas-Tree.png');
 });

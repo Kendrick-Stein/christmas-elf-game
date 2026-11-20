@@ -1,27 +1,30 @@
 'use strict';
 const {test}=require('node:test'),assert=require('node:assert/strict'),vm=require('node:vm'),fs=require('node:fs'),path=require('node:path');
 const read=f=>fs.readFileSync(path.join(__dirname,'..',f),'utf8');
-function harness(width=640,height=420,reduced=true,eventPick=null,random=.50){
+function harness(width=640,height=420,reduced=true,eventPick=null,random=.50,options={}){
  const size={width,height};
  const elements=new Map(),freshNode=()=>{const events=new Map(),classes=new Set(),attrs=new Map(),span={textContent:''};return {
   addEventListener:(n,fn)=>events.set(n,fn),fire:(n,e={})=>events.get(n)?.({preventDefault(){},...e}),textContent:'',innerHTML:'',hidden:false,style:{setProperty(){}},focus(){d.activeElement=this;},setPointerCapture(){},getBoundingClientRect:()=>({...size,left:0,right:size.width}),querySelector:()=>span,
-  dataset:{},classList:{add:x=>classes.add(x),remove:x=>classes.delete(x),toggle:(x,b)=>b?classes.add(x):classes.delete(x),contains:x=>classes.has(x)},setAttribute:(n,v)=>attrs.set(n,v),getAttribute:n=>attrs.get(n)
+  dataset:{},classList:{add:x=>classes.add(x),remove:x=>classes.delete(x),toggle:(x,b)=>b?classes.add(x):classes.delete(x),contains:x=>classes.has(x)},setAttribute:(n,v)=>attrs.set(n,v),getAttribute:n=>attrs.get(n),removeAttribute:n=>attrs.delete(n)
  };};
- const d=freshNode(),w=freshNode(),stored=new Map();
+ const d=freshNode(),w=freshNode(),stored=options.storage||new Map();
+ if(!options.firstVisit&&!stored.has("snow-pine-language-v1"))stored.set("snow-pine-language-v1","zh");
  const $=id=>{if(!elements.has(id))elements.set(id,freshNode());return elements.get(id);};
- d.getElementById=$;d.hidden=false;
+ d.getElementById=$;d.hidden=false;d.documentElement={};d.querySelectorAll=()=>[];d.querySelector=()=>null;
+ const picker=$('languagePicker');picker.showModal=()=>{picker.open=true;};picker.close=()=>{picker.open=false;};
  const leaves=[],elves=[],pixels=[],labels=[],paints=[];let transform=[],airborne=false;
  $('field').getContext=()=>new Proxy({}, {get:(o,k)=>o[k]??(k==='setTransform'?((...args)=>{transform=args;}):k==='clearRect'?()=>{leaves.length=0;elves.length=0;pixels.length=0;labels.length=0;paints.length=0;airborne=false;}:
  k==='setLineDash'?a=>{if(a.length)airborne=true;}:k==='fillRect'?(...pos)=>pixels.push({pos,color:o.fillStyle,alpha:o.globalAlpha}):
  k==='stroke'?()=>paints.push(o.strokeStyle):k==='fillText'?t=>labels.push(t):k==='drawImage'?(img,x,y,w,h)=>{if(img.src.includes('/pixel-branch-')){paints.push(airborne?'air-branch':'branch');leaves.push({x:x+w/2,y:y+h/2,w,h:airborne?0:31,actualHeight:h,src:img.src});}if(img.src.includes('/pixel-sled.svg'))elves.push(x+w/2);if(img.src.includes('/pixel-bell.svg'))paints.push(airborne?'air-bell':'bell');if(img.src.includes('/pixel-cane.svg'))paints.push(airborne?'air-cane':'cane');}:()=>{})});
  let raf,time=0;
- const c=vm.createContext({window:w,document:d,devicePixelRatio:1,matchMedia:q=>({matches:q.includes("reduced-motion")?reduced:true}),Image:class{constructor(){this.complete=true;this.naturalWidth=160;}},requestAnimationFrame:fn=>{raf=fn;},localStorage:{getItem:k=>stored.get(k),setItem:(k,v)=>stored.set(k,v)}});
+ const c=vm.createContext({window:w,document:d,devicePixelRatio:1,matchMedia:q=>({matches:q.includes("reduced-motion")?reduced:true}),Image:class{constructor(){this.complete=true;this.naturalWidth=160;}},requestAnimationFrame:fn=>{raf=fn;},localStorage:{getItem:k=>{if(options.denyStorage&&k==='snow-pine-language-v1')throw Error('denied');return stored.get(k);},setItem:(k,v)=>{if(options.denyStorage&&k==='snow-pine-language-v1')throw Error('denied');stored.set(k,v);}}});
  Object.assign(c,{console});
  vm.runInContext('globalThis.Math.random=()=>'+random,c);
  vm.runInContext(read('game-core.js'),c);
  w.ElfCore=c.ElfCore;
  if(eventPick!==null){const pick=w.ElfCore.nextEvent;w.ElfCore.nextEvent=(...args)=>pick(...args,()=>eventPick);}
 
+ vm.runInContext(read('locale.js'),c);
  vm.runInContext(read('game.js'),c);
  let tracking=false;
  const point=x=>{$('field').fire('pointerdown',{pointerId:1,clientX:x});$('field').fire('pointermove',{pointerId:1,clientX:x});$('field').fire('pointerup',{pointerId:1});};
@@ -299,4 +302,40 @@ test('far touch taps and drags do not move sled, while desktop pointing remains 
  advance(16);assert.equal(elves[0],center);
  field.fire('pointerup',{pointerId:46});
  point(300);advance(16);assert(Math.abs(elves[0]-300*640/390)<=.51);
+});
+
+test('first visit requires an explicit choice, persists it and supports unavailable storage',()=>{
+ const h=harness(390,650,true,null,.5,{firstVisit:true}),{$,d,stored}=h;
+ assert($('languagePicker').open);assert($('languageBack').hidden);assert.equal($('languageZH').getAttribute('aria-pressed'),undefined);assert.equal(d.activeElement,$('languageZH'));
+ $('languagePicker').fire('cancel');assert($('languagePicker').open);
+ $('start').fire('click');assert($('languagePicker').open);
+ $('languageEN').fire('click');assert(!$('languagePicker').open);
+ assert.equal(d.documentElement.lang,'en');assert.equal($('languageEN').getAttribute('aria-pressed'),'true');assert.equal(d.title,'Pine & Snow · Tree Stacker');
+ assert.equal($('panelTitle').textContent,'Stack as high as you can');
+ assert.equal(d.activeElement,$('start'));assert.equal(stored.get('snow-pine-language-v1'),'en');
+ const reload=harness(640,420,true,null,.5,{storage:stored});
+ assert(!reload.$('languagePicker').open);assert.equal(reload.d.documentElement.lang,'en');
+ const denied=harness(640,420,true,null,.5,{firstVisit:true,denyStorage:true});
+ denied.$('languageZH').fire('click');assert(!denied.$('languagePicker').open);
+ denied.$('start').fire('click');assert(denied.$('panel').hidden);
+});
+test('focus-mode language switch freezes only the modal time and preserves live run',()=>{
+ const h=harness(390,650),{$,d,w}=h;
+ $('start').fire('click');h.follow(true);h.advance(10500);
+ const score=$('score').textContent,level=parseInt($('progress').innerHTML,10),hearts=$('hearts').getAttribute('aria-label');
+ assert(+score>0);assert(level>=2);
+ h.follow(false);
+ $('focusToggle').fire('click');$('focusLanguageToggle').fire('click');
+ assert($('languagePicker').open);assert(!$('languageBack').hidden);
+ h.advance(12000);assert.equal($('score').textContent,score);assert.equal($('hearts').getAttribute('aria-label'),hearts);
+ $('languageEN').fire('click');assert.equal(d.activeElement,$('focusLanguageToggle'));
+ assert(!$('languagePicker').open);assert($('panel').hidden);assert($('shell').classList.contains('focus-view'));
+ assert.equal($('score').textContent,score);assert.equal($('progress').innerHTML,level+'<span> layers</span>');
+ assert.match($('hearts').getAttribute('aria-label'),/Lives:/);
+ $('focusLanguageToggle').fire('click');$('languagePicker').fire('cancel');
+ assert(!$('languagePicker').open);assert.equal(d.documentElement.lang,'en');
+ w.fire('keydown',{key:'Escape'});w.fire('keydown',{key:'Escape'});
+ assert.equal($('panelTitle').textContent,'Paused');
+ $('languageToggle').fire('click');$('languageZH').fire('click');
+ assert.equal($('panelTitle').textContent,'雪夜暂停');assert.equal($('score').textContent,score);
 });
