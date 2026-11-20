@@ -193,3 +193,10 @@ test('decoration sweep catches touch at high dt and a moving cart without endpoi
  a.equal(sweep.row,0);a(sweep.t>0&&sweep.t<1);
  a.equal(C.decorationContact(s,300,300,300,360,300,363,'bauble'),null);
 });
+test('a candy cane catches an actual side branch and ignoring it does not change the run',()=>{
+ const s=C.fresh();s.layers=[{x:0,w:112},{x:38,w:46}];s.level=2;
+ const before=JSON.stringify(s);
+ a.equal(C.decorationContact(s,300,300,261,270,261,360,'cane').row,0);
+ a.equal(C.decorationContact(s,300,300,232,270,232,360,'cane'),null);
+ a.equal(JSON.stringify(s),before);
+});

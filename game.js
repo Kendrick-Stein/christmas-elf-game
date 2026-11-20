@@ -3,8 +3,9 @@
 const C=window.ElfCore,$=id=>document.getElementById(id),canvas=$('field'),g=canvas.getContext('2d'),screen=$('screen'),panel=$('panel'),start=$('start'),left=$('left'),right=$('right'),banner=$('banner');
 const W=640,H=420,CL=46,CR=W-46,reduce=matchMedia('(prefers-reduced-motion: reduce)').matches;
 const clamp=(x,a,b)=>Math.max(a,Math.min(x,b));
-const art={};for(const n of ['sled',...Array.from({length:8},(_,i)=>'branch-'+i)]){art[n]=new Image();art[n].src='./assets/pixel-'+n+'.svg';}
+const art={};for(const n of ['sled','cane',...Array.from({length:8},(_,i)=>'branch-'+i)]){art[n]=new Image();art[n].src='./assets/pixel-'+n+'.svg';}
 const snow=Array.from({length:42},(_,i)=>({x:(i*137.5)%W,y:(i*83.4)%H,r:1+i%3*.42,v:8+i%7*2}));
+const ORDINARY_ORNAMENTS=['string','bow','string','cane','string','bauble'];
 const TINTS=['#ffd979','#ff849b','#88edcf','#9bb9ff'];
 const tones={bad:[176,132],nice:[523],bright:[659,784],festival:[523,659,784,1047]};
 const motion={keys:new Set(),buttons:new Map(),pointer:null};
@@ -165,7 +166,7 @@ function update(dt){
  }
  stringWait-=dt;
  if(stringWait<=0&&state.level>0&&state.festival<=0&&!lights.some(o=>o.kind!=='festival')&&lights.length<6){
-   lights.push(createBulb(['string','bow','string','bauble'][ordinaryIndex++%4]));stringWait=6+Math.random()*2;
+   lights.push(createBulb(ORDINARY_ORNAMENTS[ordinaryIndex++%ORDINARY_ORNAMENTS.length]));stringWait=6+Math.random()*2;
  }
  if(state.festival>0){bulbWait-=dt;if(bulbWait<=0&&lights.length<6){lights.push(createBulb('festival'));bulbWait=.72;}}
  for(let i=lights.length-1;i>=0;i--){
@@ -178,7 +179,7 @@ function update(dt){
      const str=o.kind==='string', fest=o.kind==='festival';
      const points=fest||str?C.light(state,o.kind):8;
      if(!fest&&!str){state.score+=points;state.decorations++;}
-     const name={festival:'彩灯',string:'灯串',bow:'蝴蝶结',bauble:'彩球'}[o.kind];
+     const name={festival:'彩灯',string:'灯串',bow:'蝴蝶结',bauble:'彩球',cane:'拐杖糖'}[o.kind];
      label(name+' +'+points+(str||fest?' · 稳固':''),x+state.layers[hit.row].x+hit.dx,
        clamp(C.CART_Y-hit.row*state.spacing+hit.dy-camera-22,42,340),'#ffd47e');tone('bright');
    }else if(o.y>C.CART_Y+20||o.y>camera+view.worldHeight-view.extra+28)lights.splice(i,1);
@@ -311,6 +312,9 @@ function drawOrnament(ctx,kind,x,y,span,seed,time,still,air=false,anchorX=x,anch
    ctx.fillStyle='#26313f';ctx.fillRect(px-5,py-3,10,9);
    ctx.fillStyle=TINTS[seed%4];ctx.fillRect(px-6,py-2,12,7);ctx.fillRect(px-4,py-4,8,11);
    ctx.fillStyle='#fff1d3';ctx.fillRect(px-3,py-2,3,3);
+ }else if(kind==='cane'){
+   hanging(ctx,anchorX,anchorY,x+2,y+4);
+   sprite('cane',Math.round(x),Math.round(y)+13,18,22,ctx);
  }else if(kind==='bow'){
    hanging(ctx,anchorX,anchorY,x,y+2);
    const px=Math.round(x),py=Math.round(y)+4;
@@ -361,7 +365,7 @@ function shareBounds(snap){
  let left=-81,right=81,top=-56,bottom=40;
  for(const [i,l] of snap.layers.entries()){
    left=Math.min(left,l.x-l.w/2-10);right=Math.max(right,l.x+l.w/2+10);top=Math.min(top,-i*snap.spacing-27);
-   for(const o of decorLayout(l.ornaments,l.w))bottom=Math.max(bottom,-i*snap.spacing+o.y+19);
+   for(const o of decorLayout(l.ornaments,l.w))bottom=Math.max(bottom,-i*snap.spacing+o.y+(o.kind==='cane'?25:19));
  }
  if(snap.star)top=Math.min(top,-snap.level*snap.spacing-35);
  return {left,right,top,bottom};
