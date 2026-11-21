@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="720" viewBox="0 0 1280 720" preserveAspectRatio="none" shape-rendering="crispEdges">
+<title>Transparent warm bridge lanterns</title>
+<defs><radialGradient id="light0"><stop stop-color="#ffc180" stop-opacity="0.28"/><stop offset=".58" stop-color="#ffc180" stop-opacity="0.140"/><stop offset="1" stop-color="#ffc180" stop-opacity="0"/></radialGradient><radialGradient id="light1"><stop stop-color="#ffc180" stop-opacity="0.28"/><stop offset=".58" stop-color="#ffc180" stop-opacity="0.140"/><stop offset="1" stop-color="#ffc180" stop-opacity="0"/></radialGradient><radialGradient id="light2"><stop stop-color="#ffc180" stop-opacity="0.28"/><stop offset=".58" stop-color="#ffc180" stop-opacity="0.140"/><stop offset="1" stop-color="#ffc180" stop-opacity="0"/></radialGradient><radialGradient id="light3"><stop stop-color="#ffc180" stop-opacity="0.28"/><stop offset=".58" stop-color="#ffc180" stop-opacity="0.140"/><stop offset="1" stop-color="#ffc180" stop-opacity="0"/></radialGradient></defs>
+<g transform="scale(4)">
+<ellipse cx="45" cy="123" rx="18" ry="22" fill="url(#light0)" shape-rendering="auto"/>
+<rect x="42" y="120" width="6" height="5" fill="#a97561"/>
+<rect x="43" y="120" width="4" height="4" fill="#e7ad74"/>
+<rect x="44" y="121" width="2" height="3" fill="#ffdfa4"/>
+<ellipse cx="115" cy="123" rx="18" ry="22" fill="url(#light1)" shape-rendering="auto"/>
+<rect x="112" y="120" width="6" height="5" fill="#a97561"/>
+<rect x="113" y="120" width="4" height="4" fill="#e7ad74"/>
+<rect x="114" y="121" width="2" height="3" fill="#ffdfa4"/>
+<ellipse cx="207" cy="123" rx="18" ry="22" fill="url(#light2)" shape-rendering="auto"/>
+<rect x="204" y="120" width="6" height="5" fill="#a97561"/>
+<rect x="205" y="120" width="4" height="4" fill="#e7ad74"/>
+<rect x="206" y="121" width="2" height="3" fill="#ffdfa4"/>
+<ellipse cx="274" cy="123" rx="18" ry="22" fill="url(#light3)" shape-rendering="auto"/>
+<rect x="271" y="120" width="6" height="5" fill="#a97561"/>
+<rect x="272" y="120" width="4" height="4" fill="#e7ad74"/>
+<rect x="273" y="121" width="2" height="3" fill="#ffdfa4"/>
+</g>
+</svg>

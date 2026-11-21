@@ -245,3 +245,23 @@ test('bell mounts on real lower branch and misses outside any contact without ch
  a.equal(C.decorationContact(s,300,300,227,270,227,359,'bell'),null);
  a.equal(JSON.stringify(s),before);
 });
+test('scenery increments from successful landings, keeps cycling and does not rewind on deer bump',()=>{
+ const s=C.fresh();
+ for(let i=0;i<56;i++){
+  const width=C.nextWidth(s,.6);C.land(s,320,320,width);
+  a.equal(s.landed,i+1);a.equal(C.journeyScene(s.landed),Math.floor((i+1)/8)%3);
+ }
+ a.equal(C.journeyScene(s.landed),1);C.deerBump(s);
+ a.equal(s.level,55);a.equal(s.landed,56);a.equal(C.journeyScene(s.landed),1);
+});
+test('partial tilt settlement finds deterministic load-bearing cut and no extra heart-loss cut',()=>{
+ const rows=[{x:0,w:108},{x:4,w:87},{x:27,w:56},{x:75,w:44}];
+ const old=JSON.stringify(rows);a.equal(C.retainedCount(rows,'tilt'),3);
+ a.equal(C.retainedCount(rows,'tilt'),3);
+ a.equal(C.retainedCount(rows,'misses'),4);a.equal(JSON.stringify(rows),old);
+ a.equal(C.retainedCount(rows.slice(0,1),'tilt'),1);
+ a.equal(C.retainedCount([],'tilt'),0);
+ const narrow=[{x:0,w:80},{x:36,w:70},{x:53,w:70},{x:75,w:70}];
+ a.equal(C.retainedCount(narrow,'tilt'),1);
+ a.equal(C.retainedCount(Array.from({length:4},()=>({x:0,w:80})),'tilt'),3);
+});

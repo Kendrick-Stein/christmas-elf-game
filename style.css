@@ -213,3 +213,35 @@ html[lang="en"] .mast .brand{letter-spacing:0}
 .focus-view:not(.is-settlement) .buffs{top:calc(91px + env(safe-area-inset-top,0px))}
 .focus-view:not(.is-settlement) .banner{top:calc(118px + env(safe-area-inset-top,0px))}
 .focus-view:not(.is-settlement) .event-hud{top:calc(143px + env(safe-area-inset-top,0px))}
+
+/* V18: scenery changes behind the unchanged canvas; festival light is local. */
+.journey-scenes,.journey-scenes > span{position:absolute;inset:0;pointer-events:none}
+.journey-scenes{z-index:0;overflow:hidden}
+.journey-scenes > span{background-position:center bottom;background-repeat:no-repeat;background-size:cover;opacity:0;transition:opacity .85s ease}
+.journey-scenes .journey-forest{background-image:url('./assets/journey-forest.svg?v=journey-18')}
+.journey-scenes .journey-bridge{background-image:url('./assets/journey-bridge.svg?v=journey-18')}
+.journey-scenes .journey-village{background-image:url('./assets/journey-village.svg?v=journey-18')}
+.journey-scenes .journey-forest-lit{background-image:url('./assets/journey-forest-lights.svg?v=journey-18')}
+.journey-scenes .journey-bridge-lit{background-image:url('./assets/journey-bridge-lights.svg?v=journey-18')}
+.journey-scenes .journey-village-lit{background-image:url('./assets/journey-village-lights.svg?v=journey-18')}
+.screen[data-scene="0"] .journey-forest,.screen[data-scene="1"] .journey-bridge,.screen[data-scene="2"] .journey-village{opacity:1}
+.journey-scenes .journey-lit{transition:opacity .38s ease-out}
+.screen[data-festival-pulse][data-scene="0"] .journey-forest-lit,.screen[data-festival-pulse][data-scene="1"] .journey-bridge-lit,.screen[data-festival-pulse][data-scene="2"] .journey-village-lit{opacity:1}
+@media (min-aspect-ratio:5/4) and (min-width:640px){.journey-scenes > span{background-size:100% 100%}}
+.screen #field{z-index:1}.journey-scenes ~ .readout{pointer-events:none}
+.screen #journeyFinale{position:absolute;inset:0;display:block;width:100%;height:100%;z-index:4;touch-action:auto;pointer-events:none}
+.screen #journeyFinale[hidden],.skip-finale[hidden]{display:none}
+.skip-finale{position:absolute;right:max(14px,env(safe-area-inset-right,0px));bottom:max(13px,env(safe-area-inset-bottom,0px));z-index:7;background:#1b2b428f;color:#ffe8bc;border:1px solid #a18364;border-radius:6px;min-height:42px;padding:0 13px;font-size:.86rem}
+.skip-finale:hover{background:#374355}.skip-finale:focus-visible{outline-color:#f1ca8b}
+.is-finale .frame{grid-template-rows:minmax(0,1fr)}
+.is-finale .controls,.is-finale .readout,.is-finale .footer,.is-finale .banner,.is-finale .event-hud,.is-finale .buffs,.is-finale .risk-hint,.is-finale .skill-tip{display:none}
+.is-finale .screen #field{visibility:hidden}
+@media (prefers-reduced-motion:reduce){.journey-scenes > span{transition:none}}
+/* The results stay in the village rather than jumping back to the last route. */
+.is-settlement .journey-scenes .journey-land:not(.journey-village){opacity:0}
+.is-settlement .journey-scenes .journey-village,
+.is-settlement .journey-scenes .journey-village-lit{opacity:1}
+.is-settlement .journey-scenes > span{transition:none}
+@media (min-width:691px) and (min-height:481px){
+ .is-settlement .screen #settlementTree{transform:translateY(clamp(10px,3.2vh,32px))}
+}

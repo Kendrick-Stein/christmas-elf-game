@@ -3,7 +3,7 @@
 const CART_Y=345,TRAY=112,LEVEL_HEIGHT=19,MIN_WIDTH=48,MAX_WIDTH=128,STAR_AT=12,HEARTS=5,HEAL_EVERY=30,STREAK=4,FESTIVAL=5;
 const BUFF_DURATION=8,WIDE_EXTRA=46,MIN_SPACING=10,STABLE_DURATION=6,STABLE_SCALE=.67,STRING_DURATION=2.5,STRING_SCORE=12;
 const clamp=(n,min,max)=>Math.max(min,Math.min(max,n));
-const fresh=()=>({score:0,combo:0,bestCombo:0,level:0,lights:0,decorations:0,perfect:0,festival:0,hearts:HEARTS,risk:0,narrowRun:0,sinceBroad:0,spacing:LEVEL_HEIGHT,buffs:{wide:0,magnet:0,stable:0},layers:[],status:'playing',reason:null,elapsed:0});
+const fresh=()=>({score:0,combo:0,bestCombo:0,landed:0,level:0,lights:0,decorations:0,perfect:0,festival:0,hearts:HEARTS,risk:0,narrowRun:0,sinceBroad:0,spacing:LEVEL_HEIGHT,buffs:{wide:0,magnet:0,stable:0},layers:[],status:'playing',reason:null,elapsed:0});
 const surface=s=>CART_Y-s.layers.length*s.spacing;
 const support=s=>s.layers[s.layers.length-1]||{x:0,w:TRAY};
 function nextWidth(s,random=Math.random()){
@@ -96,6 +96,33 @@ function balance(s,p){
  if(gain>0&&s.buffs.stable>0)gain*=STABLE_SCALE;
  return clamp(s.risk+gain,0,100);
 }
+const JOURNEY_EVERY=8,JOURNEY_SCENES=3;
+const journeyScene=landed=>Math.floor(landed/JOURNEY_EVERY)%JOURNEY_SCENES;
+// A joint can carry the load only where the two real (not widened) branches overlap.
+function weakestJoint(layers,end){
+ let mass=0,weighted=0,weakest=0,cut=end;
+ for(let i=end-1;i>=0;i--){
+   const row=layers[i],parent=layers[i-1]||{x:0,w:TRAY};
+   mass+=row.w;weighted+=row.w*row.x;
+   const cx=weighted/mass,left=Math.max(row.x-row.w*.5,parent.x-parent.w*.5),right=Math.min(row.x+row.w*.5,parent.x+parent.w*.5);
+   const normalized=Math.min(cx-left,right-cx)/Math.min(row.w,parent.w);
+   if(normalized<weakest-1e-8){weakest=normalized;cut=i;}
+ }
+ return cut;
+}
+function retainedCount(layers,reason){
+ const total=layers.length;
+ if(reason!=='tilt'||total<2)return total;
+ const failed=weakestJoint(layers,total);
+ let end=Math.max(1,failed===total?total-1:failed);
+ // Recheck without the fallen load; keep a genuine contiguous lower section only.
+ while(end>1){
+   const next=weakestJoint(layers,end);
+   if(next===end)break;
+   end=Math.max(1,next);
+ }
+ return end;
+}
 function collapse(s,reason){s.status='lost';s.reason=reason;}
 function miss(s){
  if(s.status!=='playing')return;
@@ -105,7 +132,7 @@ function miss(s){
 function land(s,cartX,itemX,w){
  const p=placement(s,cartX,itemX,w),result={...p,festival:false,star:false};
  if(s.status!=='playing'||p.rating==='miss')return result;
- s.risk=balance(s,p);s.layers.push({x:p.x,w:p.w});s.level++;s.narrowRun=p.w<66?s.narrowRun+1:0;s.sinceBroad=p.w<93?s.sinceBroad+1:0;
+ s.risk=balance(s,p);s.layers.push({x:p.x,w:p.w});s.level++;s.landed++;s.narrowRun=p.w<66?s.narrowRun+1:0;s.sinceBroad=p.w<93?s.sinceBroad+1:0;
  if(p.rating==='perfect'){
   s.combo++;s.perfect++;s.bestCombo=Math.max(s.bestCombo,s.combo);s.score+=30;
   if(s.combo%STREAK===0){s.festival=FESTIVAL;result.festival=true;s.hearts=Math.min(HEARTS,s.hearts+1);}
@@ -188,6 +215,6 @@ function difficulty(s){
  const l=s.level,wind=clamp((l-3)*4.0,0,49);
  return {speed:clamp(98+l*7.3,98,276),wind};
 }
-const core={CART_Y,TRAY,LEVEL_HEIGHT,MIN_WIDTH,MAX_WIDTH,STAR_AT,HEARTS,HEAL_EVERY,STREAK,FESTIVAL,BUFF_DURATION,WIDE_EXTRA,MIN_SPACING,STABLE_DURATION,STABLE_SCALE,STRING_DURATION,STRING_SCORE,fresh,nextWidth,decorationContact,surface,support,receiving,viewport,fall,worldTop,crossesSurface,overlap,classify,placement,land,miss,light,power,attract,tick,newEvents,nextEvent,finishEvent,realignBase,deerBump,deerTouch,difficulty};
+const core={CART_Y,TRAY,LEVEL_HEIGHT,MIN_WIDTH,MAX_WIDTH,STAR_AT,HEARTS,HEAL_EVERY,STREAK,FESTIVAL,BUFF_DURATION,WIDE_EXTRA,MIN_SPACING,STABLE_DURATION,STABLE_SCALE,STRING_DURATION,STRING_SCORE,fresh,nextWidth,journeyScene,retainedCount,decorationContact,surface,support,receiving,viewport,fall,worldTop,crossesSurface,overlap,classify,placement,land,miss,light,power,attract,tick,newEvents,nextEvent,finishEvent,realignBase,deerBump,deerTouch,difficulty};
 if(typeof module!=='undefined')module.exports=core;else global.ElfCore=core;
 })(globalThis);
