@@ -620,6 +620,8 @@ canvas.addEventListener('pointermove',e=>{
  p.last=px;x=clamp(p.relative?p.base+(px-p.at)*inputSign():px-C.support(state).x,CL,CR);
 });
 for(const n of ['pointerup','pointercancel','lostpointercapture'])canvas.addEventListener(n,e=>{if(motion.pointer?.id===e.pointerId)motion.pointer=null;});
+// Some mobile engines surface a context menu even for an active pointer hold.
+$('controls').addEventListener('contextmenu',e=>e.preventDefault());
 for(const [btn,dir] of [[left,'left'],[right,'right']]){
  const press=()=>{if(!locale.blocking()&&mode==='playing')x=clamp(x+inputSign()*(dir==='left'?-7:7)*sensitivityScale[sensitivity],CL,CR);};
  btn.addEventListener('pointerdown',e=>{if(locale.blocking()||mode!=='playing'||motion.buttons.has(dir))return;btn.setPointerCapture(e.pointerId);motion.buttons.set(dir,{id:e.pointerId,age:0,touch:e.pointerType==='touch'});btn.classList.add('held');press();});

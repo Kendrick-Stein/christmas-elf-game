@@ -141,3 +141,6 @@ html[lang="en"] .mast .brand{letter-spacing:0}
 
 .language-options button[aria-pressed="true"]{border-color:#ffda97;color:#fff7d9;background:#40516b}
 .language-picker[data-fallback="true"][open]{position:fixed;z-index:9;inset:0;max-height:min-content;box-shadow:0 0 0 100vmax #081426d6,5px 5px #101829}
+
+/* Long-pressing a direction should move the sled, not select the adjacent hints or record. */
+.controls,.controls *,.footer,.footer *{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}

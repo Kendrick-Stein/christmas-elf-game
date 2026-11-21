@@ -389,3 +389,17 @@ test('both reindeer fly toward the same existing target and icy lane stays marke
    if(name==='blue')assert(still.pixels.some(p=>p.color==='#98c9fa38'));
  }
 });
+
+test('bottom touch holds ignore native callouts without trapping selection elsewhere',()=>{
+ const {$,advance,elves}=harness(390,650);$('start').fire('click');advance(32);
+ const before=elves[0];$('right').fire('pointerdown',{pointerId:27,pointerType:'touch'});advance(256);
+ let cancelled=0;const event=()=>({pointerType:'touch',preventDefault(){cancelled++;}});
+ $('controls').fire('contextmenu',event());assert.equal(cancelled,1);
+ $('shareLink').fire('contextmenu',event());$('sensitivity').fire('contextmenu',event());$('field').fire('contextmenu',event());assert.equal(cancelled,1);
+ advance(160);assert(elves[0]>before+65);
+ $('right').fire('pointerup',{pointerId:27});advance(16);const released=elves[0];
+ advance(96);assert.equal(elves[0],released);
+ $('left').fire('pointerdown',{pointerId:28,pointerType:'touch'});advance(160);
+ $('left').fire('pointercancel',{pointerId:28});advance(16);const interrupted=elves[0];
+ advance(96);assert.equal(elves[0],interrupted);
+});
