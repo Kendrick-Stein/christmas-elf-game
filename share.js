@@ -94,14 +94,21 @@ function poster(ctx,snapshot,source,language='zh'){
  drawQR(ctx,844,836,4);
  return g;
 }
-function preview(canvas,snapshot,source){
+function preview(canvas,snapshot,source,pixelRatio=1){
  const ctx=canvas.getContext('2d');if(!ctx)throw new Error('Canvas unavailable');
- // Match the painted resolution to the CSS box so portrait/landscape never stretch the tree.
- const box=canvas.getBoundingClientRect();
- if(box.width>0&&box.height>0){const d=Math.min(global.devicePixelRatio||1,2);canvas.width=Math.round(box.width*d);canvas.height=Math.round(box.height*d);}
- const w=canvas.width,h=canvas.height;
- scene(ctx,0,0,w,h);
- tree(ctx,snapshot,source,{x:w*.06,y:h*.06,width:w*.88,height:h*.87},w/90);
+ const box=canvas.getBoundingClientRect(),d=Math.min(pixelRatio||1,2);
+ if(box.width<=0||box.height<=0)return;
+ const w=Math.max(1,Math.round(box.width*d)),h=Math.max(1,Math.round(box.height*d));
+ if(canvas.width!==w||canvas.height!==h){canvas.width=w;canvas.height=h;}
+ ctx.clearRect(0,0,w,h);
+ // The surrounding screen provides scenery. Fit the complete original tree into the
+ // available art area rather than drawing a second compressed landscape behind it.
+ const bounds=typeof source.bounds==='function'?source.bounds(snapshot):fallbackBounds(snapshot);
+ const g=fit(bounds,{x:w*.045,y:h*.035,width:w*.91,height:h*.90},d*3.4);
+ g.bottom=h*.94-bounds.bottom*g.scale;
+ ctx.save();
+ try{ctx.imageSmoothingEnabled=false;source.draw(ctx,snapshot,g);}finally{ctx.restore();}
+ return g;
 }
 function pngBlob(canvas){
  return new Promise((resolve,reject)=>{try{
@@ -115,7 +122,7 @@ function init(env){
   canvas=$('settlementTree'),form=$('shareLinkLabel'),link=$('shareLink'),panel=$('panel');
  if(!actions||!save||!share||!status||!canvas||!form||!link||!panel)return null;
  const nav=env.navigator||{};
- let snapshot=null,prepared=null,task=null,failed=false,sharing=false,revision=0;
+ let snapshot=null,prepared=null,task=null,failed=false,sharing=false,treeReady=false,revision=0;
  let language=localeCode(env.ElfLocale?.lang());
  const copy=()=>COPY[language];
  link.value=URL_TARGET;
@@ -131,7 +138,7 @@ function init(env){
  };
  function closeLink(){form.hidden=true;}
  function reset(){
-  revision++;snapshot=null;prepared=null;task=null;failed=false;
+  revision++;snapshot=null;prepared=null;task=null;failed=false;treeReady=false;
   actions.hidden=true;canvas.hidden=true;status.hidden=true;status.textContent='';closeLink();
   panel.classList.remove('settlement-panel');state();
  }
@@ -144,7 +151,7 @@ function init(env){
    return typeof source.ready==='function'?source.ready():null;
   }).then(()=>{
    if(!active(id))return null;
-   try{preview(canvas,current,source);}catch(_){canvas.hidden=true;}
+   treeReady=true;try{preview(canvas,current,source,env.devicePixelRatio);}catch(_){canvas.hidden=true;}
    const output=doc.createElement('canvas');output.width=SIZE;output.height=SIZE;
    const ctx=output.getContext('2d');if(!ctx)throw new Error('Canvas unavailable');
    poster(ctx,current,source,lang);
@@ -220,14 +227,14 @@ function init(env){
   report(revision,'preparing');state();make(revision);
  });
  const redraw=()=>{const source=env.ElfShareSource;
-  if(snapshot&&prepared&&source&&!canvas.hidden)try{preview(canvas,snapshot,source);}catch(_){}
+  if(snapshot&&treeReady&&source&&!canvas.hidden)try{preview(canvas,snapshot,source,env.devicePixelRatio);}catch(_){}
  };
  if(typeof env.ResizeObserver==='function')new env.ResizeObserver(redraw).observe(canvas);
  else env.addEventListener('resize',redraw);
  labels();reset();
  return {settle,reset};
 }
-const api={URL_TARGET,SIZE,FILE_NAME,drawQR,fit,fallbackBounds,poster,pngBlob,init};
+const api={URL_TARGET,SIZE,FILE_NAME,drawQR,fit,fallbackBounds,poster,preview,pngBlob,init};
 if(typeof module!=='undefined')module.exports=api;
 else if(global.document)global.ChristmasShare=init(global);
 })(globalThis);

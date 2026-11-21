@@ -106,6 +106,15 @@ const words={
  paused:["雪夜暂停", "Paused"],
  pausedText:["等你回来继续垒。", "Your tree will be here when you return."],
  pausedFine:["也可以按 Esc 继续", "Press Esc to resume"],
+ settings:["设置","Settings"],
+ scoreUnit:["分","pts"],
+ resultSummary:["{level} 层 · {lights} 盏彩灯 · {decorations} 件装饰","{level} layers · {lights} lights · {decorations} ornaments"],
+ tip_compress:["压低树身，同时降低晃动","Compacts the tree and reduces wobble."],
+ tip_wide:["8 秒内拓宽树顶接取范围","A wider catch area for 8 seconds."],
+ tip_magnet:["8 秒内轻拉附近松枝","Gently pulls nearby branches for 8 seconds."],
+ tip_stable:["短时间减轻偏接带来的晃动","Off-center catches add less wobble for a short time."],
+ riskEarly:["树身开始晃动 {n}%","Tree wobbling {n}%"],
+ riskTop:["危险 {n}%","Danger {n}%"],
  resume:["继续垒树", "Resume"]
 };
 const key='snow-pine-language-v1', $=id=>document.getElementById(id);

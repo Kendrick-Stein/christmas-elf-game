@@ -7,24 +7,25 @@ function context(){
  const pixels=[],labels=[];
  return {pixels,labels,fillRect(...rect){pixels.push([this.fillStyle,...rect]);},
   fillText(t){labels.push(t);},createLinearGradient(){return {addColorStop(){}};},
-  save(){},restore(){}};
+  clearRect(...rect){pixels.push(["clear",...rect]);},save(){},restore(){}};
 }
-function harness({nav={},toBlob=cb=>cb(artifact),sourceReady=()=>null,language='zh'}={}){
+function harness({nav={},toBlob=cb=>cb(artifact),sourceReady=()=>null,language='zh',dpr=1}={}){
+ const box={width:300,height:160};
  const elements=new Map(),downloads=[],urls=[],revoked=[],timers=[],winEvents=new Map(),draw=[],contexts=[],localeListeners=[];
  function el(){
   const events=new Map(),attrs=new Map(),classes=new Set();
   return {firstChild:{nodeType:3,nodeValue:""},style:{},attrs,classes,hidden:false,events,called:0,classList:{add:x=>classes.add(x),remove:x=>classes.delete(x)},
    addEventListener:(n,f)=>events.set(n,f),fire:n=>events.get(n)?.(),focus(){this.focused=true;},select(){this.selected=true;},
    setAttribute:(k,v)=>attrs.set(k,v),click(){downloads.push([this.href,this.download]);},remove(){this.removed=true;},
-   getBoundingClientRect:()=>({width:300,height:160}),getContext(){const c=context();contexts.push(c);return c;},toBlob};
+   getBoundingClientRect:()=>box,getContext(){const c=context();contexts.push(c);return c;},toBlob};
  }
  const $=id=>{if(!elements.has(id))elements.set(id,el());return elements.get(id);};
  const document={getElementById:$,createElement:el,body:{appendChild(){}}};
- const win={document,navigator:nav,ElfLocale:{lang:()=>language,onChange:fn=>localeListeners.push(fn)},File:class{constructor(parts,name,o){Object.assign(this,{parts,name,type:o.type});}},
+ const win={document,devicePixelRatio:dpr,navigator:nav,ElfLocale:{lang:()=>language,onChange:fn=>localeListeners.push(fn)},File:class{constructor(parts,name,o){Object.assign(this,{parts,name,type:o.type});}},
   URL:{createObjectURL(blob){assert.equal(blob,artifact);const url='blob:poster/'+(urls.length+1);urls.push(url);return url;},revokeObjectURL:u=>revoked.push(u)},
   setTimeout:f=>timers.push(f),addEventListener:(n,f)=>winEvents.set(n,f),
   ElfShareSource:{ready:sourceReady,snapshot:()=>tall,draw:(_ctx,s,g)=>draw.push({s,g})}};
- return {$,api:S.init(win),downloads,timers,revoked,draw,contexts,switchLanguage:next=>{language=next;localeListeners.forEach(fn=>fn(next));},event:n=>winEvents.get(n)?.({})};
+ return {$,box,api:S.init(win),downloads,timers,revoked,draw,contexts,switchLanguage:next=>{language=next;localeListeners.forEach(fn=>fn(next));},event:n=>winEvents.get(n)?.({})};
 }
 const tall=Object.freeze({score:358,level:89,spacing:19,layers:Array.from({length:89},(_,i)=>({x:i*6-100,w:80}))});
 test('poster 1080 square; authentic tilted/tall snapshot fits, with stable QR and actual stats',()=>{
@@ -104,4 +105,17 @@ test('settlement language rebuild ignores older PNG work and manual fallback loc
  h.$('shareTree').fire('click');assert(!h.$('shareLinkLabel').hidden);
  assert.match(h.$('shareStatus').textContent,/Automatic copy/);
  h.$('saveTree').fire('click');assert.equal(h.downloads[0][1],'My-Christmas-Tree.png');
+});
+
+test('settlement art uses full transparent box at DPR and fits the whole tree after resize before PNG completes',async()=>{
+ const h=harness({dpr:2,toBlob:()=>{}}),canvas=h.$('settlementTree');
+ h.api.settle(tall);await flush();
+ assert.equal(canvas.width,600);assert.equal(canvas.height,320);
+ assert.deepEqual(h.contexts[0].pixels,[['clear',0,0,600,320]]);
+ const before=h.draw.length;h.box.width=375;h.box.height=570;h.event('resize');
+ assert.equal(canvas.width,750);assert.equal(canvas.height,1140);assert(h.draw.length>before);
+ const b=S.fallbackBounds(tall),g=h.draw.at(-1).g;
+ assert(g.bottom+b.top*g.scale>0&&g.bottom+b.bottom*g.scale<1140);
+ assert(g.x+b.left*g.scale>0&&g.x+b.right*g.scale<750);
+ assert.equal(h.draw.at(-1).s,tall);
 });

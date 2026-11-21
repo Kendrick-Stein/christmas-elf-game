@@ -25,7 +25,8 @@ function harness(width=640,height=420,reduced=true,eventPick=null,random=.50,opt
  if(eventPick!==null){const pick=w.ElfCore.nextEvent;w.ElfCore.nextEvent=(...args)=>pick(...args,()=>eventPick);}
 
  vm.runInContext(read('locale.js'),c);
- vm.runInContext(read('game.js'),c);
+ const script=read('game.js');
+ vm.runInContext(options.inspect?script.replace(/\}\)\(\);\s*$/, `window.testGame={state:()=>state,tips:hintSkill,finish:lose};})();`):script,c);
  let tracking=false;
  const point=x=>{$('field').fire('pointerdown',{pointerId:1,clientX:x});$('field').fire('pointermove',{pointerId:1,clientX:x});$('field').fire('pointerup',{pointerId:1});};
  return {$,w,d,point,leaves,elves,pixels,labels,paints,actors,rings,stored,transform:()=>transform,setSize:(w,h)=>{size.width=w;size.height=h;},follow:b=>tracking=b,advance:ms=>{for(let i=0;i<ms;i+=16){
@@ -60,7 +61,7 @@ test('settled leaf retains landing offset and moves with the cart',()=>{
  assert.equal($('score').textContent,'050');
 });
 test('visible drops activate compression, wide and attraction in order, then countdown and clear',()=>{
- const {$,w,advance,follow,leaves}=harness();$('start').fire('click');follow(true);
+ const {$,w,advance,follow,leaves,stored}=harness();$('start').fire('click');follow(true);
  const seen=new Set();let minSpacing=20,everBuffs=false,stableSeen=false;
  for(let i=0;i<420;i++){
    advance(185);
@@ -72,6 +73,7 @@ test('visible drops activate compression, wide and attraction in order, then cou
    stableSeen ||= !$('buffs').hidden && /稳固 [1-6]s/.test($('buffs').innerHTML);
  }
  assert.deepEqual([...seen].slice(0,3),['压缩','加宽','吸附']);
+ assert.deepEqual(JSON.parse(stored.get('snow-pine-skill-tips-v1')).sort(),['compress','magnet','stable','wide']);
  assert(minSpacing<19);assert(everBuffs);assert(stableSeen);assert(parseInt($('progress').innerHTML,10)>16);
  // Timed badges are frozen during pause and never remain visible on its overlay.
  const badge=$('buffs').innerHTML;w.fire('keydown',{key:'Escape'});assert($('buffs').hidden);
@@ -128,7 +130,7 @@ test('focus and rail toggle without restarting; resize keeps one scale and cente
  assert.equal($('focusToggle').getAttribute('aria-label'),'打开放大模式');
  if(!$('rules').hidden)$('helpToggle').fire('click');$('helpToggle').fire('click');assert(!$('rules').hidden);
  assert.equal(d.activeElement,$('helpClose'));
- $('helpClose').fire('click');assert($('rules').hidden);assert.equal(d.activeElement,$('helpToggle'));
+ $('helpClose').fire('click');assert($('rules').hidden);assert.equal(d.activeElement,$('settingsToggle'));
  setSize(1280,600);w.fire('resize');advance(16);
  assert.equal(transform()[0],transform()[3]);assert(transform()[4]>0);
  const inside=transform()[4]+440*transform()[0];
@@ -402,4 +404,54 @@ test('bottom touch holds ignore native callouts without trapping selection elsew
  $('left').fire('pointerdown',{pointerId:28,pointerType:'touch'});advance(160);
  $('left').fire('pointercancel',{pointerId:28});advance(16);const interrupted=elves[0];
  advance(96);assert.equal(elves[0],interrupted);
+});
+
+test('skill tips are nonblocking, localized and persisted only when actually shown',()=>{
+ const opts={inspect:true},h=harness(390,650,true,null,.50,opts),{$,w}=h;
+ $('start').fire('click');h.advance(800);
+ w.testGame.tips('wide');w.testGame.tips('magnet');w.testGame.tips('wide');
+ assert.deepEqual(JSON.parse(h.stored.get('snow-pine-skill-tips-v1')),['wide']);
+ assert(!$('skillTip').hidden);assert.equal($('skillTip').dataset.kind,'wide');
+ assert.match($('skillTipText').textContent,/8 秒/);
+ const before=h.elves[0];
+ $('right').fire('pointerdown',{pointerId:19,pointerType:'touch'});h.advance(130);
+ $('right').fire('pointerup',{pointerId:19});h.advance(16);
+ assert(h.elves[0]>before+10);
+ $('languageToggle').fire('click');$('languageEN').fire('click');assert.match($('skillTipText').textContent,/8 seconds/);
+ h.advance(4700);
+ assert.deepEqual(JSON.parse(h.stored.get('snow-pine-skill-tips-v1')),['wide','magnet']);
+ assert.equal($('skillTip').dataset.kind,'magnet');
+ const reload=harness(390,650,true,null,.50,{...opts,storage:h.stored});
+ reload.$('start').fire('click');reload.w.testGame.tips('wide');assert(reload.$('skillTip').hidden);
+});
+test('risk warning follows raw 35 and 68 thresholds without moving any rendered branch',()=>{
+ for(const reduced of [false,true]){
+   const h=harness(390,650,reduced,null,.50,{inspect:true}),{$,w}=h;
+   $('start').fire('click');h.advance(4800);
+   const state=w.testGame.state(),laid=()=>h.leaves.filter(x=>x.h===31).map(x=>[x.x,x.y,x.w]);
+   state.layers[0].x=15;
+   state.risk=34.99;h.advance(16);assert($('riskHint').hidden);const before=laid();
+   state.risk=35;h.advance(16);assert.equal($('riskHint').dataset.kind,'warn');assert.match($('riskHint').textContent,/35%/);
+   state.risk=67.99;h.advance(16);assert.equal($('riskHint').dataset.kind,'warn');
+   state.risk=68;h.advance(16);assert.equal($('riskHint').dataset.kind,'high');assert.equal($('riskHint').textContent,'危险 68%');
+   assert(h.pixels.some(p=>p.color==='#ffc0a0'));assert.deepEqual(laid(),before);
+   const glow=()=>h.pixels.filter(p=>p.color==='#ffc0a0').map(p=>p.pos);
+   const initial=glow();h.advance(160);
+   if(reduced)assert.deepEqual(glow(),initial);else assert.notDeepEqual(glow(),initial);
+   $('languageToggle').fire('click');$('languageEN').fire('click');h.advance(16);assert.match($('riskHint').textContent,/Danger 68%/);
+   state.risk=22;h.advance(16);assert($('riskHint').hidden);
+ }
+});
+test('quiet settings default, do not hijack select keys, settlement mode resets on replay',()=>{
+ const h=harness(1280,720,true,null,.50,{inspect:true}),{$,w,d}=h;
+ assert($('rules').hidden);
+ $('start').fire('click');h.advance(16);
+ const before=h.elves[0];$('settingsMenu').open=true;$('settingsMenu').fire('toggle');
+ w.fire('keydown',{key:'ArrowRight',target:{tagName:'SELECT'}});h.advance(96);
+ assert.equal(h.elves[0],before);
+ w.fire('keydown',{key:'Escape'});assert(!$('settingsMenu').open);assert.equal(d.activeElement,$('settingsToggle'));
+ h.advance(4016);w.testGame.finish();
+ assert.equal($('panel').dataset.mode,'lost');assert($('shell').classList.contains('is-settlement'));
+ assert(!$('resultScore').hidden);assert.equal($('resultScoreValue').textContent,w.testGame.state().score.toString());
+ $('start').fire('click');assert.equal($('panel').dataset.mode,'playing');assert(!$('shell').classList.contains('is-settlement'));
 });

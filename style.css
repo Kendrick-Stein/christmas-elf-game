@@ -144,3 +144,72 @@ html[lang="en"] .mast .brand{letter-spacing:0}
 
 /* Long-pressing a direction should move the sled, not select the adjacent hints or record. */
 .controls,.controls *,.footer,.footer *{-webkit-touch-callout:none;-webkit-user-select:none;user-select:none}
+
+/* V17: keep the physical playfield untouched; the scenery fills its screen. */
+:root{--v17-bg:#101d30;--v17-border:#354f67;--v17-gold:#ffc779}
+.shell,.shell.focus-view{grid-template-rows:auto minmax(0,1fr)}
+.mast,.focus-view .mast{display:flex;min-height:57px;padding:calc(4px + env(safe-area-inset-top,0px)) max(12px,env(safe-area-inset-right,0px)) 4px max(12px,env(safe-area-inset-left,0px));background:#142638;border-bottom-color:#355268;justify-content:flex-end}
+.mast .brand{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+.screen,.screen[data-stage]{background:#162c49 url('./assets/pixel-forest.svg') center bottom/cover no-repeat;background-blend-mode:normal}
+@media (min-aspect-ratio:5/4) and (min-width:640px){
+ .screen,.screen[data-stage]{background-image:url('./assets/pixel-winter-wide.svg?v=quiet-17');background-size:100% 100%}
+}
+.screen::before{background:radial-gradient(ellipse 64% 53% at 53% 77%,#ebae731c,transparent 100%)}
+.readout,.focus-view .screen .readout{position:fixed;inset:calc(4px + env(safe-area-inset-top,0px)) max(59px,calc(54px + env(safe-area-inset-right,0px))) auto max(18px,env(safe-area-inset-left,0px));transform:none;width:auto;height:48px;display:flex;align-items:center;justify-content:space-between;z-index:8;gap:8px}
+.hud{margin:0;display:block}.hud>div{display:flex;align-items:baseline;gap:12px;background:none;border:0;padding:0;text-align:left}
+.hud>div:not(:first-child),.chapter #wind,.chapter #chapter,.focus-view .screen .focus-language,.focus-language,.footer{display:none}
+.hud>div>span{font-size:.76rem;color:#bdd1db;white-space:nowrap}.hud b{font-size:clamp(1.42rem,2.5vw,1.72rem);color:#ffe4a9}
+.chapter{margin:0;padding:0;background:none}.chapter #hearts{font-size:clamp(.95rem,3.7vw,1.21rem);color:#ffa9ae;letter-spacing:.06em}
+.settings-menu{margin:0;position:relative}.settings-menu summary{display:grid;place-items:center;width:44px;height:44px;cursor:pointer;list-style:none;border:1px solid transparent;color:#dbe8ed;border-radius:6px}
+.settings-menu summary::-webkit-details-marker{display:none}.settings-menu summary:hover,.settings-menu[open] summary{background:#203650;border-color:#577891}
+.settings-menu summary:focus-visible{outline:2px solid #ffe099;outline-offset:2px}
+.settings-menu .settings{position:absolute;right:0;top:calc(100% + 7px);z-index:10;display:grid;grid-template-columns:repeat(2,minmax(0,1fr));width:min(275px,calc(100vw - 24px));padding:10px;border:1px solid #536f88;border-radius:8px;background:#172c43;box-shadow:0 10px 30px #07111fc7;gap:8px}
+.settings-menu:not([open]) .settings{display:none}
+.settings-menu .settings button,.settings-menu select{width:100%;min-height:43px;color:#fff1cb;background:#203d58;border:1px solid #5b7991;font-size:.83rem;box-shadow:none}
+.settings-menu .sense{grid-column:1/-1;justify-content:space-between;font-size:.86rem;padding:0 1px}
+.settings-menu .sense>span,html[lang="en"] .settings-menu .sense>span,html[lang="en"] .settings-menu .sound span{display:inline;font-size:inherit}
+.settings-menu .sense select{width:auto;min-width:88px}.settings-menu #focusToggle{position:static;inset:auto;z-index:auto;min-width:0;display:block;height:auto}
+.shell.help-open:not(.focus-view) .stage{grid-template-columns:minmax(0,1fr)}
+.rules{position:absolute;inset:8px 10px auto auto;z-index:9;width:min(310px,calc(100% - 20px));max-height:calc(100% - 16px);border:1px solid #53779a;border-radius:8px;box-shadow:0 12px 32px #07111fb7}
+.controls{grid-template-columns:repeat(2,minmax(0,1fr));padding-inline:max(12px,env(safe-area-inset-left,0px)) max(12px,env(safe-area-inset-right,0px));gap:12px;background:#132437;border-color:#344f67}
+.controls p{display:none}.controls button{border-radius:8px;border-color:#48647f;background:#1b354b;box-shadow:none;min-height:61px}
+.controls button:hover,.controls button.held{background:#315471}.controls button.held{transform:none;box-shadow:inset 0 2px #081a2d}
+.controls svg{width:29px;height:29px}
+.skill-tip{--skill-accent:#a9efd7;position:absolute;z-index:7;top:16px;left:50%;transform:translateX(-50%);display:flex;align-items:center;gap:10px;width:max-content;max-width:calc(100% - 24px);padding:6px 11px;border:1px solid var(--skill-accent);border-radius:7px;color:var(--skill-accent);background:#142e3aee;pointer-events:none;line-height:1.3}
+.skill-tip[hidden],.risk-hint[hidden],.result-score[hidden]{display:none}
+.skill-tip>span{font:bold 1.24rem ui-monospace,monospace}.skill-tip>div{display:flex;flex-wrap:wrap;align-items:baseline;gap:2px 8px}.skill-tip strong,.skill-tip small{font-size:.77rem}.skill-tip small{color:#eff4e5}
+.skill-tip[data-kind="compress"]{--skill-accent:#ffc1c8}.skill-tip[data-kind="wide"],.skill-tip[data-kind="stable"]{--skill-accent:#ffdf99}
+.risk-hint{position:absolute;left:clamp(84px,var(--risk-x,50%),calc(100% - 84px));top:clamp(59px,var(--risk-y,51%),calc(100% - 15px));z-index:6;transform:translate(-50%,-100%);max-width:calc(100% - 18px);border:1px solid #f5c076;background:#342b31f0;color:#ffdb9d;padding:3px 9px;border-radius:5px;font-size:.74rem;font-weight:800;text-align:center;white-space:nowrap;pointer-events:none}
+.risk-hint[data-kind="high"]{border-color:#ff9f8c;background:#542f2cf5;color:#ffe5c3}
+.buffs,.focus-view .screen .buffs{left:12px;top:49px}.banner,.buffs:not([hidden]) + canvas + .banner,.focus-view .screen .banner{top:76px}.event-hud{top:101px}
+.is-settlement .frame{grid-template-rows:minmax(0,1fr)}
+.is-settlement .controls,.is-settlement .readout,.is-settlement #field,.is-settlement .footer,.is-settlement .risk-hint,.is-settlement .skill-tip{display:none}
+.is-settlement .mast{justify-content:space-between}.is-settlement .mast .brand{position:static;clip-path:none;width:auto;height:auto;color:#fff0d2;font-size:1rem;overflow:visible}
+.panel.settlement-panel{position:absolute;display:grid;grid-template-columns:minmax(280px,440px) minmax(260px,610px);grid-template-areas:"summary tree";align-items:center;align-content:center;justify-content:center;gap:clamp(12px,4vw,82px);background:transparent;padding:18px clamp(18px,5vw,82px);z-index:4}
+.panel.settlement-panel .card{grid-area:summary;width:100%;max-width:440px;justify-self:center;border:1px solid #587389;border-radius:12px;background:#0e1c2fec;box-shadow:0 12px 28px #101f3290;padding:clamp(14px,2.7vw,27px);text-align:left}
+.panel.settlement-panel #panelIcon,.panel.settlement-panel #panelTag,.panel.settlement-panel #panelFine{display:none}
+.panel.settlement-panel #panelTitle{font-size:1.12rem;font-weight:800;line-height:1.15;color:#ffdfac}
+.result-score{display:flex;gap:.55em;align-items:baseline;margin:2px 0 .1em;color:#ffe4a9}.result-score strong{font:800 clamp(2.6rem,7vw,4.8rem)/1.18 ui-monospace,monospace}.result-score>span{font-size:1.03rem;color:#ecc285}
+.panel.settlement-panel #panelText{color:#cbdde0;font-weight:500;margin:4px 0 13px;line-height:1.35}
+.panel.settlement-panel #start{width:100%;margin:2px 0 8px;min-height:48px;background:var(--v17-gold);border:1px solid #ffcc83;border-radius:6px;text-decoration:none;color:#1a2a40;font-size:1rem;box-shadow:none}.panel.settlement-panel #start:hover{background:#ffda9b}.panel.settlement-panel #start span{display:none}
+.panel.settlement-panel .share-actions{grid-template-columns:repeat(2,minmax(0,1fr));margin:0;gap:8px}
+.panel.settlement-panel .share-actions button{background:#18354d;color:#e9e6d9;border:1px solid #54748c;box-shadow:none;border-radius:5px}.panel.settlement-panel .share-actions button:hover{background:#305171}
+.panel.settlement-panel .share-actions button span{margin:0}
+.screen #settlementTree{grid-area:tree;position:relative;inset:auto;width:100%;height:min(74dvh,700px);min-height:0;max-height:100%;border:0;background:transparent;justify-self:center;touch-action:auto}
+.screen #settlementTree[hidden]{display:none}
+@media(max-width:690px) and (orientation:portrait){
+ .panel.settlement-panel{grid-template-columns:minmax(0,410px);grid-template-rows:minmax(130px,1fr) auto;grid-template-areas:"tree" "summary";align-content:stretch;gap:7px;padding:8px max(12px,env(safe-area-inset-right,0px)) max(10px,env(safe-area-inset-bottom,0px)) max(12px,env(safe-area-inset-left,0px))}
+ .screen #settlementTree{height:min(100%,45dvh);align-self:end}.panel.settlement-panel .card{padding:12px 15px}.panel.settlement-panel #panelText{margin-bottom:8px}
+ .result-score strong{font-size:clamp(2.45rem,12vw,3.55rem)}
+}
+@media(max-height:480px) and (orientation:landscape){
+ .mast,.focus-view .mast{min-height:43px;padding-block:2px}.readout,.focus-view .screen .readout{top:2px;height:39px}.settings-menu summary{width:40px;height:39px}.controls button{min-height:45px}
+ .panel.settlement-panel{grid-template-columns:minmax(0,360px) minmax(0,420px);padding:8px 14px;gap:14px}.panel.settlement-panel .card{padding:10px 13px}.panel.settlement-panel #start{min-height:43px;margin-bottom:5px}.panel.settlement-panel #panelText{margin:4px 0 6px}.result-score strong{font-size:2.65rem}.screen #settlementTree{height:64dvh}
+}
+/* Focus mode gives these pixels back to the arena without hiding settings. */
+.shell.focus-view:not(.is-settlement){grid-template-rows:minmax(0,1fr)}
+.focus-view:not(.is-settlement) .mast{position:fixed;top:0;right:0;min-height:0;background:transparent;border:0}
+.focus-view:not(.is-settlement) .skill-tip{top:calc(60px + env(safe-area-inset-top,0px))}
+.focus-view:not(.is-settlement) .buffs{top:calc(91px + env(safe-area-inset-top,0px))}
+.focus-view:not(.is-settlement) .banner{top:calc(118px + env(safe-area-inset-top,0px))}
+.focus-view:not(.is-settlement) .event-hud{top:calc(143px + env(safe-area-inset-top,0px))}
