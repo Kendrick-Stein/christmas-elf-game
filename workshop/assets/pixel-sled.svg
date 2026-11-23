@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 100" width="200" height="100" shape-rendering="crispEdges">
+<path fill="#284759" opacity=".35" d="M32 91h140v4H32zM42 95h119v3H42z"/>
+<path fill="#322935" d="M29 73h133v-3h14v-5h9v-7h6v15h-6v7h-10v6h-14v7H28v-7h15v-8H29z"/>
+<path fill="#8a3e49" d="M37 75h123v-5h19v-5h9v7h-8v7h-12v5H43v-5h-6z"/>
+<path fill="#d55b61" d="M39 73h119v-4h20v-4h9v4h-8v6h-15v6H44v-5h-5z"/>
+<path fill="#f2a760" d="M29 66h142v7H29zM41 86h125v-4h10v-5h8v5h-7v5h-13v4H33v-5h4v-4h4z"/>
+<path fill="#ffd58c" d="M31 66h140v3H31zM45 86h117v2H45z"/>
+<path fill="#633f4a" d="M43 74h8v3h-8zm13 0h8v3h-8zm99 0h8v3h-8z"/>
+<path fill="#22293d" d="M5 51h32v-6h11v4h5v20h-7v8H9V66H5z"/>
+<path fill="#2d6f68" d="M9 54h18v-5h12v13h9v7h-9v4H11v-6H9z"/>
+<path fill="#55b187" d="M12 55h23v5H12zM13 64h13v6H13z"/>
+<path fill="#8f4d4d" d="M9 34h7v-6h26v5h7v19H38v5H16v-6H9z"/>
+<path fill="#f1ad81" d="M13 35h27v7h6v7H35v5H17v-5h-4z"/>
+<path fill="#ffd39c" d="M14 34h28v10h-6v6H17v-5h-3z"/>
+<path fill="#512f42" d="M32 41h4v4h-4zm5 8h5v2h-5z"/>
+<path fill="#d87274" d="M18 45h7v3h-7z"/>
+<path fill="#65354b" d="M6 23h6v-9h12v-7h20V2h11v10h-5v8h-5v12H6z"/>
+<path fill="#d65a64" d="M9 24h6v-9h12V9h18V6h7v6h-6v8h-5v11H9z"/>
+<path fill="#ff8e82" d="M16 18h12v-5h13v3H29v5H16z"/>
+<path fill="#fff1d3" d="M6 27h7v-4h25v3h8v9H12v-2H6z"/>
+<path fill="#e5bd94" d="M9 32h35v3H9z"/>
+<path fill="#ffdb8d" d="M51 2h8v8h-8z"/>
+<path fill="#fff1ce" d="M53 2h4v3h-4z"/>
+<path fill="#ffcc97" d="M35 59h11v-3h7v7h-6v4H35z"/>
+<path d="M31 67h140v1H31Z" fill="#fff0b4" /><path d="M44 86h117v-1h6v-2h6v1h-6v2h-6v1H44Z" fill="#ffdd91" /><rect x="47" y="68" width="27" height="1" fill="#fce4ad"/><rect x="83" y="68" width="23" height="1" fill="#ba6d55"/><rect x="117" y="68" width="31" height="1" fill="#fff3bd"/><rect x="55" y="74" width="18" height="2" fill="#ef9c71"/><rect x="94" y="74" width="28" height="2" fill="#f0a677"/><path d="M21 36h18v6h-3v7H23v-3h-4v-6h2Z" fill="#f7c48f" /><rect x="22" y="38" width="11" height="2" fill="#ffe4ac"/><rect x="33" y="41" width="3" height="4" fill="#4b303d"/><rect x="21" y="45" width="3" height="2" fill="#ec8a83"/><rect x="39" y="47" width="3" height="2" fill="#bd6c62"/><rect x="26" y="29" width="13" height="2" fill="#fff1d5"/><rect x="37" y="23" width="6" height="2" fill="#f8a080"/></svg>

@@ -107,6 +107,11 @@ const words={
  pausedText:["等你回来继续垒。", "Your tree will be here when you return."],
  pausedFine:["也可以按 Esc 继续", "Press Esc to resume"],
  skipFinale:["跳过庆祝","Skip celebration"],
+ workshop:["造树工坊","Tree Workshop"],
+ workshopOther:["自由搭树，不计分，和垒树挑战分开。","Build a separate tree at your own pace, without scoring."],
+ workshopPaused:["本局已暂停，回来后继续。工坊里的树和本局分开。","Your run is paused. The workshop tree is separate."],
+ workshopBack:["返回游戏","Back to game"],
+ workshopResume:["返回并继续","Return and resume"],
  settings:["设置","Settings"],
  scoreUnit:["分","pts"],
  resultRetained:["原叠 {finalHeight} 层 · 保住 {level} 层 · {lights} 盏彩灯 · {decorations} 件装饰","{finalHeight} stacked · {level} kept · {lights} lights · {decorations} ornaments"],
@@ -133,6 +138,7 @@ function render(){
  document.title=t('title');
  for(const node of document.querySelectorAll('[data-l10n]'))node.textContent=t(node.dataset.l10n);
  for(const node of document.querySelectorAll('[data-l10n-aria]'))node.setAttribute('aria-label',t(node.dataset.l10nAria));
+ for(const node of document.querySelectorAll('[data-l10n-title]'))node.setAttribute('title',t(node.dataset.l10nTitle));
  document.querySelector('meta[name="description"]')?.setAttribute('content',t('description'));
  $('languageBadge').textContent=active==='en'?'EN':'中';
  $('focusLanguageBadge').textContent=active==='en'?'EN':'中';

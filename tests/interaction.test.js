@@ -11,7 +11,10 @@ function harness(width=640,height=420,reduced=true,eventPick=null,random=.50,opt
  if(!options.firstVisit&&!stored.has("snow-pine-language-v1"))stored.set("snow-pine-language-v1","zh");
  const $=id=>{if(!elements.has(id))elements.set(id,freshNode());return elements.get(id);};
  d.getElementById=$;d.hidden=false;d.documentElement={};d.querySelectorAll=()=>[];d.querySelector=()=>null;
- const picker=$('languagePicker');picker.showModal=()=>{picker.open=true;};picker.close=()=>{picker.open=false;};
+ for(const id of ['languagePicker','workshopDialog']){
+  const dialog=$(id);dialog.showModal=()=>{dialog.open=true;};dialog.close=()=>{dialog.open=false;};
+ }
+ const workshopMessages=[];$('workshopFrame').contentWindow={postMessage:(...args)=>workshopMessages.push(args)};
  const finalFrames=[],emitted=[];
  if(options.finale){
   const context={setTransform(){}};$('journeyFinale').getContext=()=>context;
@@ -23,7 +26,7 @@ function harness(width=640,height=420,reduced=true,eventPick=null,random=.50,opt
  k==='setLineDash'?a=>{if(a.length)airborne=true;}:k==='fillRect'?(...pos)=>pixels.push({pos,color:o.fillStyle,alpha:o.globalAlpha}):
  k==='ellipse'?(...args)=>rings.push({args,color:o.strokeStyle,alpha:o.globalAlpha}):k==='stroke'?()=>paints.push(o.strokeStyle):k==='fillText'?t=>labels.push(t):k==='drawImage'?(img,x,y,w,h)=>{if(img.src.includes('/pixel-branch-')){paints.push(airborne?'air-branch':'branch');leaves.push({x:x+w/2,y:y+h/2,w,h:airborne?0:31,actualHeight:h,src:img.src});}if(img.src.includes('/pixel-sled.svg'))elves.push(x+w/2);if(img.src.includes('/sprite-'))actors.push({name:img.src.split('/sprite-')[1].split('.')[0],x:x+w/2,y:y+h/2});if(img.src.includes('/pixel-bell.svg'))paints.push(airborne?'air-bell':'bell');if(img.src.includes('/pixel-cane.svg'))paints.push(airborne?'air-cane':'cane');}:()=>{})});
  let raf,time=0;
- const c=vm.createContext({window:w,document:d,CustomEvent:class{constructor(type){this.type=type;}},devicePixelRatio:1,matchMedia:q=>({matches:q.includes("reduced-motion")?reduced:true}),Image:class{constructor(){this.complete=true;this.naturalWidth=160;}},requestAnimationFrame:fn=>{raf=fn;},localStorage:{getItem:k=>{if(options.denyStorage&&k==='snow-pine-language-v1')throw Error('denied');return stored.get(k);},setItem:(k,v)=>{if(options.denyStorage&&k==='snow-pine-language-v1')throw Error('denied');stored.set(k,v);}}});
+ const c=vm.createContext({window:w,document:d,location:{origin:'https://kendrick-stein.github.io'},CustomEvent:class{constructor(type){this.type=type;}},devicePixelRatio:1,matchMedia:q=>({matches:q.includes("reduced-motion")?reduced:true}),Image:class{constructor(){this.complete=true;this.naturalWidth=160;}},requestAnimationFrame:fn=>{raf=fn;},localStorage:{getItem:k=>{if(options.denyStorage&&k==='snow-pine-language-v1')throw Error('denied');return stored.get(k);},setItem:(k,v)=>{if(options.denyStorage&&k==='snow-pine-language-v1')throw Error('denied');stored.set(k,v);}}});
  Object.assign(c,{console});
  vm.runInContext('globalThis.Math.random=()=>'+random,c);
  vm.runInContext(read('game-core.js'),c);
@@ -35,7 +38,7 @@ function harness(width=640,height=420,reduced=true,eventPick=null,random=.50,opt
  vm.runInContext(options.inspect?script.replace(/\}\)\(\);\s*$/, `window.testGame={state:()=>state,tips:hintSkill,finish:lose,decor:()=>ornaments};})();`):script,c);
  let tracking=false;
  const point=x=>{$('field').fire('pointerdown',{pointerId:1,clientX:x});$('field').fire('pointermove',{pointerId:1,clientX:x});$('field').fire('pointerup',{pointerId:1});};
- return {$,w,d,point,leaves,elves,pixels,labels,paints,actors,rings,finalFrames,emitted,stored,transform:()=>transform,setSize:(w,h)=>{size.width=w;size.height=h;},follow:b=>tracking=b,advance:ms=>{for(let i=0;i<ms;i+=16){
+ return {$,w,d,point,leaves,elves,pixels,labels,paints,actors,rings,finalFrames,emitted,workshopMessages,stored,transform:()=>transform,setSize:(w,h)=>{size.width=w;size.height=h;},follow:b=>tracking=b,advance:ms=>{for(let i=0;i<ms;i+=16){
       if(tracking && leaves.length){const o=leaves.find(x=>x.h!==31&&x.y>0);if(o)point(o.x*transform[0]+transform[4]);}
       raf(time+=16);
  }}};
@@ -547,4 +550,37 @@ test('animated break receives only actual upper rows and uses retained star thre
  assert.deepEqual({...removed[0].ornaments[0]},ornament);assert(Object.isFrozen(before.layers));
  assert(snapshot.layers.every(row=>row.ornaments.length===0));
  $('skipFinale').fire('click');assert.strictEqual(snapshot,w.ElfShareSource.snapshot());
+});
+
+test('home workshop is same-origin, lazy, separate from the ready game and returns focus',()=>{
+ const h=harness(390,700,true,null,.5,{inspect:true,finale:true}),{$,d,w}=h;
+ assert.equal($('workshopFrame').src,undefined);assert.equal(h.emitted.length,0);
+ $('workshopHome').fire('click');assert($('workshopDialog').open);
+ assert.equal($('workshopFrame').src,'./workshop/index.html');
+ assert.equal($('workshopBack').textContent,'返回游戏');assert.equal(d.activeElement,$('workshopBack'));
+ h.advance(11000);assert.equal(w.testGame.state().elapsed,0);
+ assert.deepEqual(h.workshopMessages.at(-1).map(x=>typeof x==='object'?x.language:x),['zh','https://kendrick-stein.github.io']);
+ w.fire('message',{origin:'https://different.example',source:$('workshopFrame').contentWindow,data:{type:'pine:workshop-close'}});
+ assert($('workshopDialog').open);
+ $('workshopBack').fire('click');assert(!$('workshopDialog').open);
+ assert.equal(d.activeElement,$('workshopHome'));assert.equal(h.emitted.length,0);
+ assert(!$('panel').hidden);$('start').fire('click');assert.deepEqual(h.emitted,['elf:reset']);
+});
+test('midrun workshop stops play, retains exact state, and only returns to prior run mode',()=>{
+ const h=harness(390,700,true,null,.5,{inspect:true,finale:true}),{$,d,w,elves}=h;
+ $('start').fire('click');h.follow(true);h.advance(10500);h.follow(false);
+ const game=w.testGame.state(),before={elapsed:game.elapsed,score:game.score,heart:game.hearts,level:game.level,cart:elves[0]};
+ $('settingsMenu').open=true;$('workshopSettings').fire('click');
+ assert($('workshopDialog').open);assert(!$('settingsMenu').open);assert.equal($('workshopBack').textContent,'返回并继续');
+ $('start').fire('click');h.advance(15000);
+ assert.deepEqual({elapsed:game.elapsed,score:game.score,heart:game.hearts,level:game.level,cart:elves[0]},before);
+ w.fire('message',{origin:'https://kendrick-stein.github.io',source:{},data:{type:'pine:workshop-close'}});
+ assert($('workshopDialog').open);
+ w.fire('message',{origin:'https://kendrick-stein.github.io',source:$('workshopFrame').contentWindow,data:{type:'pine:workshop-close'}});
+ assert(!$('workshopDialog').open);assert($('panel').hidden);
+ assert.equal(d.activeElement,$('field'));assert.deepEqual(h.emitted,['elf:reset']);
+ h.advance(160);assert(game.elapsed>before.elapsed);assert.strictEqual(w.testGame.state(),game);
+ w.fire('keydown',{key:'Escape'});assert(!$('panel').hidden);
+ $('workshopHome').fire('click');assert.equal($('workshopBack').textContent,'返回游戏');
+ $('workshopDialog').fire('cancel');assert(!$('workshopDialog').open);assert(!$('panel').hidden);
 });

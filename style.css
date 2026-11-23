@@ -245,3 +245,17 @@ html[lang="en"] .mast .brand{letter-spacing:0}
 @media (min-width:691px) and (min-height:481px){
  .is-settlement .screen #settlementTree{transform:translateY(clamp(10px,3.2vh,32px))}
 }
+
+/* A same-page workshop keeps the current run in memory while building a separate tree. */
+#workshopSettings{grid-column:1/-1}.panel .workshop-home{display:inline-block;margin:8px 4px 0;min-height:44px;background:#203c55;color:#ffe3aa;border:1px solid #7893a3;box-shadow:none}
+.panel .workshop-home:hover{background:#305677}.panel .workshop-home[hidden]{display:none}
+.workshop-dialog{inset:0;margin:auto;width:min(1160px,calc(100vw - 20px));height:min(930px,calc(100dvh - 20px));max-width:none;max-height:none;box-sizing:border-box;padding:0;border:1px solid #527990;border-radius:11px;background:#14283e;color:#fff0d0;overflow:hidden}
+.workshop-dialog[open]{display:grid;grid-template-rows:auto minmax(0,1fr)}
+.workshop-dialog::backdrop{background:#0a172bd9}
+.workshop-dialog[data-fallback=true]{position:fixed;z-index:15;box-shadow:0 0 0 100vmax #0a172bd9}
+.workshop-dialog header{min-height:56px;padding:6px 12px;display:flex;align-items:center;justify-content:space-between;gap:10px;border-bottom:1px solid #466986;background:#172d45}
+.workshop-dialog h2{font-size:1.03rem;margin:0}.workshop-dialog p{color:#b4cbd9;font-size:.78rem;line-height:1.2;margin:2px 0 0}
+.workshop-dialog button{min-height:44px;min-width:96px;border:1px solid #7193a7;background:#264662;color:#ffe6ae;border-radius:5px;padding:5px 10px;font-weight:800;white-space:nowrap}
+.workshop-dialog button:focus-visible{outline:2px solid #ffe29f;outline-offset:2px}
+.workshop-dialog iframe{display:block;width:100%;height:100%;min-height:0;border:0;overscroll-behavior:contain}
+@media(max-width:680px){.workshop-dialog{width:100vw;height:100dvh;border:0;border-radius:0}.workshop-dialog header{padding-top:calc(5px + env(safe-area-inset-top,0px));padding-left:max(9px,env(safe-area-inset-left,0px));padding-right:max(9px,env(safe-area-inset-right,0px))}}

@@ -1,0 +1,22 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="768" height="624" viewBox="0 0 768 624" preserveAspectRatio="xMidYMid slice" shape-rendering="crispEdges">
+<defs>
+ <linearGradient id="wall" x2="0" y2="1"><stop stop-color="#152a3d"/><stop offset="1" stop-color="#31495b"/></linearGradient>
+ <radialGradient id="lamp"><stop stop-color="#c38b53" stop-opacity=".22"/><stop offset="1" stop-color="#c38b53" stop-opacity="0"/></radialGradient>
+ <pattern id="floor" width="96" height="19" patternUnits="userSpaceOnUse"><path fill="#795748" d="M0 0h96v19H0z"/><path fill="#6d4e43" d="M0 17h96v2H0zM59 0h1v17h-1z"/><path fill="#8a6651" d="M8 9h32v1H8zM66 4h18v1H66z"/></pattern>
+</defs>
+<path d="M0 0h768v624H0z" fill="url(#wall)"/>
+<path d="M0 22h768v3H0zM0 188h768v1H0zM0 350h768v1H0zM0 433h768v2H0z" fill="#426076" opacity=".42"/>
+<path d="M0 518h768v106H0z" fill="url(#floor)"/>
+<path d="M0 498h768v20H0z" fill="#203748"/><path d="M0 500h768v3H0zM0 516h768v3H0z" fill="#4e6470"/>
+<ellipse cx="387" cy="379" rx="343" ry="296" fill="url(#lamp)"/>
+<!-- Peripheral panes recede behind the intentionally clean central canvas. -->
+<g opacity=".58">
+<path d="M46 101h87v121H46zM635 101h87v121h-87z" fill="#142a42"/>
+<path d="M42 97h95v129H42zM631 97h95v129h-95z" fill="none" stroke="#6b705e" stroke-width="5"/>
+<path d="M88 100h4v123h-4zM673 100h4v123h-4zM45 160h88v4H45zM634 160h88v4h-88z" fill="#6b705e"/>
+<path d="M45 199h14v-4h9v-4h6v-7h5v-8h6v-6h7v5h7v6h8v5h9v5h16v16H45zM636 192h19v-5h10v-5h11v-7h9v8h10v5h12v5h13v10h-84z" fill="#263f56"/>
+<path d="M45 212h88v9H45zM635 212h86v9h-86z" fill="#849cac"/>
+<path d="M54 117h2v2h-2zM68 139h2v2h-2zM101 114h2v2h-2zM112 127h3v3h-3zM652 115h2v2h-2zM663 141h2v2h-2zM687 146h3v3h-3zM703 125h2v2h-2z" fill="#c5d8dc"/>
+</g>
+<path d="M0 595h75v2H0zM104 580h102v2H104zM554 599h98v2h-98zM691 580h77v2h-77z" fill="#9e7656" opacity=".45"/>
+</svg>
