@@ -557,7 +557,7 @@ test('home workshop is same-origin, lazy, separate from the ready game and retur
  assert.equal($('workshopFrame').src,undefined);assert.equal(h.emitted.length,0);
  $('workshopHome').fire('click');assert($('workshopDialog').open);
  assert.equal($('workshopFrame').src,'./workshop/index.html');
- assert.equal($('workshopBack').textContent,'返回游戏');assert.equal(d.activeElement,$('workshopBack'));
+ assert.equal($('workshopBack').textContent,'返回首页');assert.equal(d.activeElement,$('workshopBack'));
  h.advance(11000);assert.equal(w.testGame.state().elapsed,0);
  assert.deepEqual(h.workshopMessages.at(-1).map(x=>typeof x==='object'?x.language:x),['zh','https://kendrick-stein.github.io']);
  w.fire('message',{origin:'https://different.example',source:$('workshopFrame').contentWindow,data:{type:'pine:workshop-close'}});
@@ -566,21 +566,18 @@ test('home workshop is same-origin, lazy, separate from the ready game and retur
  assert.equal(d.activeElement,$('workshopHome'));assert.equal(h.emitted.length,0);
  assert(!$('panel').hidden);$('start').fire('click');assert.deepEqual(h.emitted,['elf:reset']);
 });
-test('midrun workshop stops play, retains exact state, and only returns to prior run mode',()=>{
- const h=harness(390,700,true,null,.5,{inspect:true,finale:true}),{$,d,w,elves}=h;
- $('start').fire('click');h.follow(true);h.advance(10500);h.follow(false);
- const game=w.testGame.state(),before={elapsed:game.elapsed,score:game.score,heart:game.hearts,level:game.level,cart:elves[0]};
- $('settingsMenu').open=true;$('workshopSettings').fire('click');
- assert($('workshopDialog').open);assert(!$('settingsMenu').open);assert.equal($('workshopBack').textContent,'返回并继续');
- $('start').fire('click');h.advance(15000);
- assert.deepEqual({elapsed:game.elapsed,score:game.score,heart:game.hearts,level:game.level,cart:elves[0]},before);
- w.fire('message',{origin:'https://kendrick-stein.github.io',source:{},data:{type:'pine:workshop-close'}});
- assert($('workshopDialog').open);
- w.fire('message',{origin:'https://kendrick-stein.github.io',source:$('workshopFrame').contentWindow,data:{type:'pine:workshop-close'}});
- assert(!$('workshopDialog').open);assert($('panel').hidden);
- assert.equal(d.activeElement,$('field'));assert.deepEqual(h.emitted,['elf:reset']);
- h.advance(160);assert(game.elapsed>before.elapsed);assert.strictEqual(w.testGame.state(),game);
- w.fire('keydown',{key:'Escape'});assert(!$('panel').hidden);
- $('workshopHome').fire('click');assert.equal($('workshopBack').textContent,'返回游戏');
- $('workshopDialog').fire('cancel');assert(!$('workshopDialog').open);assert(!$('panel').hidden);
+test('workshop is unavailable while playing, paused, watching finale, or settled',()=>{
+ const h=harness(390,700,true,null,.5,{inspect:true,finale:true}),{$,w}=h;
+ const cannotOpen=()=>{
+   assert($('workshopHome').hidden);
+   $('workshopHome').fire('click');assert(!$('workshopDialog').open);
+   assert.equal($('workshopFrame').src,undefined);
+ };
+ $('start').fire('click');h.follow(true);h.advance(10000);h.follow(false);
+ cannotOpen();const game=w.testGame.state(),elapsed=game.elapsed;
+ w.fire('keydown',{key:'Escape'});cannotOpen();h.advance(1000);assert.equal(game.elapsed,elapsed);
+ $('start').fire('click');cannotOpen();h.advance(100);assert(game.elapsed>elapsed);assert.strictEqual(w.testGame.state(),game);
+ w.testGame.finish();cannotOpen();
+ $('skipFinale').fire('click');cannotOpen();assert.deepEqual(h.emitted,['elf:reset','elf:settlement']);
+ $('start').fire('click');cannotOpen();assert.deepEqual(h.emitted,['elf:reset','elf:settlement','elf:reset']);
 });

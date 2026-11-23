@@ -57,20 +57,18 @@ try{const raw=JSON.parse(localStorage.getItem(recordKey));if(raw&&Number.isFinit
 const shell=$('shell'),rules=$('rules'),focusToggle=$('focusToggle'),helpToggle=$('helpToggle'),helpClose=$('helpClose');
 const settingsMenu=$('settingsMenu'),settingsToggle=$('settingsToggle');
 const workshopDialog=$('workshopDialog'),workshopFrame=$('workshopFrame'),workshopBack=$('workshopBack');
-const workshopHome=$('workshopHome'),workshopSettings=$('workshopSettings');
-let workshopOpen=false,workshopResume=false,workshopOrigin=null,workshopLoaded=false;
+const workshopHome=$('workshopHome');
+let workshopOpen=false,workshopLoaded=false;
 function renderWorkshop(){
  if(!workshopDialog)return;
- $('workshopStatus').textContent=t(workshopResume?'workshopPaused':'workshopOther');
- workshopBack.textContent=t(workshopResume?'workshopResume':'workshopBack');
+ $('workshopStatus').textContent=t('workshopOther');
+ workshopBack.textContent=t('workshopBack');
  if(workshopLoaded&&typeof location!=='undefined'&&location.origin!=='null')try{
    workshopFrame.contentWindow?.postMessage({type:'pine:workshop-language',language:locale.lang()},location.origin);
  }catch{}
 }
-function openWorkshop(origin){
- if(workshopOpen||locale.blocking()||!workshopDialog||mode==='finale')return;
- workshopOrigin=origin;workshopResume=mode==='playing';
- if(workshopResume)pause();
+function openWorkshop(){
+ if(workshopOpen||locale.blocking()||!workshopDialog||mode!=='ready')return;
  workshopOpen=true;settingsMenu.open=false;resetInput();
  if(!workshopLoaded){workshopFrame.src='./workshop/index.html';workshopLoaded=true;}
  renderWorkshop();
@@ -83,12 +81,9 @@ function closeWorkshop(){
  workshopOpen=false;
  if(typeof workshopDialog.close==='function')workshopDialog.close();
  else{workshopDialog.removeAttribute('open');shell.inert=false;}
- if(workshopResume&&mode==='paused')begin();
- else (workshopOrigin===workshopSettings?settingsToggle:workshopHome).focus({preventScroll:true});
- workshopResume=false;workshopOrigin=null;
+ workshopHome.focus({preventScroll:true});
 }
-workshopHome?.addEventListener('click',()=>openWorkshop(workshopHome));
-workshopSettings?.addEventListener('click',()=>openWorkshop(workshopSettings));
+workshopHome?.addEventListener('click',openWorkshop);
 workshopBack?.addEventListener('click',closeWorkshop);
 workshopDialog?.addEventListener('cancel',e=>{e.preventDefault();closeWorkshop();});
 workshopFrame?.addEventListener('load',()=>{if(workshopLoaded)renderWorkshop();});
@@ -820,7 +815,7 @@ function renderPanel(){
  $('panelTag').textContent=mode==='lost'?t(newRecord?'record':'settlement'):mode==='paused'?t('break'):'';
  $('panelIcon').textContent=mode==='lost'&&state.level>=C.STAR_AT?'✦':'❄';
  $('panelFine').textContent=mode==='lost'?t('bestCombo',{n:state.bestCombo}):mode==='paused'?t('pausedFine'):'';
- workshopHome.hidden=mode==='lost'||mode==='playing';
+ workshopHome.hidden=mode!=='ready';
  button(mode==='lost'?'replay':mode==='paused'?'resume':'start');
 }
 function renderSound(){

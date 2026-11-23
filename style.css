@@ -247,7 +247,7 @@ html[lang="en"] .mast .brand{letter-spacing:0}
 }
 
 /* A same-page workshop keeps the current run in memory while building a separate tree. */
-#workshopSettings{grid-column:1/-1}.panel .workshop-home{display:inline-block;margin:8px 4px 0;min-height:44px;background:#203c55;color:#ffe3aa;border:1px solid #7893a3;box-shadow:none}
+.panel .workshop-home{display:inline-block;margin:8px 4px 0;min-height:44px;background:#203c55;color:#ffe3aa;border:1px solid #7893a3;box-shadow:none}
 .panel .workshop-home:hover{background:#305677}.panel .workshop-home[hidden]{display:none}
 .workshop-dialog{inset:0;margin:auto;width:min(1160px,calc(100vw - 20px));height:min(930px,calc(100dvh - 20px));max-width:none;max-height:none;box-sizing:border-box;padding:0;border:1px solid #527990;border-radius:11px;background:#14283e;color:#fff0d0;overflow:hidden}
 .workshop-dialog[open]{display:grid;grid-template-rows:auto minmax(0,1fr)}
