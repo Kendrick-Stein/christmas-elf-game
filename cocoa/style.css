@@ -119,3 +119,16 @@ header>div:not(.tools){min-width:0}
 main:has(.overlay.celebrating) .counter-drink{animation:cup-light .26s calc(.82s + .038s * var(--cup-in)) both}
 @keyframes cup-light{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 @media(max-height:600px){.overlay[data-screen=result]{top:93px;position:relative;margin-top:-170px;margin-bottom:90px}}
+/* Draw the same local vector vessel in the mixer, stored cups and closing counter. */
+#mixCup{width:59px;height:55.3125px;border:0;background:none;box-shadow:none;transform:none;bottom:7%;--cup-rim-x:50%;--cup-rim-y:23.33%}
+#mixCup::after,.counter-drink::before,.counter-drink::after,.cup-slot[data-drink] b::before{content:none}
+#mixCupArt,#mixCupArt svg,.counter-drink svg,.cup-thumb svg{display:block;width:100%;height:100%}
+#mixCup #liquid{left:var(--cup-rim-x);right:auto;top:var(--cup-rim-y);width:1px;height:1px;background:transparent;border:0}
+#mixCup #garnish{left:var(--cup-rim-x);right:auto;top:var(--cup-rim-y);transform:translate(-50%,-70%);white-space:nowrap}
+#mixCup .steam{left:var(--cup-rim-x);top:calc(var(--cup-rim-y) - 22px);transform:translateX(-50%);width:20px}
+.cup-thumb:not([data-vessel=empty]){display:inline-block;width:16px;height:15px;margin-right:3px;vertical-align:middle}
+.counter-drink{width:clamp(15px,5.3vw,34px);height:auto;aspect-ratio:32/30;border:0;background:none;box-shadow:none}
+.cup-thumb{position:relative}
+.vessel-toppings{position:absolute;left:var(--vessel-x);top:var(--vessel-y);transform:translate(-50%,-70%);display:flex;gap:1px;pointer-events:none}
+.vessel-toppings i{width:2px;height:2px;background:var(--topping);border-radius:1px}
+.counter-drink .vessel-toppings i{width:clamp(2px,.7vw,4px);height:clamp(2px,.7vw,4px)}

@@ -36,8 +36,25 @@ const ingKeys='qweasdzxc',orderNodes=new Map(),empty=node('p','empty');$('orders
 const ing=C.ingredients.map((k,i)=>{
  const b=button('ingredient',()=>pour(k));b.append(node('i'),node('span'),node('kbd'));b.children[0].style.setProperty('--item',food[k][2]);b.children[2].textContent=ingKeys[i<C.bases.length?i:i-C.bases.length].toUpperCase();$('ingredients').append(b);return b;
 });
+const cupArt=globalThis.PineCups;
+function drawVessel(el,recipe,showEmpty=false){
+ const drink=recipe?.[0]??'', vessel=drink||'empty', key=showEmpty?vessel:(recipe?.join('|')||'empty');
+ if(el.dataset.recipe===key)return;
+ el.dataset.recipe=key;el.dataset.vessel=vessel;
+ el.innerHTML=(drink||showEmpty)?(cupArt?.svg(vessel)??''):'';
+ if(!showEmpty&&recipe?.length>1){
+  const rim=cupArt?.rim(vessel)??{x:5,y:7,width:22};
+  const sprinkles=node('span','vessel-toppings');
+  sprinkles.style.setProperty('--vessel-x',(rim.x+rim.width/2)/32*100+'%');
+  sprinkles.style.setProperty('--vessel-y',rim.y/30*100+'%');
+  for(const topping of recipe.slice(1)){
+   const mark=node('i');mark.style.setProperty('--topping',food[topping][2]);sprinkles.append(mark);
+  }
+  el.append(sprinkles);
+ }
+}
 const slots=s.cups.map((_,i)=>{
- const el=node('div','cup-slot'),pickBtn=button('cup-pick',()=>pick(i)),trash=button('cup-discard',()=>discard(i));pickBtn.append(node('b'),node('em'));trash.textContent='×';el.append(pickBtn,trash);$('cups').append(el);return {el,pickBtn,trash};
+ const el=node('div','cup-slot'),pickBtn=button('cup-pick',()=>pick(i)),trash=button('cup-discard',()=>discard(i));const thumb=node('span','cup-thumb'),label=node('b');thumb.setAttribute('aria-hidden','true');label.append(thumb,node('span'));pickBtn.append(label,node('em'));trash.textContent='×';el.append(pickBtn,trash);$('cups').append(el);return {el,pickBtn,trash,thumb,labelText:label.lastChild};
 });
 function setText(el,text){if(el.textContent!==text)el.textContent=text;}
 function render(){
@@ -61,18 +78,25 @@ function render(){
   const pct=Math.max(0,(o.until-s.time)/(o.until-o.at)),bar=b.children[2].firstChild;bar.style.width=(pct*100)+'%';bar.classList.toggle('low',pct<.27);
   b.classList.toggle('targetable',Boolean(cup?.ready));b.classList.toggle('urgent',pct<.27);
  });
- slots.forEach(({el,pickBtn,trash},i)=>{
+ slots.forEach(({el,pickBtn,trash,thumb,labelText},i)=>{
   const c=s.cups[i];el.dataset.state=c.ready?'ready':c.items.length?'mixing':'empty';el.dataset.drink=c.items[0]??'';
   pickBtn.disabled=!playing;pickBtn.setAttribute('aria-pressed',String(s.selected===i));trash.hidden=!c.items.length;trash.disabled=!playing||!c.items.length;trash.setAttribute('aria-label',L('清空第 '+(i+1)+' 杯','Clear cup '+(i+1)));
-  setText(pickBtn.children[0],L('杯 '+(i+1),'Cup '+(i+1))+(c.ready?L(' · 已好',' · Ready'):''));setText(pickBtn.children[1],c.items.length?list(c.items):L('空杯','Empty'));
+  drawVessel(thumb,c.items);setText(labelText,L('杯 '+(i+1),'Cup '+(i+1))+(c.ready?L(' · 已好',' · Ready'):''));setText(pickBtn.children[1],c.items.length?list(c.items):L('空杯','Empty'));
  });
  const showToppings=Boolean(cup?.items.length);ing.forEach((b,i)=>{b.hidden=showToppings?i<C.bases.length:i>=C.bases.length;b.disabled=!playing||!cup||cup.ready||cup.items.length>=4||b.hidden;});
  $('seal').disabled=!playing||!cup||cup.ready||cup.items.length<2;$('serve').disabled=!playing||!cup?.ready||!s.orders.length;
  setText($('formula'),cup?.items.length?list(cup.items):cup?L('先选一款底饮','Choose a base first'):L('先选一个杯位','Select a cup slot'));
  const guest=reaction&&reaction.end>s.time?reaction:s.orders[0];
  setText($('patron'),guest?' ':'');portrait($('patron'),guest);$('patron').classList.toggle('ok',Boolean(reaction?.ok&&reaction.end>s.time));
- $('liquid').style.backgroundColor=cup?.items[0]?food[cup.items[0]][2]:'#542e36';const drink=cup?.items[0]??'',effect=C.visual(cup?.items??[]),cupArt=document.querySelector('.cup');
- $('liquid').dataset.drink=drink;$('liquid').dataset.react=effect;cupArt.dataset.drink=drink;cupArt.dataset.combo=effect;
+ const drink=cup?.items[0]??'',effect=C.visual(cup?.items??[]),stageCup=$('mixCup');
+ if(stageCup.dataset.drink!==drink){
+  drawVessel($('mixCupArt'),cup?.items,true);
+  const rim=cupArt?.rim(drink||'empty')??{x:5,y:7,width:22};
+  stageCup.style.setProperty('--cup-rim-x',(rim.x+rim.width/2)/32*100+'%');stageCup.style.setProperty('--cup-rim-y',rim.y/30*100+'%');
+  stageCup.dataset.drink=drink;
+ }
+ if($('liquid').dataset.react!==effect)$('liquid').dataset.react=effect;
+ stageCup.dataset.combo=effect;
  $('reaction').hidden=!effect;
  const visualName={fizz:['焦糖金泡','Golden caramel bubbles'],cinnamon:['姜饼香气','Gingerbread spice'],mint:['薄荷雪光','Mint sparkle'],cream:['绵密奶泡','Creamy foam']};
  setText($('reaction'),effect?L(...visualName[effect]):'');setText($('garnish'),(cup?.items.slice(1)??[]).map(x=>({mint:'✦',cream:'☁',mallow:'▪',spice:'✶',orange:'◕',caramel:'✧',crumb:'◈',peppermint:'▧'}[x])).join(''));
@@ -89,7 +113,7 @@ function pause(value,focus=true){if(s.phase!=='playing')return;paused=value;rend
 function showCounter(){
  const display=$('counterDisplay');display.replaceChildren();
  s.drinks.forEach((recipe,i)=>{
-  const cup=node('i','counter-drink');cup.style.setProperty('--drink',food[recipe[0]][2]);cup.style.setProperty('--garnish',food[recipe[1]][2]);cup.style.setProperty('--cup-in',String(i%12));display.append(cup);
+  const cup=node('i','counter-drink');drawVessel(cup,recipe);cup.style.setProperty('--cup-in',String(i%12));display.append(cup);
  });display.hidden=false;
 }
 function end(){showCounter();audio?.effect?.('finish');if(s.money>best){best=s.money;set(record,String(best));}finalAt=0;finalProgress=reduced()?1:0;render();(finalProgress===1?$('start'):$('skipAnimation')).focus();}

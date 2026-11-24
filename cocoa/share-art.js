@@ -50,22 +50,21 @@ function drawCounter(ctx,{drinks=[],revenue=0,served=0,tips=0,omitted=0}={},lang
  function mug(d,x,baseline,u){
   const A=(xx,yy,w,h,c)=>rect(x+xx*u,baseline+yy*u,w*u,h*u,c);
   ellipse(x+u*16,baseline+u*1.5,u*21,u*4.5,'#281c34');
-  const c=BASE[d[0]];
-  A(1,-32,26,31,'#361f34');A(23,-25,11,22,'#361f34');A(26,-22,8,15,'#e19d7b');A(28,-19,4,9,'#4b2c43');
-  A(3,-29,23,25,'#af665d');A(4,-28,18,24,'#d79173');A(5,-26,4,18,'#f0b395');
-  A(4,-30,21,5,'#ffe3b7');A(6,-29,17,3,c);A(6,-2,18,3,'#9b5159');
-  A(10,-21,10,13,'#993e64');A(11,-20,8,11,c);A(12,-18,6,2,'#f0c594');
+  const shared=globalThis.PineCups,rim=shared?.rim(d[0])??{x:5,y:7,width:22}; 
+  const rY=rim.y-30,rCenter=rim.x+rim.width/2;
+  if(shared)shared.draw(ctx,d[0],{x,y:baseline-30*u,size:32*u});
+  else A(4,-27,24,27,BASE[d[0]]);
   for(let j=0;j<d.slice(1).length;j++){
    const k=d[j+1],cl=TOP[k];if(!cl)continue;
-   const xx=8+j*6;
-   if(k==='cream'){A(xx,-35,5,4,cl);A(xx+1,-37,3,2,cl);}
-   else if(k==='mint'){A(xx,-34,4,4,cl);A(xx+1,-36,2,2,'#dbf4d0');}
-   else if(k==='orange'){A(xx,-35,5,5,cl);A(xx+1,-34,3,3,'#ffcf7d');}
-   else if(k==='peppermint'){A(xx,-35,4,5,cl);A(xx,-33,4,1,'#fff1d2');}
-   else if(k==='caramel'){A(xx,-33,5,2,cl);A(xx+2,-35,2,2,'#ffd580');}
-   else {A(xx,-34,4,4,cl);A(xx+1,-35,2,1,cl);}
+   const xx=rCenter-((d.length-2)*5)/2+j*5-2, top=rY+34;
+   if(k==='cream'){A(xx,top-35,5,4,cl);A(xx+1,top-37,3,2,cl);}
+   else if(k==='mint'){A(xx,top-34,4,4,cl);A(xx+1,top-36,2,2,'#dbf4d0');}
+   else if(k==='orange'){A(xx,top-35,5,5,cl);A(xx+1,top-34,3,3,'#ffcf7d');}
+   else if(k==='peppermint'){A(xx,top-35,4,5,cl);A(xx,top-33,4,1,'#fff1d2');}
+   else if(k==='caramel'){A(xx,top-33,5,2,cl);A(xx+2,top-35,2,2,'#ffd580');}
+   else {A(xx,top-34,4,4,cl);A(xx+1,top-35,2,1,cl);}
   }
-  A(10,-42,2,4,'#ebd1bdb0');A(12,-44,2,3,'#ebd1bd90');A(19,-43,2,4,'#ebd1bd96');A(17,-46,2,3,'#ebd1bd84');
+  A(rCenter-5,rY-9,2,4,'#ebd1bdb0');A(rCenter-3,rY-11,2,3,'#ebd1bd90');A(rCenter+4,rY-10,2,4,'#ebd1bd96');A(rCenter+2,rY-13,2,3,'#ebd1bd84');
  }
  const cols=n<=4?n:n<=10?5:6;
  const rows=n?Math.ceil(n/cols):0;
