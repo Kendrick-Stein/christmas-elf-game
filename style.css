@@ -300,3 +300,16 @@ html[lang="en"] .mast .brand{letter-spacing:0}
  .panel[data-mode=ready] #panelText{font-size:.73rem}
  .panel[data-mode=ready] .mode-grid .mode-card{min-height:62px}
 }
+
+/* The arcade has its own winter market. Layout and scenery return to the game on start. */
+.arcade-backdrop{display:none}
+.shell.is-arcade{isolation:isolate;background:none}
+.shell.is-arcade .arcade-backdrop{display:block;position:fixed;inset:0;z-index:-1;pointer-events:none;background:#181a2e url('./assets/arcade-market.svg?v=market-30') center/cover no-repeat;image-rendering:pixelated}
+.shell.is-arcade .mast{background:#171a2a71;border-bottom-color:#d6b19735}
+.shell.is-arcade .stage,.shell.is-arcade .play,.shell.is-arcade .frame,.shell.is-arcade .screen{background:transparent;box-shadow:none;border-color:transparent}
+.shell.is-arcade .screen::before,.shell.is-arcade .journey-scenes,.shell.is-arcade #field{visibility:hidden}
+.shell.is-arcade .panel[data-mode=ready]{background:transparent}
+.shell.is-arcade .panel[data-mode=ready] .card{background:linear-gradient(145deg,#17283aec,#211b30f5);border-color:#d3ad78;box-shadow:0 6px 23px #080d1ebe}
+@media(max-width:650px) and (orientation:portrait){
+ .shell.is-arcade .arcade-backdrop{background-image:url('./assets/arcade-market-portrait.svg?v=market-30')}
+}
