@@ -1,0 +1,926 @@
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>搭姜饼屋</title><meta name="description" content="接住姜饼，拼起你的雪夜小屋。"><link rel="canonical" href="https://kendrick-stein.github.io/christmas-elf-game/gingerbread/">
+<style>
+*{box-sizing:border-box}body{margin:0;background:#101924;color:#ffe6c2;font:600 16px system-ui,sans-serif;overflow:hidden}button{font:inherit;color:inherit;background:#294355;border:1px solid #567486;border-radius:10px;cursor:pointer;min-height:45px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}button:focus-visible{outline:3px solid #ffcf86;outline-offset:2px}button:disabled{opacity:.4;cursor:default}.app{height:100vh;height:100dvh;max-width:550px;position:relative;margin:auto;display:grid;grid-template-rows:auto 1fr auto;overflow:hidden;background:#202d45}header{padding:calc(10px + env(safe-area-inset-top)) 14px 9px;background:#152735;display:flex;align-items:center;gap:12px;z-index:1;border-bottom:1px solid #587281}h1{font-size:21px;margin:0 auto 0 0}header button{font-size:14px;padding:0 10px}#score{color:#ffca87;font-variant-numeric:tabular-nums}.arena{min-height:0;position:relative}canvas{width:100%;height:100%;display:block}.msg{position:absolute;top:12px;left:50%;transform:translateX(-50%);pointer-events:none;background:#142636dc;border:1px solid #587080;border-radius:999px;padding:5px 12px;white-space:nowrap;color:#bde7d0;font-size:13px}.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:10px 10px calc(10px + env(safe-area-inset-bottom));background:#152835;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}.controls button{min-height:55px;font-size:17px;touch-action:none}.controls button:last-child{background:#765540;border-color:#bc916c}.screen{position:absolute;inset:0;background:#112031ba;display:grid;place-items:center;z-index:3;padding:20px}.sheet{width:min(100%,355px);border:1px solid #8498a0;border-radius:18px;background:#172c3b;padding:20px}.sheet p{color:#c1d0d8;font-size:15px;line-height:1.55;margin:13px 0 18px}.sheet h2{margin:0;color:#ffebc4}.sheet .row{display:flex;flex-wrap:wrap;gap:7px}.sheet button{flex:1;padding:0 9px}.sheet button.primary{background:#895c42;border-color:#deac85}.screen[hidden]{display:none}.screen[data-mode=capped],.screen[data-mode=collapse]{align-items:end;padding-bottom:calc(87px + env(safe-area-inset-bottom));background:linear-gradient(0deg,#112031d0,transparent 65%);pointer-events:none}.screen .sheet{pointer-events:auto}.sr{position:absolute;clip:rect(0,0,0,0);width:1px;height:1px;overflow:hidden} @media (max-width:350px){h1{font-size:17px}header{gap:7px}header button{padding:0 7px}} 
+.screen[data-mode=capped],.screen[data-mode=collapse]{background:#152734;align-items:center;padding:12px 12px calc(12px + env(safe-area-inset-bottom));pointer-events:auto;overflow:auto}.screen[data-mode=capped] .sheet,.screen[data-mode=collapse] .sheet{width:min(100%,470px);margin:auto;padding:12px 14px;background:linear-gradient(165deg,#233b4c,#172a38 70%);border-color:#647886;box-shadow:0 15px 45px #0b1521}.result-tag{font-size:12px;letter-spacing:.13em;color:#eabb91;margin:4px 0}.result h2{font-size:21px}.result-score{display:flex;align-items:baseline;gap:6px;color:#ffca8c;font-size:14px}.result-score strong{font-size:38px;font-variant-numeric:tabular-nums;line-height:1.04}.result figure{margin:10px 0 11px;height:min(49dvh,435px);min-height:155px;border-radius:11px;background:#142639;padding:3px;overflow:hidden;border:1px solid #475f71}.result figure canvas{object-fit:contain}.sheet .result-fine{margin:7px 0;font-size:12px;line-height:1.35;color:#bbccd3}.result-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}.result-actions button{font-size:14px;padding:0 4px}.result .row button.primary{margin-top:1px}.result .share-status{margin:7px 0 0;min-height:16px;color:#f3cf9b;font-size:12px}.result[hidden],.result-actions[hidden],.row [hidden]{display:none}.screen.is-result #dialogCopy{display:none}
+@media (max-height:610px){.result figure{height:39dvh}.result-score strong{font-size:30px}}
+.arena{touch-action:none}.controls{grid-template-columns:repeat(2,1fr);gap:7px}.controls small{font-size:11px;color:#c6d6d5}.cart-handle{grid-column:1/-1;position:relative;height:38px;border:1px solid #506f80;border-radius:11px;background:#1d3340;touch-action:none;cursor:ew-resize}.cart-handle:before{content:"";position:absolute;inset:16px 14px auto;height:2px;background:#587687}.cart-handle span{position:absolute;top:2px;left:50%;transform:translateX(-50%);background:#405867;border:1px solid #9bacb1;border-radius:8px;padding:4px 10px;white-space:nowrap;font-size:13px;pointer-events:none}#hearts{font-size:18px;color:#ffa79b;letter-spacing:.07em;min-width:53px;text-align:center}.controls button{min-height:48px}.controls button:active{background:#9b684b}canvas{touch-action:none}
+.ice-key{font-size:10px;white-space:nowrap;color:#e1b18a}.ice-key b{color:#b8eaf5;font-weight:700}.ice-key b:before{content:' ';white-space:pre} @media(max-width:340px){.ice-key{font-size:9px}}
+.next-box{position:absolute;top:49px;right:9px;min-width:74px;min-height:41px;padding:4px 6px 4px 8px;display:grid;grid-template-columns:auto auto;align-items:center;gap:5px;border:1px solid #627382;border-radius:8px;background:#172a38eb;color:#ebc9a5;font-size:10px;pointer-events:none}.next-box small{grid-column:1/-1;color:#bae6f2;text-align:center;font-size:9px;letter-spacing:.01em}.next-box[hidden],.next-box small[hidden]{display:none}.ice-key b{color:#e8f4ec}
+header{gap:7px}header h1{font-size:clamp(13px,3.9vw,20px);white-space:nowrap}header button{padding:0 7px;min-height:41px}.language{font-size:12px;min-width:37px}.ice-key{display:none}@media(min-width:460px){.ice-key{display:inline}}#score{font-size:13px;white-space:nowrap}.home-link{display:block;text-align:center;margin:10px 0 0;color:#b9d4e4;font-size:13px;padding:5px}.copy-link{grid-column:1/-1;min-height:39px}.msg{max-width:94%;white-space:normal;text-align:center;width:max-content;line-height:1.2}.finale-controls{position:absolute;z-index:2;inset:auto 14px calc(109px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-between;gap:8px;pointer-events:none}.finale-controls[hidden]{display:none}.finale-controls output{border-radius:8px;background:#172a3beb;color:#ffe5bb;font-size:13px;padding:8px 10px}.finale-controls button{pointer-events:auto;padding:0 12px;font-size:13px;background:#293d4a;border-color:#967964}
+.result-nav{display:flex;align-items:center;justify-content:center;gap:10px;margin:8px 0 0}.result-nav .home-link{margin:0}.sheet .screen-language{min-height:36px;font-size:12px;padding:4px 9px;background:#293c45}
+</style>
+<main class="app"><header><h1 id="brand">搭姜饼屋</h1><span id="score" aria-label="车上姜饼">车上 0</span><span class="ice-key" id="iceLegend" aria-label="普通姜饼可滑，蓝白糖霜表示冻结"><span id="normalKey">普通可滑</span> <b id="freezeKey">白霜冻结</b></span><span id="hearts" role="status" aria-label="剩余 3 心">♥♥♥</span><button id="language" class="language" aria-label="切换语言">EN</button><button id="pause" aria-label="暂停">Ⅱ</button></header>
+<div class="arena"><canvas id="field" role="img" aria-label="姜饼屋叠放区域"></canvas><output class="msg" id="message" aria-live="polite">拖推车去接住姜饼</output><div class="next-box" id="nextBox" hidden role="img" aria-label="下一块"><span id="nextLabel">下一块</span><svg id="nextIcon" width="35" height="28" viewBox="0 0 32 26" aria-hidden="true"></svg><small id="nextCondition" hidden>接住后掉糖霜</small></div></div>
+<footer class="controls"><div id="cartHandle" class="cart-handle" tabindex="0" role="slider" aria-label="推车把手，拖动或使用左右键" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"><span id="cartThumb">↔ 推车</span></div><button id="drop"><span id="dropLabel">下落</span> <small id="holdLabel">可长按</small></button><button id="rotate">旋转</button></footer>
+<div id="finaleControls" class="finale-controls" hidden><output id="finaleStatus" aria-live="polite"></output><button id="skipFinale" type="button">跳过动画</button></div>
+<section id="screen" class="screen"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><h2 id="dialogTitle">搭姜饼屋</h2><p id="dialogCopy">拖动推车接姜饼。接触够宽会先粘住，贴稳后更牢，移动时仍可微滑；大幅甩车会甩掉薄粘块。点按或长按「下落」加速，也可以旋转。</p><div class="result" id="result" hidden><div id="resultTag" class="result-tag" aria-hidden="true">✦  雪夜留影  ✦</div><div class="result-score"><strong id="resultScore">0</strong><span id="resultUnit">块留存</span></div><p id="resultFine" class="result-fine"></p><figure><canvas id="resultHouse" role="img" aria-label="本局实际留下的姜饼屋以及屋顶和彩灯"></canvas></figure></div><div class="row"><button class="primary" id="start">开始</button></div><div id="resultActions" class="result-actions" hidden><button id="save" disabled>保存我的姜饼屋</button><button id="share" disabled>分享</button><button id="copyLink" class="copy-link" type="button">复制游戏链接</button></div><div class="result-nav"><a id="homeLink" class="home-link" href="../">返回游戏首页</a><button id="screenLanguage" class="screen-language" type="button" aria-label="切换语言">English</button></div><p id="shareStatus" class="share-status" role="status" hidden></p></div></section>
+</main>
+<script id="engine">
+const GB=(()=>{
+ const SHAPES={L:[[0,0],[1,0],[0,1],[0,2]],T:[[0,0],[1,0],[2,0],[1,1]],Z:[[0,0],[1,0],[1,1],[2,1]],S:[[1,0],[2,0],[0,1],[1,1]],O:[[0,0],[1,0],[0,1],[1,1]],I:[[0,0],[1,0],[2,0],[3,0]],J:[[0,0],[1,0],[1,1],[1,2]],U:[[0,0],[1,0],[2,0],[0,1],[2,1]],D:[[0,0],[4,0],[0,1],[4,1],[0,2],[1,2],[3,2],[4,2],[0,3],[1,3],[2,3],[3,3],[4,3]],N:[[0,0],[1,0],[0,1],[1,1],[0,2],[1,2],[0,3],[1,3]],M:[[0,0],[1,0],[2,0],[3,0],[4,0],[5,0]],R:[[0,0],[1,0],[0,1],[1,1],[0,2],[1,2],[1,3]]};
+ const SEQ=['D','N','R','M','J','I','M','U','T','Z','N','L','O','S','M','D'],OPEN=[14.5,12.5,19.5,14.55],DECOR=['bulb','wreath','garland'],ITEM_NAMES={P:'补缝饼干',F:'急凝糖霜',bulb:'彩灯',wreath:'圣诞花环',garland:'彩色灯带'};
+ const LIMIT=34,TRAY=[-5.20,5.20],TRAVEL=[6.06,27.94],MID=17,EPS=.00001,ICE=.12,BOND_TIME=.86,HP=3,RAIL_HEIGHT=2.24,VIEW=42;
+ const clamp=(v,a,b)=>Math.max(a,Math.min(b,v)), toward=(from,to,step)=>from+clamp(to-from,-step,step);
+ const ov=(a,b,c,d)=>Math.min(b,d)-Math.max(a,c);
+ const spin=a=>{const b=a.map(([x,y])=>[-y,x]),m=Math.min(...b.map(i=>i[0])),n=Math.min(...b.map(i=>i[1]));return b.map(([x,y])=>[x-m,y-n]);};
+ const world=(p,x=p.x,y=p.y)=>p.cells.map(([a,b])=>[a+x,b+y]);
+ const top=s=>{let t=0;for(const p of s.stack)for(const [,z] of p.cells)t=Math.max(t,p.y+z+1);return t;};
+ const center=p=>world(p).reduce((n,c)=>n+c[0]+.5,0)/p.cells.length;
+ function tray(s,at=s.cart.x){const a=at+TRAY[0],b=at+TRAY[1];return [[a,-.96,b,0,-1],[a,0,a+.68,RAIL_HEIGHT,-2],[b-.68,0,b,RAIL_HEIGHT,-3]];}
+ function obstacles(s,subject,live=false){
+  const a=tray(s);
+  for(const p of (live&&s.active?s.stack.concat(s.active):s.stack)){if(p===subject)continue;for(const [x,y] of world(p))a.push([x,y,x+1,y+1,p.id]);}
+  return a;
+ }
+ function intersects(p,x,y,a,fx=x,fy=y){
+  return world(p).some(([u,v])=>{u-=p.x;v-=p.y;
+   const lo=Math.min(x,fx)+u,hi=Math.max(x,fx)+u+1,bot=Math.min(y,fy)+v,end=Math.max(y,fy)+v+1;
+   return a.some(([b,d,c,e])=>ov(lo,hi,b,c)>EPS&&ov(bot,end,d,e)>EPS);
+  });
+ }
+ // Leading surfaces only; swept axis movement stops at the genuine first contact.
+ function sweepY(p,down,a){
+  if(down<=0)return 0;
+  let travel=down;
+  for(const [x,y] of world(p))for(const [l,,r,t] of a){
+   const gap=y-t;if(gap>=-EPS&&gap<travel&&ov(x,x+1,l,r)>EPS)travel=Math.max(0,gap);
+  }
+  return travel;
+ }
+ function sweepX(p,dx,a){
+  if(Math.abs(dx)<EPS)return 0;let travel=Math.abs(dx);
+  for(const [x,y] of world(p))for(const [l,b,r,t] of a){
+   if(ov(y,y+1,b,t)<=EPS)continue;
+   const gap=dx>0?l-(x+1):x-r;
+   if(gap>=-EPS&&gap<travel)travel=Math.max(0,gap);
+  }
+  return Math.sign(dx)*travel;
+ }
+ function contacts(p,a){
+  const out=[];
+  for(const [x,y] of world(p))for(const [l,,r,t,id] of a)if(Math.abs(y-t)<=EPS&&ov(x,x+1,l,r)>EPS)out.push({x0:Math.max(x,l),x1:Math.min(x+1,r),y,parent:id});
+  return out;
+ }
+ function connected(s){
+  const kept=new Set();
+  let changed=true;
+  while(changed){changed=false;
+   for(const p of s.stack){if(kept.has(p.id))continue;
+    if(contacts(p,obstacles(s,p)).some(k=>k.parent<0||kept.has(k.parent))){kept.add(p.id);changed=true;}
+   }
+  }return s.stack.filter(p=>kept.has(p.id));
+ }
+ function make(){const s={stack:[],active:null,hearts:HP,mode:'playing',flash:'',cart:{x:MID,target:MID,v:0},turn:0,landed:0,next:0,debris:null,time:0,drop:false,id:0};spawn(s);return s;}
+ function dueItem(s,n){
+  if(n>=4&&(n-4)%5===0&&s.patchAt!==n)return 'P';
+  if(n>0&&n%4===0&&s.frostAt!==n)return 'F';
+  if((n===2||n===5||(n>=7&&(n-7)%3===0))&&s.decorAt!==n)return DECOR[(s.decorTurns||0)%DECOR.length];
+  return '';
+ }
+ function spawn(s){
+  const pattern=[-.7,-1.3,-.2,-1.2,.65,-1.9,2.7,-2.3,1.3,-3.4,3.9,-1.6];
+  const kind=dueItem(s,s.landed)||SEQ[s.turn%SEQ.length],item=!!ITEM_NAMES[kind];
+  if(kind==='P'){s.patchAt=s.landed;s.flash='补缝饼干来了 · 接到屋子上试试';}
+  else if(kind==='F'){s.frostAt=s.landed;s.flash='急凝糖霜来了 · 冻结命中周围的接触区';}
+  else if(item){s.decorAt=s.landed;s.decorTurns=(s.decorTurns||0)+1;s.flash=ITEM_NAMES[kind]+'来了 · 接在姜饼上 · 漏掉不扣心';}
+  const iw=kind==='wreath'?2:kind==='garland'?3:1;
+  const cells=item?Array.from({length:iw},(_,i)=>[i,0]):SHAPES[kind];
+  const x=item?clamp(s.cart.x+(kind==='P'?2.30:-(iw===1?.35:iw*.5)),0,LIMIT-iw):OPEN[s.turn]??MID+pattern[s.turn%pattern.length]*(s.turn<4?1:Math.min(2.05,1+s.turn*.085));
+  s.active={id:++s.id,x,y:top(s)+(s.turn===0?15:14.2),cells,kind,item,window:kind==='N'||kind==='R',reserved:kind==='D'?[[1,0],[2,0],[3,0],[1,1],[2,1],[3,1],[2,2]]:null,vx:0,vy:0,dwell:0,bond:null,tack:null,coolUntil:0};
+  if(!item||kind==='F')s.turn++;
+ }
+ function nextPreview(s){
+  if(s.mode!=='playing')return {kind:'',bonus:''};
+  const pending=dueItem(s,s.landed);
+  const bonus=s.active&&!s.active.item&&!pending?dueItem(s,s.landed+1):'';
+  return {kind:pending||SEQ[s.turn%SEQ.length],bonus};
+ }
+ function target(s,x){if(Number.isFinite(x))s.cart.target=clamp(x,...TRAVEL);}
+ function rotate(s){
+  const p=s.active;if(s.mode!=='playing'||!p||p.item)return false;
+  const cells=spin(p.cells),q={...p,cells};if(cells.some(([x])=>p.x+x<0||p.x+x+1>LIMIT)||intersects(q,q.x,q.y,obstacles(s)))return false;
+  if(p.reserved){const maxY=Math.max(...p.cells.map(c=>c[1]));p.reserved=p.reserved.map(([x,y])=>[maxY-y,x]);}
+  p.cells=cells;return true;
+ }
+ function bind(s,p,c,instant=false){
+  // Real joint only. Store local span on the child so it rides the whole tree.
+  if(p.bond||!c||c.x1-c.x0<ICE)return false;
+  p.bond={parent:c.parent,a:c.x0-p.x,b:c.x1-p.x,z:c.y-p.y,instant};p.vx=0;p.vy=0;return true;
+ }
+ function iced(s,p,y){
+  const hit=contacts({...p,y},obstacles(s)).sort((a,b)=>(b.x1-b.x0)-(a.x1-a.x0)||b.parent-a.parent)[0];
+  if(!hit){s.flash='糖霜没接住 · 不扣心';return false;}
+  const cx=(hit.x0+hit.x1)/2,cy=hit.y,radius=3.35;
+  const near=q=>world(q).some(([x,yy])=>Math.hypot(clamp(cx,x,x+1)-cx,clamp(cy,yy,yy+1)-cy)<=radius+EPS);
+  const fixed=anchors(s,true),queue=[],seen=new Set(),selected=[];
+  if(hit.parent<0){
+   const a=s.cart.x,lo=clamp(cx-a-.8,TRAY[0],TRAY[1]),hi=clamp(cx-a+.8,TRAY[0],TRAY[1]);
+   (s.trayFrost??=[]).push({lo,hi,y:cy});if(s.trayFrost.length>4)s.trayFrost.shift();
+   for(const q of s.stack)if(near(q)&&contacts(q,obstacles(s,q)).some(c=>c.parent===hit.parent&&c.x1-c.x0>=ICE))queue.push({q,hops:0});
+  }else{
+   const q=s.stack.find(q=>q.id===hit.parent);if(q)queue.push({q,hops:0});
+  }
+  function touch(q,r){
+   return world(q).some(([x,z])=>world(r).some(([xx,zz])=>
+    (((Math.abs(x+1-xx)<=EPS||Math.abs(xx+1-x)<=EPS)&&ov(z,z+1,zz,zz+1)>=ICE-EPS)||
+     ((Math.abs(z+1-zz)<=EPS||Math.abs(zz+1-z)<=EPS)&&ov(x,x+1,xx,xx+1)>=ICE-EPS))));
+  }
+  while(queue.length&&selected.length<5){
+   const {q,hops}=queue.shift();if(seen.has(q.id)||!near(q))continue;seen.add(q.id);
+   if(!fixed.has(q.id)){
+    const contact=contacts(q,obstacles(s,q)).filter(c=>c.parent<0||fixed.has(c.parent)).sort((a,b)=>b.x1-b.x0-(a.x1-a.x0))[0];
+    if(!bind(s,q,contact,true))continue;fixed.add(q.id);
+   }
+   if(!q.frozen){
+    if(q.tack){
+     const j=q.tack;q.tack=null;bind(s,q,{parent:j.parent,x0:q.x+j.a,x1:q.x+j.b,y:q.y+j.z},true);
+    }
+    if(q.bond){q.bond.instant=true;q.frozen=true;q.frozenAt=s.time;q.frozenX=q.x-s.cart.x;selected.push(q);}
+   }
+   if(hops<2)for(const r of s.stack){if(!seen.has(r.id)&&near(r)&&touch(q,r))queue.push({q:r,hops:hops+1});}
+  }
+  s.iceWave={x:cx-s.cart.x,y:cy,until:s.time+.58};
+  s.flash=selected.length?'局部冻结 '+selected.length+' 块 · 白霜接缝不再滑动':hit.parent<0?'推车结霜 · 附近没有可冻结的姜饼':'接触区域已经冻结或还没有可靠支撑';
+  return selected.length>0||hit.parent<0;
+ }
+ const patchCells=s=>s.stack.flatMap(p=>p.cells.map(([a,b],i)=>({p,i,x:p.x+a,y:p.y+b})));
+ function patchRegion(s,m,material=patchCells(s)){
+  const l=material.find(a=>a.p.id===m.l&&a.i===m.li),r=material.find(a=>a.p.id===m.r&&a.i===m.ri);
+  if(!l||!r)return null;
+  const x0=l.x+1,x1=r.x,y0=Math.max(l.y,r.y),y1=Math.min(l.y+1,r.y+1),w=x1-x0,h=y1-y0;
+  if(w<.18||w>1.25||h<.42||w*h<.12)return null;
+  if(material.some(c=>ov(x0,x1,c.x,c.x+1)>EPS&&ov(y0,y1,c.y,c.y+1)>EPS))return null;
+  for(const q of s.stack)for(const [a,b] of q.reserved||[])if(ov(x0,x1,q.x+a,q.x+a+1)>EPS&&ov(y0,y1,q.y+b,q.y+b+1)>EPS)return null;
+  // At least one real horizontal closing face, in addition to both vertical walls.
+  const frames=material.filter(c=>(Math.abs(c.y+1-y0)<=EPS||Math.abs(c.y-y1)<=EPS)&&ov(x0,x1,c.x,c.x+1)>=w*.58);
+  if(!frames.length||(m.f!==undefined&&!frames.some(c=>c.p.id===m.f&&c.i===m.fi)))return null;
+  return {x0,x1,y0,y1,frame:frames[0]};
+ }
+ function findPatch(s,x,y){
+  const all=patchCells(s),supported=new Set(connected(s).map(q=>q.id));
+  const local=all.filter(c=>supported.has(c.p.id)&&Math.abs(x-c.x-.5)<5.6&&Math.abs(y-c.y-.5)<4.8);
+  const existing=s.patches||[];let best=null;
+  for(const l of local)for(const r of local){
+   if(l.p===r.p||r.x-l.x-1<.18||r.x-l.x-1>1.25||ov(l.y,l.y+1,r.y,r.y+1)<.42)continue;
+   const key={l:l.p.id,li:l.i,r:r.p.id,ri:r.i};
+   if(existing.some(a=>a.l===key.l&&a.li===key.li&&a.r===key.r&&a.ri===key.ri))continue;
+   const box=patchRegion(s,key,all);if(!box||!supported.has(box.frame.p.id))continue;
+   const dist=Math.hypot(x-(box.x0+box.x1)/2,y-(box.y0+box.y1)/2);
+   if(dist>4.25)continue;
+   const merit=dist-(box.x1-box.x0)*(box.y1-box.y0)*.42;
+   if(!best||merit<best.merit)best={...key,f:box.frame.p.id,fi:box.frame.i,merit};
+  }return best;
+ }
+ function seal(s,p){
+  const hit=contacts(p,obstacles(s)).filter(c=>c.parent>=0).sort((a,b)=>b.x1-b.x0-(a.x1-a.x0))[0];
+  if(!hit){s.flash='补缝饼干没接到屋子 · 不扣心';return false;}
+  const found=findPatch(s,(hit.x0+hit.x1)/2,hit.y);
+  if(!found){s.flash='这附近没有可填的小缝';return false;}
+  (s.patches??=[]).push({...found,when:s.time});
+  s.flash='补上了一处小缝 · 门洞保留';return true;
+ }
+ function visiblePatches(s){
+  if(!s.patches?.length)return [];
+  const material=patchCells(s),out=[];
+  for(const p of s.patches){const box=patchRegion(s,p,material);if(box)out.push({...box,when:p.when});}
+  return out;
+ }
+ function decorate(s,p){
+  const hit=contacts(p,obstacles(s)).filter(c=>c.parent>=0).sort((a,b)=>(b.x1-b.x0)-(a.x1-a.x0)||a.parent-b.parent)[0];
+  const host=hit&&s.stack.find(q=>q.id===hit.parent);
+  if(!host){s.flash=ITEM_NAMES[p.kind]+'没挂住 · 不扣心';return false;}
+  (host.ornaments??=[]).push({kind:p.kind,dx:(hit.x0+hit.x1)/2-host.x,dz:hit.y-host.y});
+  s.flash=ITEM_NAMES[p.kind]+'已挂上 · 会留在这块姜饼上';return true;
+ }
+ function loss(s,n){
+  if(n<=0||s.mode!=='playing')return;
+  s.hearts=Math.max(0,s.hearts-n);s.flash='掉了 '+n+' 块 · −'+n+' 心';
+  if(s.hearts===0){s.stack=connected(s);s.active=null;s.mode='collapse';s.drop=false;}
+ }
+ function anchors(s,includeTack=false){
+  const out=new Set();let changed=true;
+  while(changed){changed=false;for(const p of s.stack)if(!out.has(p.id)){const joint=p.bond||(includeTack&&p.tack);if(joint&&(joint.parent<0||out.has(joint.parent))){out.add(p.id);changed=true;}}}
+  return out;
+ }
+ function tackable(s,p,fixed){
+  if(p.bond||p.tack||s.time<(p.coolUntil||0))return false;
+  const hit=contacts(p,obstacles(s,p)).filter(c=>c.parent<0||fixed.has(c.parent));
+  if(!hit.length)return false;
+  // Real horizontal contact: merge contiguous coverage per parent rather than awarding
+  // grip twice for shared support. No center correction or air-gap tolerance.
+  const groups=new Map();
+  for(const c of hit){const key=c.parent+':'+c.y;if(!groups.has(key))groups.set(key,[]);groups.get(key).push(c);}
+  let best=null;
+  for(const list of groups.values()){
+   list.sort((a,b)=>a.x0-b.x0);let now=null;
+   for(const c of list){
+    if(now&&c.x0<=now.x1+EPS)now.x1=Math.max(now.x1,c.x1);
+    else{now={...c};}
+    if(!best||now.x1-now.x0>best.x1-best.x0)best={...now};
+   }
+  }
+  const low=Math.min(...p.cells.map(c=>c[1]));
+  const width=p.cells.filter(c=>c[1]===low).length;
+  const span=best.x1-best.x0;
+  if(span+EPS<Math.max(.30,.17*width))return false;
+  const cx=center(p);
+  const bearing=hit.filter(c=>c.parent===best.parent&&Math.abs(c.y-best.y)<=EPS);
+  const left=Math.min(...bearing.map(c=>c.x0)),right=Math.max(...bearing.map(c=>c.x1));
+  p.tack={...best,a:best.x0-p.x,b:best.x1-p.x,z:best.y-p.y,weak:span<.72||cx<left||cx>right,stress:0,age:0};p.dwell=0;p.vx=p.vy=0;
+  return true;
+ }
+ function updateTack(s,dt){
+  const fixed=anchors(s,true),protectedIds=new Set();
+  const byId=new Map(s.stack.map(p=>[p.id,p]));
+  for(const p of s.stack)if(p.frozen){
+   let j=p.bond,watch=new Set();
+   while(j&&j.parent>=0&&!watch.has(j.parent)){
+    watch.add(j.parent);protectedIds.add(j.parent);const parent=byId.get(j.parent);j=parent&&(parent.bond||parent.tack);
+   }
+  }
+  for(const p of [...s.stack].sort((a,b)=>a.y-b.y)){
+   const j=p.tack;if(!j)continue;
+   if(j.parent>=0&&!fixed.has(j.parent)){p.tack=null;p.dwell=0;p.coolUntil=s.time+.4;fixed.delete(p.id);continue;}
+   j.age+=dt;
+   if(!protectedIds.has(p.id)&&j.weak&&j.age>.24&&Math.abs(s.cart.actual||0)>12){
+    j.stress+=dt;
+   }else j.stress=Math.max(0,j.stress-dt*1.35);
+   if(j.stress>.24){
+    p.tack=null;p.dwell=0;p.coolUntil=s.time+.55;p.vx=(s.cart.actual||0)*.28;p.vy=0;fixed.delete(p.id);
+   }else if(j.age>=BOND_TIME&&(j.parent<0||s.stack.some(q=>q.id===j.parent&&q.bond))){
+    p.tack=null;p.dwell=BOND_TIME;
+    if(bind(s,p,{parent:j.parent,x0:p.x+j.a,x1:p.x+j.b,y:p.y+j.z}))s.flash='凝结完成 · 接缝稳住';
+   }else p.dwell=Math.min(BOND_TIME,j.age);
+  }
+  return fixed;
+ }
+ function flexJoints(s,dt,fixed){
+  const v=s.cart.actual||0;
+  if(Math.abs(v)<.22||!fixed.size)return;
+  // A mature natural seam grips but is not welded. Its tiny cumulative drift is
+  // bounded relative to the original placement and stops with actual cart motion.
+  // Move the entire supporting subtree together, only through a free sweep.
+  for(const p of [...s.stack].sort((a,b)=>a.y-b.y)){
+   const joint=p.bond||p.tack;
+   if(!joint||p.frozen||joint.instant||!fixed.has(p.id))continue;
+   const previous=p.flex||0,cap=p.bond?.34:.25;
+   let dx=clamp(previous-v*.077*dt,-cap,cap)-previous;
+   if(Math.abs(dx)<EPS)continue;
+   const group=new Set([p.id]),pinned=[];
+   for(const q of [...s.stack].sort((a,b)=>a.y-b.y)){
+    const j=q.bond||q.tack;if(j&&fixed.has(q.id)&&group.has(j.parent)){if(q.frozen||j.instant)pinned.push(q);else group.add(q.id);}
+   }
+   const bodies=s.stack.filter(q=>group.has(q.id));
+   const other=tray(s).concat(s.stack.filter(q=>!group.has(q.id)).concat(s.active?[s.active]:[]).flatMap(q=>world(q).map(([x,y])=>[x,y,x+1,y+1,q.id])));
+   for(const q of bodies)dx=sweepX(q,dx,other);
+   if(Math.abs(dx)<EPS)continue;
+   const hold=contacts({...p,x:p.x+dx},other).filter(c=>c.parent===joint.parent).sort((a,b)=>(b.x1-b.x0)-(a.x1-a.x0));
+   if(hold.reduce((w,c)=>w+c.x1-c.x0,0)<.155)continue;
+   // Leave frozen subtrees at their cart-relative positions even if the lower
+   // warm support slips; the support may move only while the actual bond still touches.
+   let keep=true;const retouch=[];
+   for(const q of pinned){
+    const j=q.bond||q.tack,carrier=bodies.find(r=>r.id===j.parent);
+    const c=contacts(q,world(carrier,carrier.x+dx,carrier.y).map(([x,y])=>[x,y,x+1,y+1,carrier.id])).sort((a,b)=>b.x1-b.x0-(a.x1-a.x0))[0];
+    if(!c||c.x1-c.x0<.155){keep=false;break;}retouch.push([q,j,c]);
+   }
+   if(!keep)continue;
+   for(const q of bodies)q.x+=dx;
+   p.flex=previous+dx;
+   for(const [q,j,c] of retouch){j.a=c.x0-q.x;j.b=c.x1-q.x;j.z=c.y-q.y;}
+   // Represent actual retained contact on the seam (not its previous location).
+   joint.a=hold[0].x0-p.x;joint.b=hold[0].x1-p.x;joint.z=hold[0].y-p.y;
+  }
+ }
+ function moveCart(s,dt){
+  const cart=s.cart, oldX=cart.x, ideal=clamp((cart.target-cart.x)*7.6,-16.4,16.4);
+  cart.v=toward(cart.v,ideal,48*dt);
+  let dx=cart.v*dt;
+  if((cart.target-cart.x)*dx>0&&Math.abs(dx)>Math.abs(cart.target-cart.x)){dx=cart.target-cart.x;cart.v=0;}
+  dx=clamp(cart.x+dx,...TRAVEL)-cart.x;
+  const fixed=anchors(s,true),loose=s.stack.filter(p=>!fixed.has(p.id));
+  // A loose parcel touching the solid guard can be nudged rather than pinning the cart.
+  // Only the free, swept horizontal displacement is allowed; frozen and falling bodies
+  // still block an unsafe cart sweep below.
+  if(Math.abs(dx)>EPS){
+   const dir=Math.sign(dx),rails=tray(s).slice(1);
+   const order=loose.slice().sort((a,b)=>dir*(b.x-a.x));
+   for(const p of order){
+    let freeGap=Infinity;
+    for(const [x,y] of world(p))for(const [l,b,r,t] of rails){
+     if(ov(y,y+1,b,t)<=EPS)continue;
+     const gap=dir>0?x-r:l-(x+1);
+     if(gap>=-EPS)freeGap=Math.min(freeGap,Math.max(0,gap));
+    }
+    if(freeGap>=Math.abs(dx))continue;
+    const pushed=sweepX(p,dir*(Math.abs(dx)-freeGap),obstacles(s,p,true));
+    p.x+=pushed;
+    if(Math.sign(pushed)===dir&&p.vx*dir<Math.abs(pushed)/dt)p.vx=pushed/dt;
+   }
+  }
+  const a=loose.concat(s.active?[s.active]:[]).flatMap(p=>world(p).map(([x,y])=>[x,y,x+1,y+1,p.id]));
+  for(const p of s.stack)if(fixed.has(p.id))dx=sweepX(p,dx,a);
+  // Sweep each cart rail/floor against non-carried bodies before moving the cart.
+  for(const [l,b,r,t] of tray(s)){
+   for(const [x,y,x2,y2] of a){
+    if(ov(b,t,y,y2)<=EPS)continue;
+    const gap=dx>0?x-r:l-x2;
+    if(gap>=-EPS&&gap<Math.abs(dx))dx=Math.sign(dx)*Math.max(0,gap);
+   }
+  }
+  cart.x=oldX+dx;cart.actual=dx/dt;
+  for(const p of s.stack)if(fixed.has(p.id))p.x+=dx;
+  return fixed;
+ }
+ function tickPart(s,dt){
+  if(s.mode!=='playing')return;
+  s.time+=dt;
+  moveCart(s,dt);
+  const fixed=updateTack(s,dt);
+  flexJoints(s,dt,fixed);
+  for(const p of [...s.stack].sort((a,b)=>a.y-b.y)){
+   if(fixed.has(p.id))continue;
+   const a=obstacles(s,p,true),support=contacts(p,a);
+   if(p.bond){
+    // A child with an unanchored parent is temporarily held jointly in place; it cannot
+    // freeze on unstable pieces, so this branch is an exceptional icing attachment only.
+    if(!support.some(c=>c.parent===p.bond.parent))p.bond=null;
+   }
+   const reliable=support.filter(c=>c.parent<0||fixed.has(c.parent));
+   const carry=reliable.length?s.cart.actual:0;
+   const left=support.length?Math.min(...support.map(c=>c.x0)):0,right=support.length?Math.max(...support.map(c=>c.x1)):0;
+   const com=center(p),over=support.length?(com<left-.015?com-left:com>right+.015?com-right:0):0;
+   const desired=clamp(carry*.97+over*16,-20,20);
+   p.vx=toward(p.vx,desired,(support.length?46:2.4)*dt);
+   const dx=sweepX(p,p.vx*dt,a);
+   p.x+=dx;if(Math.abs(dx-p.vx*dt)>EPS)p.vx=0;
+   p.vy=Math.min(34,p.vy+44*dt);
+   const dy=sweepY(p,p.vy*dt,a);p.y-=dy;
+   if(dy+EPS<p.vy*dt)p.vy=0;
+   if(p.vy===0&&tackable(s,p,fixed))fixed.add(p.id);
+  }
+  let off=0;
+  s.stack=s.stack.filter(p=>{if(p.y< -5.1){off++;return false;}return true;});
+  if(!s.active){
+   s.next-=dt;if(s.next<=0&&s.mode==='playing'&&s.hearts>off)spawn(s);
+  }else{
+   const p=s.active, rate=s.drop?36:4.24+Math.min(3.44,s.turn*.144),a=obstacles(s);
+   const fall=rate*dt,dy=sweepY(p,fall,a);p.y-=dy;
+   if(dy+EPS<fall){
+    if(p.item){if(p.kind==='F')iced(s,p,p.y);else if(p.kind==='P')seal(s,p);else decorate(s,p);}
+    else{p.vy=0;p.vx=0;s.stack.push(p);s.landed++;s.flash=tackable(s,p,fixed)?'已暂时粘住 · 正在凝结':'接触过窄 · 姜饼还没站稳';s.flashTime=s.time;}
+    s.active=null;s.next=.39;
+   }else if(p.y< -5.1){
+    if(p.item)s.flash=ITEM_NAMES[p.kind]+'没接住 · 不扣心';else off++;
+    s.active=null;s.next=.33;
+   }
+  }
+  loss(s,off);
+ }
+ function tick(s,dt){if(!Number.isFinite(dt)||dt<=0)return;let t=Math.min(dt,.12);while(t>1e-6){const step=Math.min(1/120,t);tickPart(s,step);t-=step;}}
+ function rewardFor(s){
+  const rows=s.stack,height=top(s);
+  if(!rows.length)return {rows,height,x0:s.cart.x+TRAY[0]+.45,x1:s.cart.x+TRAY[1]-.45,rich:rows.length>=4};
+  const spans=rows.flatMap(p=>world(p).filter(k=>Math.abs(k[1]+1-height)<=EPS).map(k=>k[0])).sort((a,b)=>a-b);
+  let x0=spans[0],x1=x0+1,longest=[x0,x1];
+  for(const x of spans.slice(1)){if(x<=x1+EPS)x1=Math.max(x1,x+1);else{x0=x;x1=x+1;}if(x1-x0>longest[1]-longest[0])longest=[x0,x1];}
+  return {rows,height,x0:longest[0],x1:longest[1],rich:rows.length>=4};
+ }
+ function roofFit(reward){
+  const ridge=(reward.x0+reward.x1)/2,support=reward.x1-reward.x0;
+  const points=reward.rows.flatMap(p=>world(p));
+  const footprint=points.filter(c=>c[1]<2.65);
+  const near=points.filter(c=>c[1]+1>=reward.height-3);
+  const low=footprint.length?footprint:points;
+  const center=low.length?(Math.min(...low.map(c=>c[0]))+Math.max(...low.map(c=>c[0]+1)))/2:ridge;
+  const broad=support>=4.5&&Math.abs(ridge-center)<1.4&&near.length>0;
+  const inset=broad?Math.min(ridge-Math.min(...near.map(c=>c[0])),Math.max(...near.map(c=>c[0]+1))-ridge):0;
+  const half=broad?Math.min(6.3,Math.max(support/2,inset)+.32):support/2+Math.min(.37,.18+support*.047);
+  return {ridge,left:ridge-half,right:ridge+half,broad};
+ }
+ return {make,tick,target,rotate,world,top,tray,rewardFor,LIMIT,TRAY,BOND_TIME,SHAPES,connected,anchors,intersects,obstacles,sweepX,sweepY,contacts,bind,iced,loss,TRAVEL,MID,RAIL_HEIGHT,VIEW,tackable,flexJoints,nextPreview,ITEM_NAMES,decorate,roofFit,findPatch,seal,visiblePatches};
+})();
+if(typeof module!=='undefined')module.exports=GB;
+</script>
+<script id="forest">
+/* Original layered pixel backdrop. Coordinates are CSS pixels, not DPR. */
+(function(env){
+'use strict';
+let prepared=null;
+const unit=2;
+function rng(i){const a=Math.imul(i+9,486187739)>>>0;return ((a^(a>>>15))>>>0)%1709/1709;}
+function block(c,x,y,w,h,color){if(w<=0||h<=0)return;c.fillStyle=color;c.fillRect(Math.round(x),Math.round(y),Math.ceil(w),Math.ceil(h));}
+function pine(c,x,g,h,spread,palette,details){
+ const n=Math.max(6,Math.round(h/5)),top=g-h;
+ block(c,x-unit*.5,top+3,unit*1.5,h+6,palette[0]);
+ for(let j=1;j<n;j++){
+  const progress=j/n;
+  const half=Math.max(2,Math.round(spread*(.08+.89*progress)*.50/unit)*unit);
+  const depth=4+(j%3===1?2:0)+(j/n>.67?2:0);
+  const stepY=Math.round((top+j*h/n)/2)*2;
+  const asym=j%3===2?2:0;
+  block(c,x-half+asym,stepY,2*half-asym,depth,palette[0]);
+  if(j%3===0||details){
+   block(c,x-half+2+asym,stepY,half*.76,unit,palette[1]);
+   block(c,x+2,stepY-1,half*.60,unit,palette[1]);
+   if(details&&j%2===1){
+    block(c,x-half+4+asym,stepY-2,half*.52,unit,palette[2]);
+    block(c,x+4,stepY-3,half*.39,unit,palette[2]);
+    if(j%3===1){block(c,x-half+4+asym,stepY-4,half*.28,unit,palette[3]);block(c,x+5,stepY-5,unit,unit,palette[3]);}
+   }
+  }
+ }
+}
+function scene(c,w,h,ground){
+ const sky=c.createLinearGradient(0,0,0,h);
+ sky.addColorStop(0,'#10112a');sky.addColorStop(.53,'#191a39');sky.addColorStop(.83,'#282b4a');sky.addColorStop(1,'#343753');
+ c.fillStyle=sky;c.fillRect(0,0,w,h);
+ const dusk=c.createRadialGradient(w*.52,ground-12,0,w*.52,ground-12,Math.max(w*.49,h*.53));
+ dusk.addColorStop(0,'rgba(100,86,150,.20)');dusk.addColorStop(1,'rgba(100,86,150,0)');
+ c.fillStyle=dusk;c.fillRect(0,0,w,h);
+ for(let i=0;i<46;i++){
+  const x=2*Math.floor(rng(i*13)*w/2),y=2*Math.floor((5+rng(i*24+13)*ground*.69)/2);
+  const bright=i%11===0;
+  block(c,x,y,bright?3:2,bright?3:2,bright?'#aeb6d9':i%3===0?'#7479a7':'#3f4875');
+  if(bright&&i%2===0){block(c,x-2,y+1,7,1,'#727aab');block(c,x+1,y-2,1,7,'#727aab');}
+ }
+ for(let layer=0;layer<2;layer++){
+  c.beginPath();c.moveTo(0,h);
+  for(let x=0;x<=w+9;x+=8){
+   const z=ground-(.15-layer*.043)*h+Math.round((Math.sin(x/33+layer*.8)*7+Math.cos(x/65+layer*.8)*10)/4)*4;
+   c.lineTo(x,z);c.lineTo(x+8,z);
+  }
+  c.lineTo(w,h);c.closePath();c.fillStyle=layer===0?'#1d203c':'#222642';c.fill();
+ }
+ // Back forest is deliberately muted and low at center so airborne items remain readable.
+ for(let i=0;i<w/16+4;i++){
+  const x=i*16-22+rng(i*11+25)*13,edge=Math.min(1,Math.abs(x/w-.5)*2),k=.48+edge*.52;
+  pine(c,x,ground+12+(i%3)*3,(.064+.095*rng(i*5))*h*k,22+rng(i*31)*22,['#161c36','#242b4b','#414675','#666b92'],false);
+ }
+ for(const [x,ht,spread] of [[.025,.228,.173],[.14,.138,.11],[.25,.112,.10],[.74,.105,.108],[.86,.149,.113],[.981,.225,.175]]){
+  const distance=Math.abs(.5-x);
+  const colors=distance>.33?['#202748','#414b77','#707dc0','#adb7e1']:['#222a48','#354064','#565f91','#777fad'];
+  pine(c,x*w,ground+10,(Math.min(h*.78,w*1.38))*ht*1.55,Math.min(67,spread*w),colors,true);
+ }
+}
+function paint(c,w,h,settings={}){
+ if(!Number.isFinite(w)||!Number.isFinite(h)||w<1||h<1)return;
+ const {time=0,reduced=false,exporting=false}=settings;
+ const ground=Number.isFinite(settings.groundY)?Math.min(h,Math.max(h*.3,settings.groundY)):h*.84;
+ const depth=Math.min(1,430/w,790/h);
+ const sw=Math.max(1,Math.round(w*depth)), sh=Math.max(1,Math.round(h*depth));
+ // Round ground to a pixel to keep the raster cache stable during small view easing.
+ const sg=Math.round(ground*depth);
+ c.save();c.imageSmoothingEnabled=false;
+ if(env.document?.createElement||typeof env.OffscreenCanvas==='function'){
+  if(!prepared||prepared.w!==sw||prepared.h!==sh||prepared.ground!==sg){
+   const cv=env.document?.createElement?env.document.createElement('canvas'):new env.OffscreenCanvas(sw,sh);
+   cv.width=sw;cv.height=sh;
+   const d=cv.getContext('2d');
+   if(d){scene(d,sw,sh,sg);prepared={cv,w:sw,h:sh,ground:sg};}
+  }
+  if(prepared)c.drawImage(prepared.cv,0,0,w,h);else scene(c,w,h,ground);
+ }else scene(c,w,h,ground);
+ if(!reduced&&!exporting&&Number.isFinite(time)&&time>0){
+  for(let i=0;i<20;i++){
+   const x=2*Math.floor((rng(i*71+29)*w+time*(2+i%4))%w/2),y=2*Math.floor((rng(i*18+111)*h+time*(5+i%5))%h/2);
+   block(c,x,y,2,2,i%4===0?'#7f8ab4':'#505a7e');
+  }
+ }
+ c.restore();
+}
+env.GBForest=Object.freeze({paint});
+env.paintGingerForest=(c,w,h,t,{reduced,exporting,groundY}={})=>paint(c,w,h,{time:t,reduced,exporting,groundY});
+})(globalThis);
+
+</script>
+<script>
+(()=>{
+const $=s=>document.getElementById(s), canvas=$('field'),g=canvas.getContext('2d');
+const score=$('score'),msg=$('message'),overlay=$('screen'),start=$('start'),pause=$('pause'),save=$('save'),hearts=$('hearts'),handle=$('cartHandle'),thumb=$('cartThumb');
+const LANGUAGE_KEY='snow-pine-language-v1', CANONICAL='https://kendrick-stein.github.io/christmas-elf-game/gingerbread/';
+const MATRIX=["1111111010001111010110110010001111111","1000001001010100110010010100001000001","1011101011101101010111000100101011101","1011101000000011111001110100001011101","1011101001011010101001000110001011101","1000001010011011111010001100101000001","1111111010101010101010101010101111111","0000000001010011110110111001000000000","1010001101110000010011110001000100101","1111110110100100010010100111101001111","0010001000011011011011010101010011101","0011100110010010000110000010111101000","0101111100011111000010011001101101001","1111100110100111101101011011101101001","1001011101110011011100011011000001101","0101110011110100001111011000011111010","1100001110110111111001001000101100001","0011010011001010101001001001101101011","0001001111011000101101101011001011001","0111100000011001100000011011110110000","0100001000001010100110001001101101010","1001000010101001110110110011101000001","1010111101011011000101111101101001101","0110000111001110110000111011011111010","1101001011111110010011101001101100000","0011110010110110010010100001101101101","1100111000111111011011010101100010101","0000100100011000001110111001101001000","1110011000101001100010001000111111011","0000000010001101101111011001100010001","1111111010111001111110010110101010011","1000001001000010101111000011100010011","1011101001000111111001001001111110011","1011101000100100101000010000010011000","1011101011111000101100111100110110001","1000001001001101101000001010101011000","1111111010100000000110111000101101001"];
+let lang='zh';try{const saved=localStorage.getItem(LANGUAGE_KEY);if(saved==='en'||saved==='zh')lang=saved;else if(typeof navigator!=='undefined'&&navigator.language&&!navigator.language.toLowerCase().startsWith('zh'))lang='en';}catch{}
+const L=(cn,en)=>lang==='en'?en:cn, NAME=()=>L('搭姜饼屋','Gingerbread Builder');
+const NAMES_EN={O:'square',T:'T',L:'L',J:'reverse L',Z:'Z',S:'S',I:'bar',U:'U',D:'arch',N:'window',R:'notched window',M:'wide beam',P:'seam wafer',F:'flash frosting',bulb:'fairy bulb',wreath:'Christmas wreath',garland:'light strand'};
+const itemName=k=>L(GB.ITEM_NAMES[k],NAMES_EN[k]);
+const FLASH={'补缝饼干来了 · 接到屋子上试试':'Seam wafer incoming · catch it on the house','急凝糖霜来了 · 冻结命中周围的接触区':'Flash frosting incoming · freezes a small contact area','糖霜没接住 · 不扣心':'Missed frosting · no heart lost','推车结霜 · 附近没有可冻结的姜饼':'Cart frosted · no cookie nearby','接触区域已经冻结或还没有可靠支撑':'Already frozen or not securely supported','补缝饼干没接到屋子 · 不扣心':'Seam wafer missed the house · no heart lost','这附近没有可填的小缝':'No small gap nearby','补上了一处小缝 · 门洞保留':'Small gap filled · doorway stays open','凝结完成 · 接缝稳住':'Seam set · slight movement is still possible','已暂时粘住 · 正在凝结':'Holding · seam is setting','接触过窄 · 姜饼还没站稳':'Not enough contact · cookie may slip'};
+function flashText(x){
+ if(lang==='zh'||!x)return x;
+ if(FLASH[x])return FLASH[x];
+ let m=/^局部冻结 (\d+) 块/.exec(x);if(m)return 'Froze '+m[1]+' in place';
+ m=/^掉了 (\d+) 块 · −(\d+) 心/.exec(x);if(m)return m[1]+' fell · −'+m[2]+' hearts';
+ for(const [k,v] of Object.entries(GB.ITEM_NAMES))if(x.startsWith(v)){
+  const n=NAMES_EN[k];
+  if(x.includes('来了'))return 'Incoming: '+n+' · catch it on a cookie';
+  if(x.includes('已挂上'))return 'Hung '+n+' on the cookie';
+  if(x.includes('没'))return 'Missed '+n+' · no heart lost';
+ }
+ return x;
+}
+function drawQR(c,x,y,u){c.fillStyle='#fff9eb';c.fillRect(x,y,(MATRIX.length+8)*u,(MATRIX.length+8)*u);c.fillStyle='#162637';MATRIX.forEach((row,j)=>{for(let i=0;i<row.length;i++)if(row[i]==='1')c.fillRect(x+(i+4)*u,y+(j+4)*u,u,u);});}
+const colors={L:['#b57047','#ffc788'],J:['#97523c','#ffb77f'],T:['#ae6445','#eeb381'],Z:['#a15c41','#f2b785'],S:['#955438','#e8aa75'],O:['#bb7546','#ffce90'],I:['#b77a48','#f5c591'],U:['#9c6042','#f1ba80'],D:['#aa6042','#ffc48a'],N:['#b46a42','#ffcb8f'],M:['#ab5d3a','#ffc483'],R:['#b46a42','#ffcb8f']};
+const grain=(i,k)=>{const f=Math.sin((i+3)*k)*43758.5453;return f-Math.floor(f);};
+const snow=Array.from({length:58},(_,i)=>[grain(i,12.9898),grain(i,78.233),(i%4===0?2:1),i%3]);
+let s=GB.make(),mode='idle',look=0,last=0,overTime=0,held=new Set(),drag=null,dropTimer=0,width=0,height=0,dpr=1,flashUntil=0,currentFlash='';
+let finaleElapsed=0,finaleStep=-1;
+const finaleControls=$('finaleControls'),finStatus=$('finaleStatus');
+let shareGeneration=0,posterBlob=null,posterFile=null,shareBusy=false;
+const share=$('share'),shareStatus=$('shareStatus');
+const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
+function reset(){clearPoster();finaleControls.hidden=true;$('result').hidden=true;$('resultActions').hidden=true;s=GB.make();mode='playing';look=0;flashUntil=0;currentFlash='';clearHold();overlay.hidden=true;pause.textContent='Ⅱ';pause.setAttribute('aria-label',L('暂停','Pause'));handle.focus();update();}
+function dialog(kind){
+ mode=kind;clearHold();overlay.dataset.mode=kind;overlay.hidden=false;
+ const done=kind==='collapse';
+ $('result').hidden=!done;$('resultActions').hidden=!done;
+ if(overlay.classList)overlay.classList.toggle('is-result',done);
+ textForDialog(kind);
+ start.focus();update();
+ if(done)preparePoster();else clearPoster();
+}
+function textForDialog(kind){
+ $('dialogTitle').textContent=kind==='paused'?L('已暂停','Paused'):kind==='collapse'?L('雪夜收工','A House for the Holidays'):NAME();
+ $('dialogCopy').textContent=kind==='paused'?L('继续从原来的位置开始。','Resume right where you left off.'):kind==='collapse'?L('爱心用完了。屋顶和彩灯落在车上实际留下的姜饼上。','Out of hearts. The roof and lights land on the cookies still on your cart.'):L('拖推车接小姜饼。贴稳会凝结，急转仍可能甩掉松动的块。点按或长按「下落」加速；下落时也能旋转。','Drag the cart to catch cookies. Stable joins set, but a sharp turn can shake loose pieces. Tap or hold Drop to speed up, or rotate the falling cookie.');
+ start.textContent=kind==='paused'?L('继续','Resume'):kind==='idle'?L('开始','Play'):L('再搭一次','Play Again');
+}
+function localize(){
+ if(document.documentElement)document.documentElement.lang=L('zh-CN','en');
+ document.title=NAME();
+ for(const [id,cn,en] of [
+  ['brand','搭姜饼屋','Gingerbread Builder'],['normalKey','普通可滑','Loose'],['freezeKey','白霜冻结','Frosted'],['nextLabel','下一块','Next'],['dropLabel','下落','Drop'],['holdLabel','可长按','hold'],['rotate','旋转','Rotate'],
+  ['resultTag','✦ 雪夜留影 ✦','✦ WINTER KEEPSAKE ✦'],['resultUnit','块留存','saved'],['save','保存我的姜饼屋','Save House'],['share','分享','Share'],['copyLink','复制游戏链接','Copy Game Link'],['homeLink','返回游戏首页','Back to Game Menu'],['skipFinale','跳过动画','Skip'],
+  ['language','EN','中'],['screenLanguage','English','中文']])$(id).textContent=L(cn,en);
+ for(const [id,cn,en] of [['language','切换语言','Change language'],['screenLanguage','切换语言','Change language'],['pause','暂停','Pause'],['score','车上姜饼','Cookies on the cart'],['iceLegend','普通姜饼可滑，蓝白糖霜表示冻结','Plain cookies can slide; frost marks frozen cookies'],['field','姜饼屋叠放区域','Gingerbread playing field'],['cartHandle','推车把手，拖动或使用左右键','Cart handle, drag or use the arrow keys'],['resultHouse','本局实际留下的姜饼屋以及屋顶和彩灯','Your retained gingerbread house with roof and lights']])$(id).setAttribute('aria-label',L(cn,en));
+ if(mode==='idle'||mode==='paused'||mode==='collapse')textForDialog(mode);
+ previewKey=null;hearts.textContent='';update();
+ if(mode==='finishing')showFinaleCaption(true);
+ if(mode==='collapse')preparePoster();
+}
+function setLanguage(code){if(code!=='en'&&code!=='zh')return;lang=code;try{localStorage.setItem(LANGUAGE_KEY,lang);}catch{}localize();}
+const toggleLanguage=()=>setLanguage(lang==='zh'?'en':'zh');
+$('language').onclick=toggleLanguage;$('screenLanguage').onclick=toggleLanguage;
+window.addEventListener('storage',e=>{if(e.key===LANGUAGE_KEY&&(e.newValue==='zh'||e.newValue==='en')&&lang!==e.newValue){lang=e.newValue;localize();}});
+let previewKey=null;
+function upcoming(){
+ const box=$('nextBox'),icon=$('nextIcon'),condition=$('nextCondition');
+ const visible=mode==='playing';
+ if(box.hidden!==!visible)box.hidden=!visible;
+ if(!visible)return;
+ const p=GB.nextPreview(s),key=p.kind+'|'+p.bonus;
+ if(key===previewKey)return;
+ previewKey=key;condition.hidden=!p.bonus;if(p.bonus)condition.textContent=L('接住后：','Catch for: ')+itemName(p.bonus);
+ const names={O:'方形',T:'T 形',L:'L 形',J:'反 L 形',Z:'Z 形',S:'S 形',I:'直条',U:'U 形',D:'拱门',N:'暖灯窗',R:'暖灯窗',M:'宽墙梁'};
+ box.setAttribute('aria-label',GB.ITEM_NAMES[p.kind]?L('下一块：','Next: ')+itemName(p.kind):L('下一块：'+names[p.kind]+'姜饼','Next: '+NAMES_EN[p.kind]+' cookie')+(p.bonus?L('；接住后先掉','; catch for ')+itemName(p.bonus):''));
+ if(p.kind==='P'){icon.innerHTML='<path d="M9 5h11l4 5v9l-4 3H9l-3-4v-9z" fill="#cc9359" stroke="#853f35"/><path d="M10 8h9m-7 7h4m4 2h2" stroke="#fff0ba" stroke-width="1.5"/>';return;}
+ if(p.kind==='F'){icon.innerHTML='<path d="m5 6 23 2-3 8-17 7 3-8z" fill="#fff0c8" stroke="#936658"/><path d="m10 10 15 3" stroke="#cf7861" stroke-width="2"/>';return;}
+ if(p.kind==='bulb'){icon.innerHTML='<path d="M12 5h8v4h-8zm-4 5h16v8l-6 5h-4l-6-5z" fill="#ffac7c" stroke="#8e6150"/><path d="M12 12v3" stroke="#fff0bb" stroke-width="2"/>';return;}
+ if(p.kind==='wreath'){icon.innerHTML='<circle cx="16" cy="12" r="8" fill="none" stroke="#84c381" stroke-width="5"/><path d="m8 18 8 3 8-3v6l-8-2-8 2z" fill="#f79287"/>';return;}
+ if(p.kind==='garland'){icon.innerHTML='<path d="M3 7Q16 25 29 7" fill="none" stroke="#ccab79"/><circle cx="7" cy="12" r="3" fill="#f99a85"/><circle cx="16" cy="16" r="3" fill="#ffcf82"/><circle cx="25" cy="12" r="3" fill="#99dfcb"/>';return;}
+ const cells=GB.SHAPES[p.kind];if(!cells){icon.innerHTML='';return;}
+ const w=Math.max(...cells.map(c=>c[0]))+1,h=Math.max(...cells.map(c=>c[1]))+1,unit=Math.min(7,22/h,30/w);
+ const x0=(32-w*unit)*.5,y0=(26-h*unit)*.5;
+ icon.innerHTML=cells.map(([x,y])=>'<rect x="'+(x0+x*unit)+'" y="'+(y0+(h-1-y)*unit)+'" width="'+(unit+.16)+'" height="'+(unit+.16)+'" fill="#c68454"/>').join('')+
+  cells.filter(([x,y])=>!cells.some(c=>c[0]===x&&c[1]===y+1)).map(([x,y])=>'<path d="M'+(x0+x*unit)+' '+(y0+(h-1-y)*unit+.5)+'h'+unit+'" stroke="#ffe8bd" stroke-width="1.2"/>').join('');
+}
+function update(){
+ upcoming();
+ const text=L('车上 '+s.stack.length,'On cart: '+s.stack.length);
+ if(score.textContent!==text)score.textContent=text;
+ const hp='♥'.repeat(s.hearts)+'♡'.repeat(3-s.hearts);
+ if(hearts.textContent!==hp){hearts.textContent=hp;hearts.setAttribute('aria-label',L('剩余 '+s.hearts+' 心',s.hearts+' hearts left'));}
+ const position=Math.round((s.cart.x-GB.TRAVEL[0])/(GB.TRAVEL[1]-GB.TRAVEL[0])*100);
+ thumb.style.left=(9+.82*position)+'%';thumb.textContent=L('↔ 推车','↔ Cart');handle.setAttribute('aria-valuenow',String(position));
+ pause.disabled=mode!=='playing';
+ if(s.flash){currentFlash=s.flash;flashUntil=performance.now()+1700;s.flash='';}
+ const frozen=s.stack.filter(p=>p.frozen).length;
+ const status=performance.now()<flashUntil?flashText(currentFlash):L('已冻结 '+frozen+' 块 · 普通块仍可微滑','Frozen: '+frozen+' · others can slip');
+ if(msg.textContent!==status)msg.textContent=status;
+ msg.style.color=s.hearts===1?'#ffbd97':'';
+}
+function size(){const r=canvas.getBoundingClientRect(),ratio=Math.min(2,window.devicePixelRatio||1);if(width===r.width&&height===r.height&&ratio===dpr)return;width=r.width;height=r.height;dpr=ratio;canvas.width=Math.max(1,Math.round(width*dpr));canvas.height=Math.max(1,Math.round(height*dpr));}
+function render(c,w,h,view,t,exporting=false,film=null){
+ const final=exporting||film!==null,rewards=final?GB.rewardFor(s):null;
+ const ease=v=>{v=Math.max(0,Math.min(1,v));return v*v*(3-2*v);};
+ const stage=exporting?4.2:Math.max(0,film??0),plaza=final?ease(stage/.86):0;
+ let minX=s.cart.x+GB.TRAY[0],maxX=s.cart.x+GB.TRAY[1];
+ if(final)for(const p of rewards.rows)for(const [x] of GB.world(p)){minX=Math.min(minX,x);maxX=Math.max(maxX,x+1);}
+ const playU=Math.min(w/GB.VIEW,h*.0775);
+ const endU=final?Math.min(w/Math.max(14,maxX-minX+3),h*.69/(rewards.height+2.3)):playU;
+ const u=playU+(endU-playU)*plaza;
+ const left=w/2-u*(GB.LIMIT/2+((minX+maxX)/2-GB.LIMIT/2)*plaza);
+ const bottom=h*.87+view*playU*(1-plaza) - (exporting?0:final?Math.min(h*.022,14)*plaza:0);
+ const rect=(x,y,a,b,color)=>{c.fillStyle=color;c.fillRect(x,y,a,b);};
+ const line=(pts,color,l=1)=>{c.strokeStyle=color;c.lineWidth=l;c.beginPath();pts.forEach(([x,y],i)=>i?c.lineTo(x,y):c.moveTo(x,y));c.stroke();};
+ GBForest.paint(c,w,h,{groundY:Math.min(h,bottom+.25*u),time:t,reduced,exporting});
+ if(bottom-u*.15<h){rect(0,bottom+.25*u,w,h-bottom,'#668292');rect(0,bottom+.25*u,w,3,'#9ebac6');for(let i=0;i<6;i++)rect(i*w/6,bottom+.72*u+(i%3)*11,w*.097,2,'#89a5b1');}
+ if(plaza>0&&bottom<h){
+  c.save();c.globalAlpha=plaza;
+  const lampXs=[w*.09,w*.91];
+  for(const xx of lampXs){
+   const zz=bottom-8,lh=Math.min(66,h*.112);
+   const glow=c.createRadialGradient(xx,zz-lh+9,1,xx,zz-lh+9,42);
+   glow.addColorStop(0,'rgba(255,190,110,.36)');glow.addColorStop(1,'rgba(255,180,105,0)');
+   c.fillStyle=glow;c.fillRect(xx-42,zz-lh-33,84,84);
+   rect(xx-2,zz-lh+6,4,lh-3,'#554b56');rect(xx-7,zz-lh,14,6,'#79574b');
+   rect(xx-5,zz-lh+6,10,12,'#dc8d54');rect(xx-3,zz-lh+7,6,9,'#ffdb92');
+   rect(xx-8,zz,16,3,'#9ab2bd');
+  }
+  c.restore();
+ }
+ const rail=GB.tray(s);
+ for(const [x,y,X,Y,id] of rail){
+  const yy=bottom-Y*u,cx=left+x*u;
+  rect(cx,yy,(X-x)*u,(Y-y)*u,id===-1?'#394962':'#b17557');
+  rect(cx,yy,(X-x)*u,Math.min(3,(Y-y)*u),'#f6c897');
+ }
+ for(const patch of s.trayFrost||[]){
+  const xa=left+(s.cart.x+patch.lo)*u,xb=left+(s.cart.x+patch.hi)*u,z=bottom-patch.y*u;
+  line([[xa,z],[xb,z]],'#b0e6f3',2.2);
+ }
+ const snowcart=left+(s.cart.x+GB.TRAY[0])*u, span=(GB.TRAY[1]-GB.TRAY[0])*u;
+ rect(snowcart,bottom+u*.70,span,5,'#5e534e');
+ rect(snowcart+5,bottom+u*1.00,span-10,3,'#b2937d');
+ for(const q of [.18,.82]){const xx=snowcart+span*q;rect(xx-4,bottom+u*.90,8,8,'#273b45');rect(xx-2,bottom+u*1.08,4,3,'#ce956c');}
+ function ornament(kind,x,y,u,hang=false){
+  const q=Math.max(.68,Math.min(3.5,u/11));
+  const R=(a,b,w,h,col)=>rect(x+a*q,y+b*q,w*q,h*q,col);
+  if(hang)line([[x,y-5*q],[x,y+2*q]],'#6f5140',Math.max(1,q));
+  if(kind==='bulb'){
+   R(-3,-6,6,3,'#473832');R(-5,-3,10,9,'#6b403f');R(-4,-2,8,7,'#ffa47b');R(-2,5,4,2,'#ffcf88');R(-2,-1,2,3,'#fff5cc');
+  }else if(kind==='wreath'){
+   c.beginPath();c.arc(x,y+q,6.5*q,0,Math.PI*2);c.strokeStyle='#47323f';c.lineWidth=4.7*q;c.stroke();
+   c.strokeStyle='#7bb776';c.lineWidth=3*q;c.stroke();
+   R(-5,-4,2,2,'#eed091');R(3,-3,2,2,'#efd19b');R(-3,3,2,2,'#ebc675');
+   R(-5,6,10,3,'#df716d');R(-2,5,4,5,'#ff9a92');
+  }else{
+   c.beginPath();c.moveTo(x-15*q,y-3*q);c.quadraticCurveTo(x,y+13*q,x+15*q,y-3*q);c.strokeStyle='#433b3c';c.lineWidth=1.6*q;c.stroke();
+   const palette=['#ff9d8e','#ffcb80','#aee6ce','#b2c5ff','#ffa1ae'];
+   for(let j=0;j<5;j++){const a=j*6.1-12.2,b=5.5-4.4*((j-2)/2)**2;R(a-1.5,b,3,3,palette[j]);R(a-.5,b,1.1,1.1,'#fff3cf');}
+  }
+ }
+ function cookie(p,y=p.y,ghost=false){
+  if(p.item){
+   const iw=p.cells.length,x=left+(p.x+iw*.5)*u,z=bottom-(y+.05)*u;
+   if(ghost){line([[x-u*.42*iw,z],[x+u*.42*iw,z]],'#f4ddaa',1.6);return;}
+   if(p.kind==='P'){
+    const rr=q=>Math.max(1,u*q),a=x-u*.43,b=z-u*.89;
+    rect(a,b,rr(.86),rr(.83),'#814c38');rect(a+u*.09,b+u*.09,rr(.68),rr(.64),'#d3955b');
+    line([[a+u*.18,b+u*.23],[a+u*.68,b+u*.23]],'#fff0c6',Math.max(1,u*.085));
+    rect(x-u*.12,b+u*.42,rr(.12),rr(.14),'#fff1c5');rect(x+u*.16,b+u*.60,rr(.10),rr(.10),'#b36e44');
+    return;
+   }
+   if(p.kind!=='F'){ornament(p.kind,x,z-u*.54,u);return;}
+   const bag=[[x-u*.43,z-u*.79],[x-u*.27,z-u*.99],[x+u*.38,z-u*.79],[x+u*.41,z-u*.56],[x+u*.08,z-u*.19],[x-u*.05,z],[x-u*.16,z-u*.15]];
+   c.beginPath();bag.forEach(([xx,yy],i)=>i?c.lineTo(xx,yy):c.moveTo(xx,yy));c.closePath();c.fillStyle='#fff0ca';c.fill();c.strokeStyle='#815747';c.lineWidth=2;c.stroke();
+   line([[x-u*.32,z-u*.76],[x+u*.35,z-u*.55]],'#d08067',3);
+   line([[x-u*.02,z-u*.39],[x+u*.07,z-u*.44]],'#e8ae73',2);
+   return;
+  }
+  const [col,glaze]=colors[p.kind], set=new Set(p.cells.map(k=>k.join(',')));
+  const J=(a,b)=>set.has(a+','+b);
+  const X=x=>left+(p.x+x)*u,Y=z=>bottom-(y+z)*u;
+  const rim=Math.max(.9,Math.min(3,u*.12)),sugar=Math.max(.85,Math.min(2.4,u*.14));
+  let wm=null;
+  if(!ghost){
+   c.save();c.beginPath();for(const [x,z] of p.cells)c.rect(X(x),Y(z+1),u,u);c.clip();
+   const minY=Y(1+Math.max(...p.cells.map(k=>k[1]))),maxY=Y(0);
+   const dough=c.createLinearGradient(0,minY,0,maxY);
+   dough.addColorStop(0,glaze);dough.addColorStop(.24,col);dough.addColorStop(1,'#8e4e34');
+   c.fillStyle=dough;c.fillRect(X(0),minY,u*(1+Math.max(...p.cells.map(c=>c[0]))),maxY-minY);
+  }
+  for(const [x,z] of p.cells){
+   const px=X(x),py=Y(z+1);
+   if(!ghost){
+    for(let n=0;n<(u<12?4:9);n++){let q=((x*7+z*11+n*31)%37)/37, r=((x*13+z*7+n*19)%41)/41;rect(px+u*(.11+.78*q),py+u*(.10+.80*r),n%5===0?Math.min(2,u*.13):.75,.68,n%3===0?'#7d4333':'#eab479');}
+    if(!J(x,z+1)){rect(px,py,u,rim,'#613626');rect(px+.4,py+rim,u-.8,rim*.50,p.frozen?'#d2e8dc':'#ad683e');}
+    if(!J(x,z-1)){rect(px,py+u-rim,u,rim,'#754634');}
+    if(!J(x-1,z)){rect(px,py,rim,u,'#784b36');rect(px+rim,py+rim,.6,u-rim*2,'#b77e53');}
+    if(!J(x+1,z)){rect(px+u-rim,py,rim,u,'#6f432f');}
+    if(!J(x,z+1)){const icing=[];for(let a=0;a<9;a++)icing.push([px+u*a/8,py+u*.15+Math.sin(a*Math.PI*.5)*u*.04]);c.lineJoin='round';c.lineCap='round';line(icing,p.frozen?'#7eb2bc':'#945638',sugar*1.7);line(icing,p.frozen?'#f8ffeb':'#fff0c4',sugar);}
+    if(p.kind==='D'){
+     const icing=p.frozen?'#e9fcf4':'#fce6b8',maxX=Math.max(...p.cells.map(k=>k[0]));
+     if(x>0&&!J(x-1,z))line([[px+rim*.9,py],[px+rim*.9,py+u]],icing,sugar*.75);
+     if(x<maxX&&!J(x+1,z))line([[px+u-rim*.9,py],[px+u-rim*.9,py+u]],icing,sugar*.75);
+     if(z>0&&!J(x,z-1))line([[px,py+u-rim*.8],[px+u,py+u-rim*.8]],icing,sugar*.75);
+    }
+    if(p.frozen&&!J(x,z+1)){
+     const a=px+u*.66,b=py+u*.27;
+     line([[a-u*.06,b],[a+u*.08,b]],'#d6faff',Math.max(.72,u*.09));
+     line([[a,b-u*.07],[a,b+u*.11]],'#ecfffa',Math.max(.62,u*.07));
+    }
+    if(!wm)wm=[px+u*.5,py+u*.59];
+   }else{
+    const k='#a8e4d1';
+    if(!J(x,z+1))line([[px,py],[px+u,py]],k,1.4);
+    if(!J(x,z-1))line([[px,py+u],[px+u,py+u]],k,1.4);
+    if(!J(x-1,z))line([[px,py],[px,py+u]],k,1.4);
+    if(!J(x+1,z))line([[px+u,py],[px+u,py+u]],k,1.4);
+   }
+  }
+  if(!ghost)c.restore();
+  if(!ghost&&(p.kind==='N'||p.kind==='R')){
+   const sw=1+Math.max(...p.cells.map(k=>k[0])),sh=1+Math.max(...p.cells.map(k=>k[1]));
+   const x=X(sw/2),z=Y(sh*.55),a=Math.min(u*.69,sw*u*.34),b=Math.min(u*.85,sh*u*.31);
+   rect(x-a-1,z-b-1,2*a+2,2*b+2,'#764131');
+   rect(x-a,z-b,2*a,2*b,'#fff0c9');
+   rect(x-a+rim,z-b+rim,2*a-rim*2,2*b-rim*2,'#914828');
+   for(let y=0;y<2;y++)for(let i=0;i<2;i++){
+    const px=x+(i-1)*(a-rim)+rim*.85,py=z+(y-1)*(b-rim)+rim*.75;
+    rect(px,py,a-rim*1.45,b-rim*1.43,(i+y)%2?'#ffb34f':'#ffd67d');
+    rect(px+.75,py+.45,Math.max(.5,a*.17),Math.max(.6,b*.21),'#fff5c7');
+   }
+  }else if(!ghost&&p.window&&wm){
+   let [x,z]=wm,r=u*.24;c.beginPath();c.arc(x,z,r,0,Math.PI*2);c.fillStyle='#ffd48c';c.fill();c.strokeStyle='#fff0c5';c.lineWidth=sugar;c.stroke();line([[x-r,z],[x+r,z]],'#8d563d',rim*.65);line([[x,z-r],[x,z+r]],'#8d563d',rim*.65);
+  }
+  if(!ghost&&p.bond){
+   const b=p.bond,z=Y(b.z);
+   const pts=[];for(let i=0;i<=10;i++)pts.push([X(b.a+(b.b-b.a)*i/10),z+1.6*Math.sin(i*.88)]);
+   line(pts,'#7e5140',4);line(pts,p.frozen?'#e9fcff':b.instant?'#fff6d6':'#e6ae7b',2.2);
+  }else if(!ghost&&!exporting&&p.tack){
+   const pp=p.tack,length=Math.max(.25,Math.min(1,p.dwell/GB.BOND_TIME)),z=Y(pp.z);
+   line([[X(pp.a),z],[X(pp.a+(pp.b-pp.a)*length),z]],'#fff1ce',Math.max(1,sugar));
+  }
+ }
+ const broken=s.mode==='collapse',since=film===null?t-overTime:film;
+ for(const p of s.stack)cookie(p);
+ for(const f of GB.visiblePatches(s)){
+  const x=left+f.x0*u,y=bottom-f.y1*u,w=(f.x1-f.x0)*u,h=(f.y1-f.y0)*u;
+  // Wafer is fitted between live faces, not an extra collider or brace.
+  const margin=Math.min(.20,w*.06,h*.07);
+  c.save();c.beginPath();c.rect(x+margin,y+margin,w-2*margin,h-2*margin);c.clip();
+  rect(x,y,w,h,'#995637');rect(x+.65,y+.65,Math.max(.2,w-1.3),Math.max(.2,h-1.3),'#ce925b');
+  line([[x+w*.10,y+h*.22],[x+w*.39,y+h*.15],[x+w*.64,y+h*.26],[x+w*.90,y+h*.17]],'#ffe7ac',Math.max(.7,Math.min(2,u*.11)));
+  for(const q of [.30,.64,.81])rect(x+w*q,y+h*(.62+q*.13),Math.max(.6,u*.07),Math.max(.6,u*.06),'#9c563a');
+  c.restore();
+  if(!exporting&&!reduced&&s.time-f.when<.7){
+   const q=(s.time-f.when)/.7;c.save();c.globalAlpha=(1-q)*.75;
+   const r=Math.max(2,u*.28*(1+q));line([[x+w/2-r,y+h/2],[x+w/2+r,y+h/2]],'#ffe3a4',1.2);line([[x+w/2,y+h/2-r],[x+w/2,y+h/2+r]],'#fff2c5',1);c.restore();
+  }
+ }
+ for(const p of s.stack)for(const o of (p.ornaments||[]))ornament(o.kind,left+(p.x+o.dx)*u,bottom-(p.y+o.dz-.22)*u,u,true);
+ if(!exporting&&!reduced&&s.iceWave&&s.time<s.iceWave.until){
+  const fx=s.iceWave,age=1-(fx.until-s.time)/.58,x=left+(s.cart.x+fx.x)*u,y=bottom-fx.y*u;
+  c.save();c.globalAlpha=Math.max(0,(1-age)*.8);c.strokeStyle='#bcefff';c.lineWidth=1.2;c.beginPath();c.arc(x,y,u*(.5+3.3*age),0,Math.PI*2);c.stroke();c.restore();
+ }
+ 
+ if(s.active&&!exporting)cookie(s.active);
+ if(broken){
+  const reward=rewards||GB.rewardFor(s),show=exporting||reduced?3:since-.69;
+  if(show<0)return;
+  const q=Math.min(1,show/.82),ramp=q*q*(3-2*q),rise=reward.rich?.98:.72;
+  const fit=GB.roofFit(reward),ridge=fit.ridge,eaveLeft=fit.left,eaveRight=fit.right;
+  const x1=left+eaveLeft*u,x2=left+eaveRight*u,peak=left+ridge*u,yy=bottom-reward.height*u,roofY=yy-(1-ramp)*u*2.7;
+  const roofRise=u*Math.max(rise,Math.min(2.1,(eaveRight-eaveLeft)*.27));
+  function eaves(lift,thick,fill){
+   c.beginPath();c.moveTo(x1,roofY-lift);c.lineTo(peak,roofY-roofRise-lift);c.lineTo(x2,roofY-lift);c.lineTo(x2-u*.18,roofY-lift+thick);c.lineTo(peak,roofY-roofRise-lift+thick);c.lineTo(x1+u*.18,roofY-lift+thick);c.closePath();c.fillStyle=fill;c.fill();
+  }
+  const gable=c.createLinearGradient(0,roofY-roofRise,0,roofY);
+  gable.addColorStop(0,'#9d583c');gable.addColorStop(1,'#794634');
+  c.beginPath();c.moveTo(x1+u*.21,roofY);c.lineTo(peak,roofY-roofRise);c.lineTo(x2-u*.21,roofY);c.closePath();c.fillStyle=gable;c.fill();
+  for(let i=0;i<6;i++){const x=peak+(i-2.5)*Math.min(u*.25,(x2-x1)*.07),z=roofY-u*(.18+(i%2)*.15);rect(x,z,Math.max(1,u*.038),Math.max(1,u*.031),'#c48153');}
+  eaves(u*.34,u*.34,'#613932');
+  eaves(u*.38,u*.22,reward.rich?'#c98558':'#b8774c');
+  const icing=[];
+  for(let i=0;i<=24;i++){
+   const t=i/24,x=x1+(x2-x1)*t;
+   const m=x<=peak?(x-x1)/(peak-x1):(x2-x)/(x2-peak);
+   icing.push([x,roofY-roofRise*m-u*.36+u*.04*Math.sin(i*Math.PI*.70)]);
+  }
+  line(icing,'#965338',Math.max(2,u*.12));line(icing,'#fff0c8',Math.max(1.3,u*.068));
+  if(show>=.68){
+   const phase=Math.min(1,(show-.68)/1.02),e=phase*phase*(3-2*phase);
+   const palette=reward.rich?['#ffd08a','#ff91a7','#a2e3c3','#c6d4ff']:['#ffcd86','#ffac9a','#bfebc9','#ffdca6'];
+   const wrap=(lo,hi,target,offset)=>{
+    const from=roofY-u*.54-offset*2;
+    const z=from+(target-from)*e;
+    c.beginPath();c.moveTo(left+lo*u,z);c.quadraticCurveTo(left+(lo+hi)*u/2,z+u*.48,left+hi*u,z);c.strokeStyle='#69472f';c.lineWidth=1.2;c.stroke();
+    for(let j=0;j<=5;j++){const f=(j+.4)/5.8,x=left+(lo+(hi-lo)*f)*u,yy=z+u*.96*f*(1-f);c.beginPath();c.arc(x,yy+1.2,2.8,0,Math.PI*2);c.fillStyle=palette[(j+offset)%4];c.fill();}
+   };
+   if(reward.rows.length){
+    for(const [i,p] of reward.rows.entries()){
+     const box=GB.world(p),lo=Math.min(...box.map(k=>k[0])),hi=Math.max(...box.map(k=>k[0]))+1;
+     wrap(lo,hi,bottom-(p.y+.48)*u,i);
+    }
+   }else wrap(reward.x0,reward.x1,bottom-u*.16,0);
+  }
+  if(!exporting&&!reduced&&show>1.60&&show<3.12){
+   const a=(show-1.60)/1.52;
+   for(let k=0;k<16;k++){const theta=k*Math.PI*.382,rr=a*(.7+k*.083)*u,x=(x1+x2)/2+rr*Math.cos(theta),z=yy-1.1*u+rr*Math.sin(theta);rect(x,z,3,2,k%2?'#ffde9a':'#e7a089');}
+  }
+ }
+
+}
+function showFinaleCaption(force=false){
+ const n=finaleElapsed<.68?0:finaleElapsed<1.36?1:finaleElapsed<2.47?2:3;
+ if(force||finaleStep!==n){finaleStep=n;finStatus.textContent=[
+  L('雪夜归来','Arriving at the winter village'),L('屋顶落下','Finishing the roof'),L('点亮小屋','Lighting up your house'),L('雪夜留影','A winter keepsake')
+ ][n];}
+}
+function conclude(){if(mode!=='finishing')return;finaleControls.hidden=true;dialog('collapse');}
+function transition(now){overTime=now;mode='finishing';pause.disabled=true;clearHold();finaleElapsed=0;finaleStep=-1;finaleControls.hidden=!!reduced;showFinaleCaption();if(reduced)conclude();}
+$('skipFinale').onclick=conclude;
+function frame(stamp){
+ const now=stamp/1000,dt=Math.min(.042,Math.max(0,now-last));last=now;
+ size();
+ if(mode==='playing'){
+  const dir=(held.has('right')?1:0)-(held.has('left')?1:0);
+  if(dir)GB.target(s,s.cart.target+dt*dir*14.8);
+  dropTimer=Math.max(0,dropTimer-dt);s.drop=dropTimer>0||held.has('drop')||held.has('pointer-drop');
+  GB.tick(s,dt);if(s.mode!=='playing')transition(now);update();
+ }
+ if(mode==='finishing'&&!document.hidden){finaleElapsed+=dt;showFinaleCaption();if(finaleElapsed>=4.10)conclude();}
+ const wanted=mode==='idle'?0:Math.max(0,GB.top(s)-13.4);
+ look+=(wanted-look)*(reduced?1:Math.min(1,dt*5.2));
+ g.setTransform(dpr,0,0,dpr,0,0);render(g,width,height,look,now,false,mode==='finishing'?finaleElapsed:null);
+ requestAnimationFrame(frame);
+}
+function clearHold(){held.clear();drag=null;dropTimer=0;}
+function startDrag(el,e,dock){
+ if(mode!=='playing'||e.button!==0||drag)return;
+ const b=el.getBoundingClientRect(),x=e.clientX-b.left,y=e.clientY-b.top;
+ const u=Math.min(width/GB.VIEW,height*.0775),left=(width-u*GB.LIMIT)/2;
+ if(!dock){
+  const base=height*.87+look*u,center=left+s.cart.x*u;
+  if(Math.abs(x-center)>6.0*u||y<base-(GB.RAIL_HEIGHT+1.0)*u||y>base+2.2*u)return;
+ }
+ e.preventDefault();const ratio=dock?Math.max(.04,Math.min(.16,24/b.width)):1/u;
+ drag={el,id:e.pointerId,x:e.clientX,from:s.cart.x,ratio};el.setPointerCapture?.(e.pointerId);
+}
+for(const [el,dock] of [[canvas,false],[handle,true]]){
+ el.addEventListener('pointerdown',e=>startDrag(el,e,dock));
+ el.addEventListener('pointermove',e=>{if(drag?.el!==el||drag.id!==e.pointerId)return;GB.target(s,drag.from+(e.clientX-drag.x)*drag.ratio);});
+ for(const type of ['pointerup','pointercancel','lostpointercapture'])el.addEventListener(type,e=>{if(drag?.id===e.pointerId)drag=null;});
+}
+const drop=$('drop');
+drop.addEventListener('pointerdown',e=>{if(mode==='playing'&&e.button===0){dropTimer=.19;held.add('pointer-drop');drop.setPointerCapture?.(e.pointerId);}});
+for(const type of ['pointerup','pointercancel','lostpointercapture'])drop.addEventListener(type,()=>held.delete('pointer-drop'));
+drop.onclick=e=>{if(mode==='playing'&&(!e||e.detail===0))dropTimer=.19;};
+$('rotate').onclick=()=>{if(mode==='playing')GB.rotate(s);};
+start.onclick=()=>{if(mode==='paused'){mode='playing';overlay.hidden=true;handle.focus();update();}else reset();};
+pause.onclick=()=>{if(mode==='playing')dialog('paused');};
+function keyMap(k){return {arrowleft:'left',a:'left',arrowright:'right',d:'right',arrowdown:'drop',s:'drop',' ':'drop',arrowup:'rotate',w:'rotate',r:'rotate'}[k];}
+document.addEventListener('keydown',e=>{
+ if(e.key==='Escape'){if(mode==='finishing'){conclude();return;}if(mode==='playing')dialog('paused');else if(mode==='paused')start.click();return;}
+ const key=keyMap(e.key.toLowerCase());
+ if(mode!=='playing'||!key)return;
+ if(e.key===' '&&e.target?.tagName==='BUTTON')return;
+ e.preventDefault();
+ if(key==='rotate'){if(!e.repeat)GB.rotate(s);}
+ else{held.add(key);if(key==='drop'&&!e.repeat)dropTimer=.19;}
+});
+document.addEventListener('keyup',e=>{const action=keyMap(e.key.toLowerCase());if(action)held.delete(action);});
+window.addEventListener('blur',()=>{if(mode==='playing')dialog('paused');});
+document.addEventListener('visibilitychange',()=>{if(document.hidden&&mode==='playing')dialog('paused');});
+function note(text){shareStatus.textContent=text;shareStatus.hidden=!text;}
+function clearPoster(){shareGeneration++;posterBlob=null;posterFile=null;shareBusy=false;save.disabled=true;share.disabled=true;note('');}
+function preparePoster(){
+ clearPoster();const ticket=shareGeneration,reward=GB.rewardFor(s);
+ $('resultScore').textContent=String(reward.rows.length);
+ $('resultFine').textContent=L('车上保留 '+reward.rows.length+' 块 · 屋顶与彩灯已落位',reward.rows.length+' saved · roof and lights in place');
+ const view=$('resultHouse');view.width=660;view.height=670;
+ render(view.getContext('2d'),660,670,0,overTime+3,true);
+ const out=document.createElement('canvas');out.width=780;out.height=1040;
+ const c=out.getContext('2d');
+ c.fillStyle='#152734';c.fillRect(0,0,out.width,out.height);
+ c.save();c.translate(0,170);render(c,780,752,0,overTime+3,true);c.restore();
+ c.strokeStyle='#566c7b';c.lineWidth=2;c.strokeRect(22,22,736,996);
+ c.fillStyle='#e8b994';c.font='bold 20px "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif';c.beginPath();c.moveTo(63,43);c.lineTo(66,50);c.lineTo(74,53);c.lineTo(66,56);c.lineTo(63,63);c.lineTo(60,56);c.lineTo(52,53);c.lineTo(60,50);c.closePath();c.fill();c.fillText(L('雪夜留影','WINTER KEEPSAKE'),84,61);
+ c.fillStyle='#fff0cd';c.font='bold 43px "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif';c.fillText(NAME(),53,121);
+ c.fillStyle='#ffd097';c.textAlign='right';c.font='bold 42px "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif';c.fillText(reward.rows.length+L(' 块',' saved'),724,121);
+ c.textAlign='left';c.fillStyle='#ead1ac';c.font='22px "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif';
+ c.fillText(L('车上保留 '+reward.rows.length+' 块 · 屋顶和彩灯',reward.rows.length+' saved · scan to play'),54,972);
+ drawQR(c,610,877,3);
+ note(L("正在制作分享图片…","Preparing your image…"));
+ if(!out.toBlob){note(L("这个浏览器不支持生成图片。","Your browser cannot generate images."));return;}
+ try{out.toBlob(blob=>{
+  if(ticket!==shareGeneration)return;
+  if(!blob){note(L("生成图片失败，请重新开始一局后再试。","Could not make the picture. Please try another round."));return;}
+  posterBlob=blob;
+  if(typeof File==='function'){try{posterFile=new File([blob],L("搭姜饼屋-雪夜留影.png","Gingerbread-Builder.png"),{type:'image/png'});}catch{}}
+  save.disabled=false;share.disabled=false;note('');
+ },'image/png');}catch{if(ticket===shareGeneration)note(L("这个浏览器未能生成图片。","This browser could not create the picture."));}
+}
+function download(){
+ if(!posterBlob)return false;try{const uri=URL.createObjectURL(posterBlob),a=document.createElement('a');a.href=uri;a.download=L("搭姜饼屋-雪夜留影.png","Gingerbread-Builder.png");a.click();setTimeout(()=>URL.revokeObjectURL(uri),1500);return true;}catch{return false;}
+}
+save.onclick=()=>{if(posterBlob)note(download()?L("已发起下载，请在浏览器的下载列表查看。","Download started. Check your browser’s downloads."):L("无法下载这张图。","Could not download the image."));};
+share.onclick=async()=>{
+ if(!posterBlob||shareBusy)return;
+ let data=null;
+ const nav=typeof navigator!=='undefined'?navigator:null;
+ if(posterFile&&nav&&typeof nav.share==='function'&&typeof nav.canShare==='function'){
+  try{const candidate={title:L("搭姜饼屋 · 雪夜留影","Gingerbread Builder • Winter Keepsake"),files:[posterFile]};if(nav.canShare(candidate))data=candidate;}catch{}
+ }
+ if(!data){note(download()?L("此浏览器不能直接分享图片，已发起下载。","Image sharing is unavailable. Download started instead."):L("此浏览器不能直接分享图片，请试试保存。","Image sharing is unavailable. Try Save House."));return;}
+ const ticket=shareGeneration;shareBusy=true;share.disabled=true;
+ try{await nav.share(data);if(ticket===shareGeneration)note(L("已交给系统分享。","Opened your system sharing options."));}
+ catch(e){if(ticket===shareGeneration&&e?.name!=='AbortError')note(L("未能打开系统分享，请用「保存我的姜饼屋」。","Could not open system sharing. Try Save House."));}
+ finally{if(ticket===shareGeneration){shareBusy=false;share.disabled=false;}}
+};
+$('copyLink').onclick=async()=>{
+ try{await navigator.clipboard.writeText(CANONICAL);note(L('游戏链接已复制。','Game link copied.'));}
+ catch{note(CANONICAL);}
+};
+localize();dialog('idle');requestAnimationFrame(frame);
+})();
+</script>

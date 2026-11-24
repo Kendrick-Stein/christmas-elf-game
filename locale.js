@@ -108,6 +108,7 @@ const words={
  pausedFine:["也可以按 Esc 继续", "Press Esc to resume"],
  skipFinale:["跳过庆祝","Skip celebration"],
  workshop:["造树工坊","Tree Workshop"],
+ gingerbreadGame:["搭姜饼屋","Build a Gingerbread House"],
  workshopOther:["自由搭树，不计分，和垒树挑战分开。","Build a separate tree at your own pace, without scoring."],
  workshopBack:["返回首页","Back to home"],
  settings:["设置","Settings"],
@@ -180,6 +181,11 @@ if(!nativeModal)picker.addEventListener('keydown',e=>{
     const nodes=chosen?[zh,en,back]:[zh,en],index=nodes.indexOf(document.activeElement);
     e.preventDefault();nodes[(index+(e.shiftKey?-1:1)+nodes.length)%nodes.length].focus();
  }
+});
+window.addEventListener('storage',e=>{
+ if(e.key!==key||!['en','zh'].includes(e.newValue)||active===e.newValue&&chosen)return;
+ const changed=active!==e.newValue;active=e.newValue;chosen=true;render();if(opened)close(origin);
+ if(changed)for(const fn of listeners)fn(active);
 });
 window.ElfLocale=Object.freeze({t,lang:()=>active,blocking:()=>opened,onChange:fn=>{listeners.add(fn);return()=>listeners.delete(fn);},onPicker:fn=>{pickerListeners.add(fn);return()=>pickerListeners.delete(fn);}});
 render();if(!chosen)open();

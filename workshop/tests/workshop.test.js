@@ -26,7 +26,7 @@ function harness(){
    documentElement:{},body:node(),getElementById:$,createElement:node,createTextNode:s=>s,
    querySelectorAll(s){return s==='[data-tab]'?tabs:s==='.layerChip'?$('layerButtons').children:[];}
  };
- const window={addEventListener(){}};
+ const events={}; const window={addEventListener(k,fn){events[k]=fn;}};
  const C={
   document,window,localStorage:{getItem:k=>storage.get(k),setItem:(k,v)=>storage.set(k,v)},devicePixelRatio:2,
   URL:{createObjectURL(o){uploads.push(o);return o.broken?'blob:broken':'blob:local';},revokeObjectURL(){}},
@@ -40,7 +40,7 @@ function harness(){
  const ctx=vm.createContext(C);
  vm.runInContext(read('model.js'),ctx);window.WorkshopModel=ctx.WorkshopModel;
  vm.runInContext(read('art.js'),ctx);vm.runInContext(read('workshop.js'),ctx);
- return {$,tabs,document,out,images,photos,uploads,storage};
+ return {$,tabs,document,out,images,photos,uploads,storage,events};
 }
 test('upload, local conversion, hang/remove/undo, malformed retry, and exported PNG retain photo pixels',async()=>{
  const h=harness(),{$}=h,photo=$('photoFile');h.tabs[2].fire('click');
@@ -57,5 +57,7 @@ test('upload, local conversion, hang/remove/undo, malformed retry, and exported 
  assert(h.images.some(([surface,src])=>surface==='canvas'&&src==='data:image/png;base64,fixture-converted'));
  assert.deepEqual(h.uploads.at(-1),{type:'image/png',w:960,h:1020});
  $('language').click();assert.equal(h.document.documentElement.lang,'en');
- assert.deepEqual([...h.storage.keys()],['pine-workshop-language']);
+ assert.deepEqual([...h.storage.keys()],['snow-pine-language-v1','pine-workshop-language']);
 });
+
+test('common preference follows a same-origin sibling tab',()=>{const h=harness();h.events.storage({key:'snow-pine-language-v1',newValue:'en'});assert.equal(h.document.documentElement.lang,'en');h.events.storage({key:'snow-pine-language-v1',newValue:'zh'});assert.equal(h.document.documentElement.lang,'zh-CN');});

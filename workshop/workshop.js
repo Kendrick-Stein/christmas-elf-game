@@ -11,7 +11,8 @@ const words={
  placed:['挂上了。','Hung on the tree.'],deleted:['已移除。','Removed.'],restored:['已撤销。','Undone.'],full:['挂饰已满。','The tree is full of ornaments.'],noBranch:['请点实际松枝。','Tap an actual branch.'],photoReady:['像素照片已就绪，可以挂到树上。','Pixel photo ready to hang.'],photoBad:['读不出这张照片。请重试 PNG、JPG 或 WebP 文件。','Could not read this photo. Try a PNG, JPG or WebP file.'],photoLarge:['照片太大。请选择不超过 12 MB、2400 万像素的文件。','Use a file under 12 MB and 24 megapixels.'],saved:['已请求保存 PNG。','PNG download requested.'],saveBad:['未能保存，请重试。','Could not save the image. Please try again.'],switch:['切换语言','Change language']
 };
 const embedded=!!window.parent&&window.parent!==window;
-let lang='zh';try{if(localStorage.getItem(embedded?'snow-pine-language-v1':'pine-workshop-language')==='en')lang='en';}catch{}
+const LANGUAGE_KEY='snow-pine-language-v1', WORKSHOP_LEGACY_KEY='pine-workshop-language';
+let lang='zh';try{const shared=localStorage.getItem(LANGUAGE_KEY);const legacy=localStorage.getItem(WORKSHOP_LEGACY_KEY);if((shared||legacy)==='en')lang='en';}catch{}
 $('language').hidden=embedded;
 if(!embedded&&typeof location!=='undefined'&&/^\/christmas-elf-game\/workshop(?:\/|\/index\.html)?$/.test(location.pathname))$('backStandalone').hidden=false;
 if(embedded){
@@ -157,7 +158,7 @@ $('tabs').addEventListener('keydown',e=>{
  if(!['ArrowLeft','ArrowRight','Home','End'].includes(e.key))return;
  const all=['layer','deco','photo'],i=all.indexOf(tab);e.preventDefault();changeTab(all[e.key==='Home'?0:e.key==='End'?2:(i+(e.key==='ArrowLeft'?2:1))%3],true);
 });
-$('language').onclick=()=>{lang=lang==='en'?'zh':'en';try{localStorage.setItem('pine-workshop-language',lang);}catch{}language();};
+$('language').onclick=()=>{lang=lang==='en'?'zh':'en';try{localStorage.setItem(LANGUAGE_KEY,lang);localStorage.setItem(WORKSHOP_LEGACY_KEY,lang);}catch{}language();};
 $('grow').onclick=()=>update(M.add);
 $('prune').onclick=()=>update(M.drop,'deleted');
 $('hangDecor').onclick=()=>hang(model.selected,kind);
@@ -213,4 +214,7 @@ $('export').onclick=async()=>{
 };
 if(typeof ResizeObserver==='function')new ResizeObserver(render).observe(canvas);else window.addEventListener('resize',render);
 language();changeTab('layer');ready.then(render);
+window.addEventListener('storage',e=>{if(e.key===LANGUAGE_KEY&&['en','zh'].includes(e.newValue)&&lang!==e.newValue){lang=e.newValue;language();}});
 })();
+
+

@@ -42,3 +42,7 @@
 
 ### 造树工坊 / Tree Workshop
 造树工坊只从挑战开始前的首页打开；游玩、暂停与结算中都不能切过去。工坊的松枝、灯带、挂饰和本机照片与挑战分开，不计分，不结束原局。照片只在当前浏览器处理，不上传；可随本机导出的 PNG 带走。直接打开 `workshop/` 也能使用。
+
+## Gingerbread Builder / 搭姜饼屋
+
+The start screen links to `gingerbread/`; the existing Pine & Snow and Tree Workshop routes remain in place. All three use the same Chinese/English preference; the workshop keeps its legacy value as a fallback. The new mode carries actual doors, windows, cookies, local frosting, seam wafers and ornaments into a skippable winter finale and a local PNG keepsake. The roof/lights match the retained build, with a smaller roof on a narrow/off-center support. The canonical share QR and copy action point to the GitHub Pages game under `/christmas-elf-game/gingerbread/`. No new hosting, account, network backend or analytics.

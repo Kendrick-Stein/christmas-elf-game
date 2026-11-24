@@ -57,7 +57,7 @@ try{const raw=JSON.parse(localStorage.getItem(recordKey));if(raw&&Number.isFinit
 const shell=$('shell'),rules=$('rules'),focusToggle=$('focusToggle'),helpToggle=$('helpToggle'),helpClose=$('helpClose');
 const settingsMenu=$('settingsMenu'),settingsToggle=$('settingsToggle');
 const workshopDialog=$('workshopDialog'),workshopFrame=$('workshopFrame'),workshopBack=$('workshopBack');
-const workshopHome=$('workshopHome');
+const workshopHome=$('workshopHome'),gingerbreadHome=$('gingerbreadHome');
 let workshopOpen=false,workshopLoaded=false;
 function renderWorkshop(){
  if(!workshopDialog)return;
@@ -816,6 +816,7 @@ function renderPanel(){
  $('panelIcon').textContent=mode==='lost'&&state.level>=C.STAR_AT?'✦':'❄';
  $('panelFine').textContent=mode==='lost'?t('bestCombo',{n:state.bestCombo}):mode==='paused'?t('pausedFine'):'';
  workshopHome.hidden=mode!=='ready';
+ if(gingerbreadHome)gingerbreadHome.hidden=mode!=='ready';
  button(mode==='lost'?'replay':mode==='paused'?'resume':'start');
 }
 function renderSound(){
