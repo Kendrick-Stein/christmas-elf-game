@@ -46,3 +46,7 @@
 ## Gingerbread Builder / 搭姜饼屋
 
 The start screen links to `gingerbread/`; the existing Pine & Snow and Tree Workshop routes remain in place. All three use the same Chinese/English preference; the workshop keeps its legacy value as a fallback. The new mode carries actual doors, windows, cookies, local frosting, seam wafers and ornaments into a skippable winter finale and a local PNG keepsake. The roof/lights match the retained build, with a smaller roof on a narrow/off-center support. The canonical share QR and copy action point to the GitHub Pages game under `/christmas-elf-game/gingerbread/`. No new hosting, account, network backend or analytics.
+
+## Music and operation sounds
+
+The original melody has three arrangements: sleigh bells and pluck for Pine & Snow, music box for Tree Workshop, and marimba for Gingerbread Builder. Enter a mode to hear it; browsers that block autoplay will start after a supported gesture. Background music and sound effects have independent controls in each mode, stored locally across the three same-origin screens. The front menu remains silent, the embedded Workshop uses the parent player's audio, and hidden pages pause. No external audio services or sound-tracking requests are used.

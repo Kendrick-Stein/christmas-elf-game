@@ -6,3 +6,5 @@
 button,.fileLabel{font-family:inherit}
 
 #backStandalone:not([hidden]){display:inline-grid;place-items:center;padding-inline:8px;color:#ffda9a;font-size:.76rem}
+
+.audio-menu{position:relative;z-index:4}.audio-menu summary{list-style:none;display:grid;place-items:center;min-width:42px;min-height:42px;cursor:pointer;border:1px solid #799093;border-radius:8px;color:#ffe4ae;background:#20384a}.audio-menu summary::-webkit-details-marker{display:none}.audio-menu>div{position:absolute;right:0;top:46px;min-width:155px;padding:6px;display:grid;gap:4px;background:#152735;border:1px solid #7c939c;border-radius:10px}.audio-menu:not([open])>div{display:none}.audio-menu button{white-space:nowrap;font-size:.83rem}.audio-menu button[aria-pressed=false]{color:#afc1d0}

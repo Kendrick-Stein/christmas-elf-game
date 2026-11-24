@@ -34,7 +34,8 @@ const ready=Promise.all(Object.entries(window.WorkshopArt).map(([key,url])=>new 
 let model=M.tree(),history=[],tab='layer',kind='garland',photoImage=null,photoSprite=null,photoGeneration=0,view={s:1,x:0,y:0},status='',photoStatus='';
 function message(key){status=key;$('status').textContent=key?t(key):'';}
 function photoMessage(key){photoStatus=key;$('photoInfo').textContent=key?t(key):'';}
-function update(fn,key){const before=M.clone(model);if(fn(model)){history.push(before);if(history.length>40)history.shift();if(key)message(key);sync();}else if(key==='placed')message('full');}
+const sfx=(kind)=>window.PineAudio?.effect(kind);
+function update(fn,key){const before=M.clone(model);if(fn(model)){history.push(before);if(history.length>40)history.shift();if(key)message(key);sfx(key==='placed'?'tick':key==='deleted'?'undo':'tap');sync();}else if(key==='placed')message('full');}
 function sync(){
  const selected=model.layers[model.selected];
  $('width').value=selected.w;$('widthValue').textContent=selected.w;
@@ -67,7 +68,8 @@ function buildSwatches(){
  }
 }
 function language(){
- document.documentElement.lang=lang==='en'?'en':'zh-CN';document.title=t('brand')+' · Pine & Snow';
+ document.documentElement.lang=lang==='en'?'en':'zh-CN';
+ $('audioOptions').setAttribute('aria-label',lang==='en'?'Audio settings':'音频设置');window.PineAudio?.refresh();document.title=t('brand')+' · Pine & Snow';
  for(const node of document.querySelectorAll('[data-i18n]'))node.textContent=t(node.dataset.i18n);
  $('language').textContent=lang==='en'?'🌐 中文':'🌐 English';$('language').setAttribute('aria-label',t('switch'));
  canvas.setAttribute('aria-label',t('stage'));$('photoFile').setAttribute('aria-label',t('choosePhoto'));
@@ -165,11 +167,11 @@ $('hangDecor').onclick=()=>hang(model.selected,kind);
 $('hangPhoto').onclick=()=>{if(photoSprite)hang(model.selected,'photo');};
 $('unhang').onclick=()=>update(M.removeDeco,'deleted');
 $('unhangPhoto').onclick=()=>update(M.removePhoto,'deleted');
-$('undo').onclick=()=>{if(history.length){model=history.pop();message('restored');sync();}};
+$('undo').onclick=()=>{if(history.length){model=history.pop();message('restored');sfx('undo');sync();}};
 for(const b of document.querySelectorAll('[data-size]'))b.addEventListener('click',()=>update(s=>{const w=Number(b.dataset.size);if(s.layers[s.selected].w===w)return false;s.layers[s.selected].w=w;return true;}));
 let sliderSnapshot=null;
 $('width').addEventListener('input',()=>{if(!sliderSnapshot)sliderSnapshot=M.clone(model);model.layers[model.selected].w=Number($('width').value);sync();});
-$('width').addEventListener('change',()=>{if(sliderSnapshot){history.push(sliderSnapshot);if(history.length>40)history.shift();sliderSnapshot=null;sync();}});
+$('width').addEventListener('change',()=>{if(sliderSnapshot){history.push(sliderSnapshot);if(history.length>40)history.shift();sliderSnapshot=null;sfx('tap');sync();}});
 function refreshPhoto(){
  if(!photoImage)return;
  const sample=$('photoSample'),ctx=sample.getContext('2d',{willReadFrequently:true}),n=sample.width;
@@ -208,7 +210,7 @@ $('export').onclick=async()=>{
    const c=document.createElement('canvas');c.width=960;c.height=1020;
    const ctx=c.getContext('2d');ctx.scale(1.5,1.5);draw(ctx,model,false);
    c.toBlob(blob=>{if(!blob){message('saveBad');return;}const u=URL.createObjectURL(blob),a=document.createElement('a');
-     a.href=u;a.download='pine-and-snow-workshop.png';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),20000);message('saved');
+     a.href=u;a.download='pine-and-snow-workshop.png';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),20000);message('saved');sfx('lights');
    },'image/png');
  }catch(_){message('saveBad');}
 };

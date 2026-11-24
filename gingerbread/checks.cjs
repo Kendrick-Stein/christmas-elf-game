@@ -1,6 +1,6 @@
 const fs=require('fs'), vm=require('vm'),assert=require('node:assert/strict');
 const html=fs.readFileSync(__dirname+'/index.html','utf8');
-const js=[...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].map(x=>x[1]);js.forEach(x=>new vm.Script(x));
+const js=[...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/g)].map(x=>x[1]).filter(x=>x.trim());js.forEach(x=>new vm.Script(x));
 const mod={exports:{}};vm.runInNewContext(js[0],{module:mod});const C=mod.exports;
 const frames=(s,t,fn)=>{for(let i=0;i<Math.round(t*120);i++){C.tick(s,1/120);fn?.(s);}};
 const box=(p)=>C.world(p).map(([x,y])=>[x,y,x+1,y+1]);

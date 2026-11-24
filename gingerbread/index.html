@@ -1,4 +1,4 @@
-<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>搭姜饼屋</title><meta name="description" content="接住姜饼，拼起你的雪夜小屋。"><link rel="canonical" href="https://kendrick-stein.github.io/christmas-elf-game/gingerbread/">
+<!doctype html><html lang="zh-CN"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>搭姜饼屋</title><script defer src="../audio.js?v=audio-21" data-mode="gingerbread"></script><meta name="description" content="接住姜饼，拼起你的雪夜小屋。"><link rel="canonical" href="https://kendrick-stein.github.io/christmas-elf-game/gingerbread/">
 <style>
 *{box-sizing:border-box}body{margin:0;background:#101924;color:#ffe6c2;font:600 16px system-ui,sans-serif;overflow:hidden}button{font:inherit;color:inherit;background:#294355;border:1px solid #567486;border-radius:10px;cursor:pointer;min-height:45px;touch-action:manipulation;-webkit-tap-highlight-color:transparent}button:focus-visible{outline:3px solid #ffcf86;outline-offset:2px}button:disabled{opacity:.4;cursor:default}.app{height:100vh;height:100dvh;max-width:550px;position:relative;margin:auto;display:grid;grid-template-rows:auto 1fr auto;overflow:hidden;background:#202d45}header{padding:calc(10px + env(safe-area-inset-top)) 14px 9px;background:#152735;display:flex;align-items:center;gap:12px;z-index:1;border-bottom:1px solid #587281}h1{font-size:21px;margin:0 auto 0 0}header button{font-size:14px;padding:0 10px}#score{color:#ffca87;font-variant-numeric:tabular-nums}.arena{min-height:0;position:relative}canvas{width:100%;height:100%;display:block}.msg{position:absolute;top:12px;left:50%;transform:translateX(-50%);pointer-events:none;background:#142636dc;border:1px solid #587080;border-radius:999px;padding:5px 12px;white-space:nowrap;color:#bde7d0;font-size:13px}.controls{display:grid;grid-template-columns:repeat(3,1fr);gap:7px;padding:10px 10px calc(10px + env(safe-area-inset-bottom));background:#152835;user-select:none;-webkit-user-select:none;-webkit-touch-callout:none}.controls button{min-height:55px;font-size:17px;touch-action:none}.controls button:last-child{background:#765540;border-color:#bc916c}.screen{position:absolute;inset:0;background:#112031ba;display:grid;place-items:center;z-index:3;padding:20px}.sheet{width:min(100%,355px);border:1px solid #8498a0;border-radius:18px;background:#172c3b;padding:20px}.sheet p{color:#c1d0d8;font-size:15px;line-height:1.55;margin:13px 0 18px}.sheet h2{margin:0;color:#ffebc4}.sheet .row{display:flex;flex-wrap:wrap;gap:7px}.sheet button{flex:1;padding:0 9px}.sheet button.primary{background:#895c42;border-color:#deac85}.screen[hidden]{display:none}.screen[data-mode=capped],.screen[data-mode=collapse]{align-items:end;padding-bottom:calc(87px + env(safe-area-inset-bottom));background:linear-gradient(0deg,#112031d0,transparent 65%);pointer-events:none}.screen .sheet{pointer-events:auto}.sr{position:absolute;clip:rect(0,0,0,0);width:1px;height:1px;overflow:hidden} @media (max-width:350px){h1{font-size:17px}header{gap:7px}header button{padding:0 7px}} 
 .screen[data-mode=capped],.screen[data-mode=collapse]{background:#152734;align-items:center;padding:12px 12px calc(12px + env(safe-area-inset-bottom));pointer-events:auto;overflow:auto}.screen[data-mode=capped] .sheet,.screen[data-mode=collapse] .sheet{width:min(100%,470px);margin:auto;padding:12px 14px;background:linear-gradient(165deg,#233b4c,#172a38 70%);border-color:#647886;box-shadow:0 15px 45px #0b1521}.result-tag{font-size:12px;letter-spacing:.13em;color:#eabb91;margin:4px 0}.result h2{font-size:21px}.result-score{display:flex;align-items:baseline;gap:6px;color:#ffca8c;font-size:14px}.result-score strong{font-size:38px;font-variant-numeric:tabular-nums;line-height:1.04}.result figure{margin:10px 0 11px;height:min(49dvh,435px);min-height:155px;border-radius:11px;background:#142639;padding:3px;overflow:hidden;border:1px solid #475f71}.result figure canvas{object-fit:contain}.sheet .result-fine{margin:7px 0;font-size:12px;line-height:1.35;color:#bbccd3}.result-actions{display:grid;grid-template-columns:1fr 1fr;gap:6px;margin-top:6px}.result-actions button{font-size:14px;padding:0 4px}.result .row button.primary{margin-top:1px}.result .share-status{margin:7px 0 0;min-height:16px;color:#f3cf9b;font-size:12px}.result[hidden],.result-actions[hidden],.row [hidden]{display:none}.screen.is-result #dialogCopy{display:none}
@@ -6,14 +6,15 @@
 .arena{touch-action:none}.controls{grid-template-columns:repeat(2,1fr);gap:7px}.controls small{font-size:11px;color:#c6d6d5}.cart-handle{grid-column:1/-1;position:relative;height:38px;border:1px solid #506f80;border-radius:11px;background:#1d3340;touch-action:none;cursor:ew-resize}.cart-handle:before{content:"";position:absolute;inset:16px 14px auto;height:2px;background:#587687}.cart-handle span{position:absolute;top:2px;left:50%;transform:translateX(-50%);background:#405867;border:1px solid #9bacb1;border-radius:8px;padding:4px 10px;white-space:nowrap;font-size:13px;pointer-events:none}#hearts{font-size:18px;color:#ffa79b;letter-spacing:.07em;min-width:53px;text-align:center}.controls button{min-height:48px}.controls button:active{background:#9b684b}canvas{touch-action:none}
 .ice-key{font-size:10px;white-space:nowrap;color:#e1b18a}.ice-key b{color:#b8eaf5;font-weight:700}.ice-key b:before{content:' ';white-space:pre} @media(max-width:340px){.ice-key{font-size:9px}}
 .next-box{position:absolute;top:49px;right:9px;min-width:74px;min-height:41px;padding:4px 6px 4px 8px;display:grid;grid-template-columns:auto auto;align-items:center;gap:5px;border:1px solid #627382;border-radius:8px;background:#172a38eb;color:#ebc9a5;font-size:10px;pointer-events:none}.next-box small{grid-column:1/-1;color:#bae6f2;text-align:center;font-size:9px;letter-spacing:.01em}.next-box[hidden],.next-box small[hidden]{display:none}.ice-key b{color:#e8f4ec}
-header{gap:7px}header h1{font-size:clamp(13px,3.9vw,20px);white-space:nowrap}header button{padding:0 7px;min-height:41px}.language{font-size:12px;min-width:37px}.ice-key{display:none}@media(min-width:460px){.ice-key{display:inline}}#score{font-size:13px;white-space:nowrap}.home-link{display:block;text-align:center;margin:10px 0 0;color:#b9d4e4;font-size:13px;padding:5px}.copy-link{grid-column:1/-1;min-height:39px}.msg{max-width:94%;white-space:normal;text-align:center;width:max-content;line-height:1.2}.finale-controls{position:absolute;z-index:2;inset:auto 14px calc(109px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-between;gap:8px;pointer-events:none}.finale-controls[hidden]{display:none}.finale-controls output{border-radius:8px;background:#172a3beb;color:#ffe5bb;font-size:13px;padding:8px 10px}.finale-controls button{pointer-events:auto;padding:0 12px;font-size:13px;background:#293d4a;border-color:#967964}
+header{gap:7px}header h1{min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:clamp(13px,3.9vw,20px);white-space:nowrap}header button{padding:0 7px;min-height:41px}.language{font-size:12px;min-width:37px}.ice-key{display:none}@media(min-width:460px){.ice-key{display:inline}}#score{font-size:13px;white-space:nowrap}.home-link{display:block;text-align:center;margin:10px 0 0;color:#b9d4e4;font-size:13px;padding:5px}.copy-link{grid-column:1/-1;min-height:39px}.msg{max-width:94%;white-space:normal;text-align:center;width:max-content;line-height:1.2}.finale-controls{position:absolute;z-index:2;inset:auto 14px calc(109px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-between;gap:8px;pointer-events:none}.finale-controls[hidden]{display:none}.finale-controls output{border-radius:8px;background:#172a3beb;color:#ffe5bb;font-size:13px;padding:8px 10px}.finale-controls button{pointer-events:auto;padding:0 12px;font-size:13px;background:#293d4a;border-color:#967964}
 .result-nav{display:flex;align-items:center;justify-content:center;gap:10px;margin:8px 0 0}.result-nav .home-link{margin:0}.sheet .screen-language{min-height:36px;font-size:12px;padding:4px 9px;background:#293c45}
+.audio-menu{position:relative;z-index:8}.audio-menu summary{list-style:none;display:grid;place-items:center;min-width:35px;min-height:41px;cursor:pointer;border:1px solid #6c8594;border-radius:9px;background:#294355;color:#ffe5b2}.audio-menu summary::-webkit-details-marker{display:none}.audio-menu>div{position:absolute;right:0;top:45px;min-width:153px;padding:6px;display:grid;gap:5px;background:#182b3a;border:1px solid #748995;border-radius:9px}.audio-menu:not([open])>div{display:none}.audio-menu button,.sheet .audio-sheet button{min-height:37px;font-size:12px;white-space:nowrap}.audio-sheet{display:flex;justify-content:center;gap:6px;margin-top:6px}.sheet .audio-sheet button{padding:0 7px}.audio-menu button[aria-pressed=false],.audio-sheet button[aria-pressed=false]{color:#afc2cf}@media(max-width:370px){header{gap:5px;padding-left:7px;padding-right:7px}.language{min-width:33px}.audio-menu summary{min-width:30px}#hearts{font-size:15px;min-width:40px}#score{font-size:11px}}
 </style>
-<main class="app"><header><h1 id="brand">搭姜饼屋</h1><span id="score" aria-label="车上姜饼">车上 0</span><span class="ice-key" id="iceLegend" aria-label="普通姜饼可滑，蓝白糖霜表示冻结"><span id="normalKey">普通可滑</span> <b id="freezeKey">白霜冻结</b></span><span id="hearts" role="status" aria-label="剩余 3 心">♥♥♥</span><button id="language" class="language" aria-label="切换语言">EN</button><button id="pause" aria-label="暂停">Ⅱ</button></header>
+<main class="app"><header><h1 id="brand">搭姜饼屋</h1><span id="score" aria-label="车上姜饼">车上 0</span><span class="ice-key" id="iceLegend" aria-label="普通姜饼可滑，蓝白糖霜表示冻结"><span id="normalKey">普通可滑</span> <b id="freezeKey">白霜冻结</b></span><span id="hearts" role="status" aria-label="剩余 3 心">♥♥♥</span><button id="language" class="language" aria-label="切换语言">EN</button><details class="audio-menu"><summary id="audioOptions" aria-label="音频设置">♫</summary><div><button type="button" data-pine-audio="music">背景音乐 · 开</button><button type="button" data-pine-audio="sfx">操作音效 · 开</button></div></details><button id="pause" aria-label="暂停">Ⅱ</button></header>
 <div class="arena"><canvas id="field" role="img" aria-label="姜饼屋叠放区域"></canvas><output class="msg" id="message" aria-live="polite">拖推车去接住姜饼</output><div class="next-box" id="nextBox" hidden role="img" aria-label="下一块"><span id="nextLabel">下一块</span><svg id="nextIcon" width="35" height="28" viewBox="0 0 32 26" aria-hidden="true"></svg><small id="nextCondition" hidden>接住后掉糖霜</small></div></div>
 <footer class="controls"><div id="cartHandle" class="cart-handle" tabindex="0" role="slider" aria-label="推车把手，拖动或使用左右键" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"><span id="cartThumb">↔ 推车</span></div><button id="drop"><span id="dropLabel">下落</span> <small id="holdLabel">可长按</small></button><button id="rotate">旋转</button></footer>
 <div id="finaleControls" class="finale-controls" hidden><output id="finaleStatus" aria-live="polite"></output><button id="skipFinale" type="button">跳过动画</button></div>
-<section id="screen" class="screen"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><h2 id="dialogTitle">搭姜饼屋</h2><p id="dialogCopy">拖动推车接姜饼。接触够宽会先粘住，贴稳后更牢，移动时仍可微滑；大幅甩车会甩掉薄粘块。点按或长按「下落」加速，也可以旋转。</p><div class="result" id="result" hidden><div id="resultTag" class="result-tag" aria-hidden="true">✦  雪夜留影  ✦</div><div class="result-score"><strong id="resultScore">0</strong><span id="resultUnit">块留存</span></div><p id="resultFine" class="result-fine"></p><figure><canvas id="resultHouse" role="img" aria-label="本局实际留下的姜饼屋以及屋顶和彩灯"></canvas></figure></div><div class="row"><button class="primary" id="start">开始</button></div><div id="resultActions" class="result-actions" hidden><button id="save" disabled>保存我的姜饼屋</button><button id="share" disabled>分享</button><button id="copyLink" class="copy-link" type="button">复制游戏链接</button></div><div class="result-nav"><a id="homeLink" class="home-link" href="../">返回游戏首页</a><button id="screenLanguage" class="screen-language" type="button" aria-label="切换语言">English</button></div><p id="shareStatus" class="share-status" role="status" hidden></p></div></section>
+<section id="screen" class="screen"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><h2 id="dialogTitle">搭姜饼屋</h2><p id="dialogCopy">拖动推车接姜饼。接触够宽会先粘住，贴稳后更牢，移动时仍可微滑；大幅甩车会甩掉薄粘块。点按或长按「下落」加速，也可以旋转。</p><div class="result" id="result" hidden><div id="resultTag" class="result-tag" aria-hidden="true">✦  雪夜留影  ✦</div><div class="result-score"><strong id="resultScore">0</strong><span id="resultUnit">块留存</span></div><p id="resultFine" class="result-fine"></p><figure><canvas id="resultHouse" role="img" aria-label="本局实际留下的姜饼屋以及屋顶和彩灯"></canvas></figure></div><div class="row"><button class="primary" id="start">开始</button></div><div id="resultActions" class="result-actions" hidden><button id="save" disabled>保存我的姜饼屋</button><button id="share" disabled>分享</button><button id="copyLink" class="copy-link" type="button">复制游戏链接</button></div><div class="result-nav"><a id="homeLink" class="home-link" href="../">返回游戏首页</a><button id="screenLanguage" class="screen-language" type="button" aria-label="切换语言">English</button></div><div class="audio-sheet"><button type="button" data-pine-audio="music">背景音乐 · 开</button><button type="button" data-pine-audio="sfx">操作音效 · 开</button></div><p id="shareStatus" class="share-status" role="status" hidden></p></div></section>
 </main>
 <script id="engine">
 const GB=(()=>{
@@ -496,6 +497,7 @@ env.paintGingerForest=(c,w,h,t,{reduced,exporting,groundY}={})=>paint(c,w,h,{tim
 </script>
 <script>
 (()=>{
+const sfx=kind=>window.PineAudio?.effect(kind);
 const $=s=>document.getElementById(s), canvas=$('field'),g=canvas.getContext('2d');
 const score=$('score'),msg=$('message'),overlay=$('screen'),start=$('start'),pause=$('pause'),save=$('save'),hearts=$('hearts'),handle=$('cartHandle'),thumb=$('cartThumb');
 const LANGUAGE_KEY='snow-pine-language-v1', CANONICAL='https://kendrick-stein.github.io/christmas-elf-game/gingerbread/';
@@ -528,7 +530,7 @@ const finaleControls=$('finaleControls'),finStatus=$('finaleStatus');
 let shareGeneration=0,posterBlob=null,posterFile=null,shareBusy=false;
 const share=$('share'),shareStatus=$('shareStatus');
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-function reset(){clearPoster();finaleControls.hidden=true;$('result').hidden=true;$('resultActions').hidden=true;s=GB.make();mode='playing';look=0;flashUntil=0;currentFlash='';clearHold();overlay.hidden=true;pause.textContent='Ⅱ';pause.setAttribute('aria-label',L('暂停','Pause'));handle.focus();update();}
+function reset(){window.PineAudio?.arm();sfx('nice');clearPoster();finaleControls.hidden=true;$('result').hidden=true;$('resultActions').hidden=true;s=GB.make();mode='playing';look=0;flashUntil=0;currentFlash='';clearHold();overlay.hidden=true;pause.textContent='Ⅱ';pause.setAttribute('aria-label',L('暂停','Pause'));handle.focus();update();}
 function dialog(kind){
  mode=kind;clearHold();overlay.dataset.mode=kind;overlay.hidden=false;
  const done=kind==='collapse';
@@ -550,11 +552,12 @@ function localize(){
   ['brand','搭姜饼屋','Gingerbread Builder'],['normalKey','普通可滑','Loose'],['freezeKey','白霜冻结','Frosted'],['nextLabel','下一块','Next'],['dropLabel','下落','Drop'],['holdLabel','可长按','hold'],['rotate','旋转','Rotate'],
   ['resultTag','✦ 雪夜留影 ✦','✦ WINTER KEEPSAKE ✦'],['resultUnit','块留存','saved'],['save','保存我的姜饼屋','Save House'],['share','分享','Share'],['copyLink','复制游戏链接','Copy Game Link'],['homeLink','返回游戏首页','Back to Game Menu'],['skipFinale','跳过动画','Skip'],
   ['language','EN','中'],['screenLanguage','English','中文']])$(id).textContent=L(cn,en);
- for(const [id,cn,en] of [['language','切换语言','Change language'],['screenLanguage','切换语言','Change language'],['pause','暂停','Pause'],['score','车上姜饼','Cookies on the cart'],['iceLegend','普通姜饼可滑，蓝白糖霜表示冻结','Plain cookies can slide; frost marks frozen cookies'],['field','姜饼屋叠放区域','Gingerbread playing field'],['cartHandle','推车把手，拖动或使用左右键','Cart handle, drag or use the arrow keys'],['resultHouse','本局实际留下的姜饼屋以及屋顶和彩灯','Your retained gingerbread house with roof and lights']])$(id).setAttribute('aria-label',L(cn,en));
+ for(const [id,cn,en] of [['language','切换语言','Change language'],['screenLanguage','切换语言','Change language'],['pause','暂停','Pause'],['audioOptions','音频设置','Audio settings'],['score','车上姜饼','Cookies on the cart'],['iceLegend','普通姜饼可滑，蓝白糖霜表示冻结','Plain cookies can slide; frost marks frozen cookies'],['field','姜饼屋叠放区域','Gingerbread playing field'],['cartHandle','推车把手，拖动或使用左右键','Cart handle, drag or use the arrow keys'],['resultHouse','本局实际留下的姜饼屋以及屋顶和彩灯','Your retained gingerbread house with roof and lights']])$(id).setAttribute('aria-label',L(cn,en));
  if(mode==='idle'||mode==='paused'||mode==='collapse')textForDialog(mode);
  previewKey=null;hearts.textContent='';update();
  if(mode==='finishing')showFinaleCaption(true);
  if(mode==='collapse')preparePoster();
+ window.PineAudio?.refresh();
 }
 function setLanguage(code){if(code!=='en'&&code!=='zh')return;lang=code;try{localStorage.setItem(LANGUAGE_KEY,lang);}catch{}localize();}
 const toggleLanguage=()=>setLanguage(lang==='zh'?'en':'zh');
@@ -591,7 +594,13 @@ function update(){
  const position=Math.round((s.cart.x-GB.TRAVEL[0])/(GB.TRAVEL[1]-GB.TRAVEL[0])*100);
  thumb.style.left=(9+.82*position)+'%';thumb.textContent=L('↔ 推车','↔ Cart');handle.setAttribute('aria-valuenow',String(position));
  pause.disabled=mode!=='playing';
- if(s.flash){currentFlash=s.flash;flashUntil=performance.now()+1700;s.flash='';}
+ if(s.flash){
+  currentFlash=s.flash;flashUntil=performance.now()+1700;s.flash='';
+  if(/^掉了/.test(currentFlash))sfx('dull');
+  else if(/^局部冻结/.test(currentFlash))sfx('cool');
+  else if(/补上了|已挂上/.test(currentFlash))sfx('tick');
+  else if(/正在凝结|接触过窄/.test(currentFlash))sfx('tap');
+ }
  const frozen=s.stack.filter(p=>p.frozen).length;
  const status=performance.now()<flashUntil?flashText(currentFlash):L('已冻结 '+frozen+' 块 · 普通块仍可微滑','Frozen: '+frozen+' · others can slip');
  if(msg.textContent!==status)msg.textContent=status;
@@ -812,11 +821,11 @@ function render(c,w,h,view,t,exporting=false,film=null){
 }
 function showFinaleCaption(force=false){
  const n=finaleElapsed<.68?0:finaleElapsed<1.36?1:finaleElapsed<2.47?2:3;
- if(force||finaleStep!==n){finaleStep=n;finStatus.textContent=[
+ if(force||finaleStep!==n){if(!force&&n===2)sfx('lights');finaleStep=n;finStatus.textContent=[
   L('雪夜归来','Arriving at the winter village'),L('屋顶落下','Finishing the roof'),L('点亮小屋','Lighting up your house'),L('雪夜留影','A winter keepsake')
  ][n];}
 }
-function conclude(){if(mode!=='finishing')return;finaleControls.hidden=true;dialog('collapse');}
+function conclude(){if(mode!=='finishing')return;sfx('finish');finaleControls.hidden=true;dialog('collapse');}
 function transition(now){overTime=now;mode='finishing';pause.disabled=true;clearHold();finaleElapsed=0;finaleStep=-1;finaleControls.hidden=!!reduced;showFinaleCaption();if(reduced)conclude();}
 $('skipFinale').onclick=conclude;
 function frame(stamp){
@@ -852,10 +861,10 @@ for(const [el,dock] of [[canvas,false],[handle,true]]){
  for(const type of ['pointerup','pointercancel','lostpointercapture'])el.addEventListener(type,e=>{if(drag?.id===e.pointerId)drag=null;});
 }
 const drop=$('drop');
-drop.addEventListener('pointerdown',e=>{if(mode==='playing'&&e.button===0){dropTimer=.19;held.add('pointer-drop');drop.setPointerCapture?.(e.pointerId);}});
+drop.addEventListener('pointerdown',e=>{if(mode==='playing'&&e.button===0){sfx('drop');dropTimer=.19;held.add('pointer-drop');drop.setPointerCapture?.(e.pointerId);}});
 for(const type of ['pointerup','pointercancel','lostpointercapture'])drop.addEventListener(type,()=>held.delete('pointer-drop'));
-drop.onclick=e=>{if(mode==='playing'&&(!e||e.detail===0))dropTimer=.19;};
-$('rotate').onclick=()=>{if(mode==='playing')GB.rotate(s);};
+drop.onclick=e=>{if(mode==='playing'&&(!e||e.detail===0)){sfx('drop');dropTimer=.19;}};
+$('rotate').onclick=()=>{if(mode==='playing'&&GB.rotate(s))sfx('rotate');};
 start.onclick=()=>{if(mode==='paused'){mode='playing';overlay.hidden=true;handle.focus();update();}else reset();};
 pause.onclick=()=>{if(mode==='playing')dialog('paused');};
 function keyMap(k){return {arrowleft:'left',a:'left',arrowright:'right',d:'right',arrowdown:'drop',s:'drop',' ':'drop',arrowup:'rotate',w:'rotate',r:'rotate'}[k];}
@@ -865,8 +874,8 @@ document.addEventListener('keydown',e=>{
  if(mode!=='playing'||!key)return;
  if(e.key===' '&&e.target?.tagName==='BUTTON')return;
  e.preventDefault();
- if(key==='rotate'){if(!e.repeat)GB.rotate(s);}
- else{held.add(key);if(key==='drop'&&!e.repeat)dropTimer=.19;}
+ if(key==='rotate'){if(!e.repeat&&GB.rotate(s))sfx('rotate');}
+ else{held.add(key);if(key==='drop'&&!e.repeat){sfx('drop');dropTimer=.19;}}
 });
 document.addEventListener('keyup',e=>{const action=keyMap(e.key.toLowerCase());if(action)held.delete(action);});
 window.addEventListener('blur',()=>{if(mode==='playing')dialog('paused');});
