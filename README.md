@@ -50,3 +50,7 @@ The start screen links to `gingerbread/`; the existing Pine & Snow and Tree Work
 ## Music and operation sounds
 
 The original melody has three arrangements: sleigh bells and pluck for Pine & Snow, music box for Tree Workshop, and marimba for Gingerbread Builder. Enter a mode to hear it; browsers that block autoplay will start after a supported gesture. Background music and sound effects have independent controls in each mode, stored locally across the three same-origin screens. The front menu remains silent, the embedded Workshop uses the parent player's audio, and hidden pages pause. No external audio services or sound-tracking requests are used.
+
+## Holiday arcade / 圣诞小游戏
+
+The main page is a bilingual mode picker: Tree Stacker, Tree Workshop, Gingerbread Builder, and Gift Depot Defense. The original defense game at `gift-defense/` lets Santa place defenses and protect the gift depot. Existing modes, paths, audio preferences and records remain intact; mode cards only appear on the initial menu.

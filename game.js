@@ -57,7 +57,7 @@ try{const raw=JSON.parse(localStorage.getItem(recordKey));if(raw&&Number.isFinit
 const shell=$('shell'),rules=$('rules'),focusToggle=$('focusToggle'),helpToggle=$('helpToggle'),helpClose=$('helpClose');
 const settingsMenu=$('settingsMenu'),settingsToggle=$('settingsToggle');
 const workshopDialog=$('workshopDialog'),workshopFrame=$('workshopFrame'),workshopBack=$('workshopBack');
-const workshopHome=$('workshopHome'),gingerbreadHome=$('gingerbreadHome');
+const workshopHome=$('workshopHome'),gingerbreadHome=$('gingerbreadHome'),defenseHome=$('defenseHome');
 let workshopOpen=false,workshopLoaded=false;
 function renderWorkshop(){
  if(!workshopDialog)return;
@@ -804,9 +804,11 @@ function hud(){
  buffs.innerHTML=active.map(k=>'<span class="'+k+'">'+P_ICON[k]+' '+t(k)+' '+Math.ceil(state.buffs[k])+'s</span>').join('');
  $('best').textContent=t('best',best);screen.dataset.stage=Math.min(3,Math.floor(state.level/4));
 }
-function button(key){start.innerHTML=t(key)+' <span aria-hidden="true">↗</span>';}
+function button(key){start.innerHTML=mode==='ready'?'<span>'+t('treeGame')+'</span><small>'+t('treeDesc')+'</small>':t(key)+' <span aria-hidden="true">↗</span>';}
 function renderPanel(){
  panel.dataset.mode=mode;
+ document.title=t(mode==='ready'?'title':'treeTitle');
+ shell.classList.toggle('is-arcade',mode==='ready');
  shell.classList.toggle('is-settlement',mode==='lost');
  const score=$('resultScore');score.hidden=mode!=='lost';
  $('resultScoreValue').textContent=String(state.score);
@@ -818,6 +820,7 @@ function renderPanel(){
  $('panelFine').textContent=mode==='lost'?t('bestCombo',{n:state.bestCombo}):mode==='paused'?t('pausedFine'):'';
  workshopHome.hidden=mode!=='ready';
  if(gingerbreadHome)gingerbreadHome.hidden=mode!=='ready';
+ if(defenseHome)defenseHome.hidden=mode!=='ready';
  button(mode==='lost'?'replay':mode==='paused'?'resume':'start');
 }
 function renderSound(){

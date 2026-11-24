@@ -322,11 +322,15 @@ test('first visit requires an explicit choice, persists it and supports unavaila
  $('languagePicker').fire('cancel');assert($('languagePicker').open);
  $('start').fire('click');assert($('languagePicker').open);
  $('languageEN').fire('click');assert(!$('languagePicker').open);
- assert.equal(d.documentElement.lang,'en');assert.equal($('languageEN').getAttribute('aria-pressed'),'true');assert.equal(d.title,'Pine & Snow · Tree Stacker');
- assert.equal($('panelTitle').textContent,'Stack as high as you can');
+ assert.equal(d.documentElement.lang,'en');assert.equal($('languageEN').getAttribute('aria-pressed'),'true');assert.equal(d.title,'Pine & Snow · Christmas Arcade');
+ assert.equal($('panelTitle').textContent,'Christmas Arcade');
+ assert.equal($('defenseHome').hidden,false);
+ assert($('shell').classList.contains('is-arcade'));
  assert.equal(d.activeElement,$('start'));assert.equal(stored.get('snow-pine-language-v1'),'en');
  const reload=harness(640,420,true,null,.5,{storage:stored});
  assert(!reload.$('languagePicker').open);assert.equal(reload.d.documentElement.lang,'en');
+ reload.$('start').fire('click');assert.equal(reload.d.title,'Pine & Snow · Tree Stacker');
+ assert(reload.$('defenseHome').hidden);assert(!reload.$('shell').classList.contains('is-arcade'));
  const denied=harness(640,420,true,null,.5,{firstVisit:true,denyStorage:true});
  denied.$('languageZH').fire('click');assert(!denied.$('languagePicker').open);
  denied.$('start').fire('click');assert(denied.$('panel').hidden);

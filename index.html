@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#11162b"><meta name="description" content="推着小精灵的雪橇，在雪夜垒起一棵圣诞树。"><title>松针雪夜 · 垒树挑战</title><link rel="icon" href="./assets/pixel-leaf.svg" type="image/svg+xml"><link rel="stylesheet" href="./style.css?v=audio-21"><script defer src="./game-core.js?v=journey-18"></script><script defer src="./locale.js?v=gingerbread-20"></script><script defer src="./share.js?v=quiet-17"></script><script defer src="./journey-finale.js?v=journey-18"></script><script defer src="./audio.js?v=audio-21" data-mode="tree"></script><script defer src="./game.js?v=audio-21"></script></head>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#11162b"><meta name="description" content="松针雪夜圣诞小游戏合集。垒松树、造树工坊、搭姜饼屋与礼物仓保卫战。"><title>松针雪夜 · 圣诞小游戏</title><link rel="icon" href="./assets/pixel-leaf.svg" type="image/svg+xml"><link rel="stylesheet" href="./style.css?v=defense-25"><script defer src="./game-core.js?v=journey-18"></script><script defer src="./locale.js?v=defense-25"></script><script defer src="./share.js?v=quiet-17"></script><script defer src="./journey-finale.js?v=journey-18"></script><script defer src="./audio.js?v=audio-21" data-mode="tree"></script><script defer src="./game.js?v=defense-25"></script></head>
 <body><main class="shell" id="shell">
 <header class="mast"><h1 class="brand" data-l10n="brand">松针雪夜</h1><details id="settingsMenu" class="settings-menu"><summary id="settingsToggle" data-l10n-aria="settings" aria-label="设置"><svg viewBox="0 0 24 24" width="23" height="23" aria-hidden="true"><path fill="currentColor" d="M9 1h6v3h2l2-2 3 3-2 2v2h3v6h-3v2l2 2-3 3-2-2h-2v3H9v-3H7l-2 2-3-3 2-2v-2H1V9h3V7L2 5l3-3 2 2h2zm3 6a5 5 0 1 0 0 10 5 5 0 0 0 0-10"/></svg></summary><div class="settings"><button class="help-toggle" type="button" id="helpToggle" aria-expanded="false" aria-controls="rules"><span data-l10n="help">玩法</span></button><label class="sense" for="sensitivity"><span data-l10n="sensitivity">灵敏度</span> <select id="sensitivity" data-l10n-aria="sensitivity"><option value="low" data-l10n="low">低</option><option value="medium" selected data-l10n="medium">标准</option><option value="high" data-l10n="high">高</option></select></label><button id="languageToggle" class="language-toggle" type="button" aria-label="选择语言" data-l10n-aria="language" aria-haspopup="dialog" aria-controls="languagePicker" aria-expanded="false"><span aria-hidden="true">🌐</span><span id="languageBadge" aria-hidden="true">中</span></button><button id="music" class="sound" type="button" data-pine-audio="music" aria-pressed="true">背景音乐 · 开</button><button id="sound" class="sound" type="button" data-pine-audio="sfx" aria-pressed="true"><span>操作音效 · 开</span></button><button type="button" id="focusToggle" class="focus-toggle" aria-pressed="false" aria-label="打开放大模式">↗</button></div></details></header>
 <section class="stage">
@@ -22,12 +22,15 @@
 <div class="panel" id="panel"><div class="card">
 <div id="panelIcon" class="panel-icon" hidden aria-hidden="true">✦</div>
 <p id="panelTag" class="panel-tag" hidden></p>
-<h2 id="panelTitle" data-l10n="readyTitle">垒得越高越好</h2>
+<h2 id="panelTitle" data-l10n="readyTitle">圣诞小游戏</h2>
 <div id="resultScore" class="result-score" hidden><strong id="resultScoreValue">0</strong><span data-l10n="scoreUnit">分</span></div>
-<p id="panelText" data-l10n="readyText">移动树顶，对准落下的松叶。</p>
-<button id="start" type="button"><span data-l10n="start">开始垒树</span> <span aria-hidden="true">↗</span></button>
-<a id="gingerbreadHome" class="workshop-home gingerbread-home" href="./gingerbread/" data-l10n="gingerbreadGame">搭姜饼屋</a>
-<button id="workshopHome" class="workshop-home" type="button" aria-haspopup="dialog" aria-controls="workshopDialog" data-l10n="workshop">造树工坊</button>
+<p id="panelText" data-l10n="readyText">选一个小游戏，开始你的圣诞雪夜。</p>
+<div class="mode-grid">
+<button id="start" type="button" class="mode-card tree-mode"><span data-l10n="treeGame">垒松树</span><small data-l10n="treeDesc">接松枝，垒圣诞树</small></button>
+<a id="gingerbreadHome" class="workshop-home mode-card gingerbread-home" href="./gingerbread/"><span data-l10n="gingerbreadGame">搭姜饼屋</span><small data-l10n="gingerbreadDesc">接姜饼，拼出小屋</small></a>
+<button id="workshopHome" class="workshop-home mode-card workshop-mode" type="button" aria-haspopup="dialog" aria-controls="workshopDialog"><span data-l10n="workshop">造树工坊</span><small data-l10n="workshopDesc">自由造树和装饰</small></button>
+<a id="defenseHome" class="workshop-home mode-card defense-mode" href="./gift-defense/"><span data-l10n="defenseGame">礼物仓保卫战</span><small data-l10n="defenseDesc">布置防线，守住礼物</small></a>
+</div>
 <div id="shareActions" class="share-actions" hidden>
 <button id="saveTree" type="button" aria-disabled="true"><span data-l10n="save">保存我的树</span></button>
 <button id="shareTree" type="button" aria-disabled="true"><span data-l10n="share">分享</span></button>

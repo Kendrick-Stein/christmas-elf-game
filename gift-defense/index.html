@@ -1,0 +1,32 @@
+<!doctype html>
+<html lang="zh-CN"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#11182f">
+<meta name="description" content="圣诞老人布防守住雪夜礼物仓的原创小游戏。"><title>礼物仓保卫战 · 松针雪夜</title>
+<link rel="stylesheet" href="./style.css?v=depot-1">
+<script defer src="../audio.js?v=audio-21" data-mode="tree"></script><script defer src="./core.js?v=depot-1"></script><script defer src="./game.js?v=depot-1"></script>
+</head><body>
+<main class="frame">
+<header class="top"><a id="back" href="../" aria-label="返回游戏合集">⌂</a><div><div class="overline" id="suite">松针雪夜 · 圣诞小游戏</div><h1 id="title">礼物仓保卫战</h1></div><details id="settings"><summary id="gear" aria-label="设置">⚙</summary><div class="prefs"><button id="language" type="button">English</button><button data-pine-audio="music" type="button">背景音乐</button><button data-pine-audio="sfx" type="button">操作音效</button></div></details></header>
+<section class="court" aria-labelledby="story">
+ <div class="eyebrow" id="story">圣诞老人守仓，绿毛怪来偷礼物</div>
+ <div class="stats"><span><small id="gift-label">礼物</small><b id="gifts">8</b></span><span><small id="money-label">暖星</small><b id="money">12</b></span><span><small id="wave-label">波次</small><b id="wave">1</b></span></div>
+ <canvas id="board" width="540" height="298" role="img" aria-label="三条通往礼物仓的雪道"></canvas>
+ <div id="lanes" class="lanes" role="group" aria-label="选择雪道">
+  <button type="button" data-lane="0" aria-pressed="false">左路</button>
+  <button type="button" data-lane="1" aria-pressed="true">中路</button>
+  <button type="button" data-lane="2" aria-pressed="false">右路</button>
+ </div>
+ <p id="forecast" class="forecast"></p>
+</section>
+<section class="desk" aria-labelledby="phase">
+ <div class="deskhead"><div><h2 id="phase">布置防线</h2><p id="target"></p></div><button id="pause" type="button" hidden>暂停</button></div>
+ <div class="builds" id="builds">
+  <button type="button" data-build="snow"><b></b><small></small></button>
+  <button type="button" data-build="frost"><b></b><small></small></button>
+  <button type="button" data-build="lantern"><b></b><small></small></button>
+  <button type="button" data-build="cocoa"><b></b><small></small></button>
+ </div>
+ <div class="actions"><button id="go" type="button">开始防守</button><button id="bell" type="button" hidden>摇星铃</button><button id="restart" type="button">再开一局</button></div>
+ <p id="hints" class="hints"></p><p id="status" role="status" class="status"></p>
+</section>
+</main></body></html>

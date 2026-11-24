@@ -263,3 +263,28 @@ html[lang="en"] .mast .brand{letter-spacing:0}
 .panel .gingerbread-home{font:inherit;font-weight:700;text-decoration:none;line-height:1.2;padding:12px 16px;border-radius:10px;background:#59423e;border-color:#bd9471}.panel .gingerbread-home:hover{background:#775645}.panel .gingerbread-home:focus-visible{outline:2px solid #ffe2aa;outline-offset:3px}
 
 .settings [data-pine-audio]{white-space:nowrap;min-height:42px;font-size:.79rem;padding:5px 8px}.settings [data-pine-audio][aria-pressed=false]{color:#aabdd2}
+/* Home only: a proper arcade menu. Existing pause/result cards and controls are unchanged. */
+.panel[data-mode=ready] .card{width:min(96%,605px);padding:17px 18px 16px}
+.panel[data-mode=ready] #panelTitle{letter-spacing:.045em}
+.panel[data-mode=ready] #panelText{margin:5px auto 11px;max-width:100%;font-size:.86rem}
+.panel[data-mode=ready] .mode-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.panel[data-mode=ready] .mode-grid .mode-card{display:grid;grid-template-columns:32px minmax(0,1fr);grid-template-rows:auto auto;align-content:center;column-gap:8px;justify-items:start;min-height:74px;margin:0;padding:9px 9px 8px;width:100%;height:auto;text-align:left;text-decoration:none;border:1px solid #839296;border-radius:10px;line-height:1.16;white-space:normal;color:#ffecc6;box-shadow:none;background:#263d4c}
+.panel[data-mode=ready] .mode-grid .mode-card[hidden]{display:none}
+.panel[data-mode=ready] .mode-grid .mode-card:before{content:"";grid-column:1;grid-row:1/3;width:32px;height:32px;align-self:center;background:center / contain no-repeat;image-rendering:pixelated}
+.panel[data-mode=ready] .mode-grid .mode-card span{grid-column:2;font-size:.93rem;font-weight:800}
+.panel[data-mode=ready] .mode-grid .mode-card small{grid-column:2;line-height:1.24;font-size:.72rem;color:#cfddd8;margin-top:3px}
+.panel[data-mode=ready] .mode-grid .tree-mode{background:#264d43;border-color:#94b2a1}
+.panel[data-mode=ready] .mode-grid .tree-mode:before{background-image:url("./assets/arcade-tree.svg?v=runner-23")}
+.panel[data-mode=ready] .mode-grid .gingerbread-home{background:#5c4240;border-color:#c19b79}
+.panel[data-mode=ready] .mode-grid .gingerbread-home:before{background-image:url("./assets/arcade-cookie.svg?v=runner-23")}
+.panel[data-mode=ready] .mode-grid .workshop-mode:before{background-image:url("./assets/pixel-leaf.svg")}
+.panel[data-mode=ready] .mode-grid .mode-card:hover{filter:brightness(1.15)}
+@media(max-width:435px){.panel[data-mode=ready] .card{padding:13px 10px 12px}.panel[data-mode=ready] .mode-grid{gap:6px}.panel[data-mode=ready] .mode-grid .mode-card{min-height:70px;padding:7px 6px;grid-template-columns:24px minmax(0,1fr);column-gap:5px}.panel[data-mode=ready] .mode-grid .mode-card:before{width:24px;height:24px}.panel[data-mode=ready] .mode-grid .mode-card span{font-size:.82rem}.panel[data-mode=ready] .mode-grid .mode-card small{font-size:.64rem}}
+@media(max-height:520px) and (min-width:640px){.panel[data-mode=ready] .card{padding:7px 10px}.panel[data-mode=ready] .mode-grid .mode-card{min-height:48px;padding:4px 6px}}
+
+/* Keep reserved layout height but make the ready scene a quiet game hub. */
+.shell.is-arcade .readout,.shell.is-arcade #controls,.shell.is-arcade .footer{visibility:hidden;pointer-events:none}
+
+
+.panel[data-mode=ready] .mode-grid .defense-mode{background:#4b4937;border-color:#d1ae78}
+.panel[data-mode=ready] .mode-grid .defense-mode:before{background-image:url("./assets/sprite-santa.svg")}
