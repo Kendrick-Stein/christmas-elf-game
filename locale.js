@@ -116,6 +116,8 @@ const words={
  workshopDesc:["自由造树和装饰","Make and decorate your own tree"],
  defenseGame:["礼物仓保卫战","Gift Depot Defense"],
  defenseDesc:["布置防线，守住礼物","Build defenses to protect the gifts"],
+ cocoaGame:["雪夜可可铺","Snowy Cocoa Stand"],
+ cocoaDesc:["调热可可，招待雪夜客人","Mix cocoa and serve snowy-night guests"],
  workshopOther:["自由搭树，不计分，和垒树挑战分开。","Build a separate tree at your own pace, without scoring."],
  workshopBack:["返回首页","Back to home"],
  settings:["设置","Settings"],

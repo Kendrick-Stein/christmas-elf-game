@@ -288,3 +288,6 @@ html[lang="en"] .mast .brand{letter-spacing:0}
 
 .panel[data-mode=ready] .mode-grid .defense-mode{background:#4b4937;border-color:#d1ae78}
 .panel[data-mode=ready] .mode-grid .defense-mode:before{background-image:url("./assets/sprite-santa.svg")}
+
+.panel[data-mode=ready] .mode-grid .cocoa-mode{grid-column:1/-1;background:#594038;border-color:#c29b79}
+.panel[data-mode=ready] .mode-grid .cocoa-mode:before{background-image:url("./assets/arcade-cocoa.svg")}
