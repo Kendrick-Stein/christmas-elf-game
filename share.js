@@ -119,7 +119,7 @@ function pngBlob(canvas){
 function init(env){
  const doc=env.document,$=id=>doc.getElementById(id);
  const actions=$('shareActions'),save=$('saveTree'),share=$('shareTree'),status=$('shareStatus'),
-  canvas=$('settlementTree'),form=$('shareLinkLabel'),link=$('shareLink'),panel=$('panel');
+  canvas=$('settlementTree'),form=$('shareLinkLabel'),link=$('shareLink'),panel=$('panel'),copyButton=$('copyTreeLink');
  if(!actions||!save||!share||!status||!canvas||!form||!link||!panel)return null;
  const nav=env.navigator||{};
  let snapshot=null,prepared=null,task=null,failed=false,sharing=false,treeReady=false,revision=0;
@@ -130,7 +130,10 @@ function init(env){
  const report=(id,key)=>{if(active(id)){status.hidden=!key;status.textContent=key?copy()[key]:'';}};
  function labels(){
   save.textContent=copy().save;share.textContent=copy().share;link.setAttribute('aria-label',copy().link);
-  if(form.firstChild?.nodeType===3)form.firstChild.nodeValue=copy().link+' ';
+  if(copyButton)copyButton.textContent=copy().link;
+  const caption=form.querySelector?.('span');
+  if(caption)caption.textContent=copy().link;
+  else if(form.firstChild?.nodeType===3)form.firstChild.nodeValue=copy().link+' ';
  }
  const state=()=>{
   save.setAttribute('aria-disabled',String(!prepared&&!failed));
@@ -175,14 +178,15 @@ function init(env){
   form.hidden=false;report(id,'manual');
   link.focus({preventScroll:true});link.select();
  }
- function copyLink(id){
+ function copyLink(id,imageFallback=true){
   if(!active(id))return;
   closeLink();
   if(!nav.clipboard||typeof nav.clipboard.writeText!=='function'){manualLink(id);return;}
   try{Promise.resolve(nav.clipboard.writeText(URL_TARGET)).then(()=>{
-   report(id,prepared?'copiedImage':'copied');
+   report(id,prepared&&imageFallback?'copiedImage':'copied');
   },()=>manualLink(id));}catch(_){manualLink(id);}
  }
+ copyButton?.addEventListener('click',()=>copyLink(revision,false));
  save.addEventListener('click',()=>{
   if(!snapshot)return;
   const id=revision;
@@ -207,7 +211,7 @@ function init(env){
   sharing=true;state();
   // This call must stay synchronous in the click handler: it consumes user activation.
   let requested;
-  try{requested=nav.share({files:[file],title:prepared.title});}
+  try{requested=nav.share({files:[file],title:prepared.title,url:URL_TARGET});}
   catch(error){sharing=false;state();if(error&&error.name==='AbortError')report(id,'cancelled');else copyLink(id);return;}
   Promise.resolve(requested).then(()=>report(id,'complete'),error=>{
    if(error&&error.name==='AbortError')report(id,'cancelled');

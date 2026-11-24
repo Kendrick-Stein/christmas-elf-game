@@ -8,3 +8,12 @@ button,.fileLabel{font-family:inherit}
 #backStandalone:not([hidden]){display:inline-grid;place-items:center;padding-inline:8px;color:#ffda9a;font-size:.76rem}
 
 .audio-menu{position:relative;z-index:4}.audio-menu summary{list-style:none;display:grid;place-items:center;min-width:42px;min-height:42px;cursor:pointer;border:1px solid #799093;border-radius:8px;color:#ffe4ae;background:#20384a}.audio-menu summary::-webkit-details-marker{display:none}.audio-menu>div{position:absolute;right:0;top:46px;min-width:155px;padding:6px;display:grid;gap:4px;background:#152735;border:1px solid #7c939c;border-radius:10px}.audio-menu:not([open])>div{display:none}.audio-menu button{white-space:nowrap;font-size:.83rem}.audio-menu button[aria-pressed=false]{color:#afc1d0}
+.stage-actions{display:flex;align-items:center;gap:9px}.stage-actions button{min-height:44px;font-size:.76rem}
+#workshopShare{width:min(480px,calc(100vw - 24px));max-height:calc(100dvh - 24px);padding:12px;color:var(--text);border:1px solid #7894a5;border-radius:10px;background:#172b42;overflow:auto}
+#workshopShare::backdrop{background:#10182ccf}
+.postcard-head,.postcard-actions{display:flex;align-items:center;justify-content:space-between;gap:6px}.postcard-head h2{font-size:1.05rem;margin:0}
+#postcardCanvas{display:block;width:auto;height:auto;max-width:100%;max-height:56dvh;margin:8px auto;image-rendering:pixelated}
+.postcard-actions button{flex:1;min-width:0;overflow-wrap:anywhere}
+#postcardStatus{margin:5px 0;color:#e3c8ae;font-size:.79rem;min-height:1em}
+#postcardLink{width:100%;padding:6px;border:1px solid #7894a5;background:#14263c;color:var(--text);font:inherit}
+@media(max-width:360px){.mast{gap:5px}.header-actions button,.mast #backStandalone:not([hidden]){padding-inline:4px}.mast h1{font-size:1rem}.postcard-actions button{padding-inline:4px}}

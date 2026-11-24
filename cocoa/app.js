@@ -43,7 +43,7 @@ function setText(el,text){if(el.textContent!==text)el.textContent=text;}
 function render(){
  const playing=isPlaying(),end=s.phase==='ended',cup=s.selected===null?null:s.cups[s.selected],animate=end&&finalProgress<1;
  $('kitchen').inert=!playing;$('pause').hidden=!playing;$('overlay').hidden=playing;$('overlay').dataset.screen=end?'result':paused?'paused':'ready';$('overlay').classList.toggle('celebrating',animate);
- $('honors').hidden=!end;$('breakdown').hidden=!end||animate;$('restart').hidden=!paused;$('skipAnimation').hidden=!animate;$('start').hidden=animate;
+ $('honors').hidden=!end;$('breakdown').hidden=!end||animate;$('restart').hidden=!paused;$('skipAnimation').hidden=!animate;$('start').hidden=animate;$('openShare').hidden=!end||animate;setText($('openShare'),L('分享今晚的吧台','Share my counter'));
  setText($('money'),cash(s.money));setText($('streak'),s.streak+'');setText($('fails'),s.failures+' / 3');setText($('best'),cash(best));
  if(!playing){
   setText($('banner'),end?L('今日打烊','Closing time'):paused?L('稍歇一下','Taking a break'):L('准备营业！','Open for winter!'));
@@ -80,12 +80,20 @@ function render(){
 function lang(){
  document.documentElement.lang=en?'en':'zh-CN';document.title=L(...labels.title);setText($('language'),en?'中文':'EN');$('language').setAttribute('aria-label',L('Switch to English','切换为中文'));
  for(const el of document.querySelectorAll('[data-t]'))setText(el,L(...labels[el.dataset.t]));
+ globalThis.CocoaShare?.language(en?'en':'zh');
  ing.forEach((b,i)=>setText(b.children[1],name(C.ingredients[i])+' '+cash(C.prices[C.ingredients[i]])));
  setText(empty,L('下一位顾客还在路上…','The next guest is on their way…'));say('');render();
 }
-function begin(){for(const b of orderNodes.values())b.remove();orderNodes.clear();s=C.make();C.start(s);paused=false;reaction=null;finalProgress=1;say('');audio?.switchTheme?.('tree',true);audio?.arm?.();render();slots[0].pickBtn.focus();}
+function begin(){$('counterDisplay').replaceChildren();$('counterDisplay').hidden=true;globalThis.CocoaShare?.reset();for(const b of orderNodes.values())b.remove();orderNodes.clear();s=C.make();C.start(s);paused=false;reaction=null;finalProgress=1;say('');audio?.switchTheme?.('tree',true);audio?.arm?.();render();slots[0].pickBtn.focus();}
 function pause(value,focus=true){if(s.phase!=='playing')return;paused=value;render();if(focus)(value?$('start'):$('pause')).focus();}
-function end(){audio?.effect?.('finish');if(s.money>best){best=s.money;set(record,String(best));}finalAt=0;finalProgress=reduced()?1:0;render();(finalProgress===1?$('start'):$('skipAnimation')).focus();}
+function showCounter(){
+ const display=$('counterDisplay');display.replaceChildren();
+ s.drinks.forEach((recipe,i)=>{
+  const cup=node('i','counter-drink');cup.style.setProperty('--drink',food[recipe[0]][2]);cup.style.setProperty('--garnish',food[recipe[1]][2]);cup.style.setProperty('--cup-in',String(i%12));display.append(cup);
+ });display.hidden=false;
+}
+function end(){showCounter();audio?.effect?.('finish');if(s.money>best){best=s.money;set(record,String(best));}finalAt=0;finalProgress=reduced()?1:0;render();(finalProgress===1?$('start'):$('skipAnimation')).focus();}
+$('openShare').addEventListener('click',()=>globalThis.CocoaShare.open({drinks:s.drinks,revenue:s.money,served:s.served,tips:s.tips,omitted:s.served-s.drinks.length},en?'en':'zh'));
 function finishAnimation(){finalProgress=1;render();$('start').focus();}
 $('start').addEventListener('click',()=>paused?pause(false):begin());$('pause').addEventListener('click',()=>pause(true));$('restart').addEventListener('click',begin);$('skipAnimation').addEventListener('click',finishAnimation);
 $('language').addEventListener('click',()=>{en=!en;set(langKey,en?'en':'zh');lang();});window.addEventListener('storage',e=>{if(e.key===langKey&&(e.newValue==='en'||e.newValue==='zh')){en=e.newValue==='en';lang();}});

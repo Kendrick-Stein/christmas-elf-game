@@ -14,8 +14,8 @@ function colors(seed,id){
  let n=(seed^Math.imul(id,0x9e3779b9))>>>0;n=Math.imul(n^(n>>>16),0x85ebca6b);n=Math.imul(n^(n>>>13),0xc2b2ae35);return (n^(n>>>16))&7;
 }
 const patience=[31,25,37,28,34,23];
-const cap=6;
-function make(seed=Math.floor(Math.random()*2**32)){return {seed:(seed>>>0)||1,colorSeed:(seed>>>0)||1,time:0,next:0,phase:'ready',orders:[],serial:0,cups:Array.from({length:4},()=>({items:[],ready:false})),selected:null,money:0,tips:0,speed:0,bonus:0,special:0,menu:0,streak:0,bestStreak:0,served:0,wrong:0,missed:0,failures:0};}
+const cap=6, historyLimit=24;
+function make(seed=Math.floor(Math.random()*2**32)){return {seed:(seed>>>0)||1,colorSeed:(seed>>>0)||1,time:0,next:0,phase:'ready',orders:[],serial:0,cups:Array.from({length:4},()=>({items:[],ready:false})),selected:null,money:0,tips:0,speed:0,bonus:0,special:0,menu:0,streak:0,bestStreak:0,served:0,drinks:[],wrong:0,missed:0,failures:0};}
 function rand(s){let x=s.seed;x^=x<<13;x^=x>>>17;x^=x<<5;s.seed=x>>>0;return s.seed/2**32;}
 function profile(s){return Math.min(5,Math.floor((s.time+3*s.served)/28));}
 function add(s){
@@ -43,7 +43,7 @@ function serve(s,id,n=s.selected){
  const recipe=recipes[o.recipe],correct=sorted(recipe)===sorted(s.cups[n].items);
  discard(s,n);s.orders=s.orders.filter(v=>v!==o);
  if(!correct){s.wrong++;fail(s);return {correct,patron:o.patron,palette:o.palette,failures:s.failures};}
- s.served++;s.streak++;s.bestStreak=Math.max(s.bestStreak,s.streak);s.failures=0;
+ s.served++;s.drinks.push(Object.freeze([...recipe]));if(s.drinks.length>historyLimit)s.drinks.shift();s.streak++;s.bestStreak=Math.max(s.bestStreak,s.streak);s.failures=0;
  const subtotal=recipe.reduce((a,k)=>a+prices[k],0);
  const effect=signature[o.recipe]??'',tip=Math.round(6*Math.max(0,(o.until-s.time)/(o.until-o.at)));
  const speed=s.time-o.at<=(effect==='fizz'?8:5)+1e-7?3:0,bonus=Math.min(6,Math.floor(s.streak/2)*2);

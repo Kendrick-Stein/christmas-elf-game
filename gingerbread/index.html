@@ -9,12 +9,32 @@
 header{gap:7px}header h1{min-width:0;overflow:hidden;text-overflow:ellipsis;font-size:clamp(13px,3.9vw,20px);white-space:nowrap}header button{padding:0 7px;min-height:41px}.language{font-size:12px;min-width:37px}.ice-key{display:none}@media(min-width:460px){.ice-key{display:inline}}#score{font-size:13px;white-space:nowrap}.home-link{display:block;text-align:center;margin:10px 0 0;color:#b9d4e4;font-size:13px;padding:5px}.copy-link{grid-column:1/-1;min-height:39px}.msg{max-width:94%;white-space:normal;text-align:center;width:max-content;line-height:1.2}.finale-controls{position:absolute;z-index:2;inset:auto 14px calc(109px + env(safe-area-inset-bottom));display:flex;align-items:center;justify-content:space-between;gap:8px;pointer-events:none}.finale-controls[hidden]{display:none}.finale-controls output{border-radius:8px;background:#172a3beb;color:#ffe5bb;font-size:13px;padding:8px 10px}.finale-controls button{pointer-events:auto;padding:0 12px;font-size:13px;background:#293d4a;border-color:#967964}
 .result-nav{display:flex;align-items:center;justify-content:center;gap:10px;margin:8px 0 0}.result-nav .home-link{margin:0}.sheet .screen-language{min-height:36px;font-size:12px;padding:4px 9px;background:#293c45}
 .audio-menu{position:relative;z-index:8}.audio-menu summary{list-style:none;display:grid;place-items:center;min-width:35px;min-height:41px;cursor:pointer;border:1px solid #6c8594;border-radius:9px;background:#294355;color:#ffe5b2}.audio-menu summary::-webkit-details-marker{display:none}.audio-menu>div{position:absolute;right:0;top:45px;min-width:153px;padding:6px;display:grid;gap:5px;background:#182b3a;border:1px solid #748995;border-radius:9px}.audio-menu:not([open])>div{display:none}.audio-menu button,.sheet .audio-sheet button{min-height:37px;font-size:12px;white-space:nowrap}.audio-sheet{display:flex;justify-content:center;gap:6px;margin-top:6px}.sheet .audio-sheet button{padding:0 7px}.audio-menu button[aria-pressed=false],.audio-sheet button[aria-pressed=false]{color:#afc2cf}@media(max-width:370px){header{gap:5px;padding-left:7px;padding-right:7px}.language{min-width:33px}.audio-menu summary{min-width:30px}#hearts{font-size:15px;min-width:40px}#score{font-size:11px}}
+
+/* Final share panel: the preview is the very same canvas that is saved. */
+.screen.is-result{padding:12px 12px calc(12px + env(safe-area-inset-bottom));overscroll-behavior:contain;background:radial-gradient(ellipse at 50% 15%,#324758,#152734 69%)}
+.screen.is-result .sheet{width:min(100%,474px);padding:15px 16px;border-color:#807b80;border-radius:15px}
+.screen.is-result #dialogTitle{font-size:clamp(21px,5vw,27px);line-height:1.15}
+.screen.is-result .result-tag{margin:5px 0 0}
+.screen.is-result .result-summary{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px 10px;margin:2px 0 10px}
+.screen.is-result .result-score{font-size:13px;white-space:nowrap}.screen.is-result .result-score strong{font-size:22px}
+.screen.is-result .result-fine{margin:0;color:#bcccd4;font-size:11px}
+.screen.is-result figure{min-height:0;height:auto;display:grid;place-items:center;margin:0 auto 10px;padding:0;border:0;background:none;max-width:min(100%,36dvh);overflow:visible}
+.screen.is-result figure canvas{height:auto;aspect-ratio:3/4;border-radius:8px;box-shadow:0 5px 18px #0a1420;touch-action:auto}
+.screen.is-result .result-actions{gap:8px;margin:0}.screen.is-result .result-actions button{min-height:44px}
+.screen.is-result #save{background:#9a6243;border-color:#efbf8e;color:#fff5dd}
+.screen.is-result #copyLink{grid-column:auto;background:none;border-color:transparent;color:#c0d8e4;font-size:12px}
+.screen.is-result .row{margin-top:2px;display:grid;grid-template-columns:1fr 1fr;gap:8px}.screen.is-result .row button{min-height:44px}
+.row:not(:has(#copyLink:not([hidden]))) {grid-template-columns:1fr}.screen.is-result #start{order:0;border-color:#67878e;background:#2e495a;font-size:14px}
+.screen.is-result .result-nav{margin:7px 0 0}.screen.is-result .audio-sheet{display:none}
+.screen.is-result .share-status{margin:4px 0 0;line-height:1.35;font-size:12px;overflow-wrap:anywhere}
+.screen.is-result .share-url{width:100%;font:inherit;font-size:13px;color:#f2dbc1;background:#102131;border:1px solid #718997;border-radius:6px;padding:7px;margin:5px 0 0}
+@media(max-height:600px){.screen.is-result figure{max-width:min(100%,32dvh)}}
 </style>
 <main class="app"><header><h1 id="brand">搭姜饼屋</h1><span id="score" aria-label="车上姜饼">车上 0</span><span class="ice-key" id="iceLegend" aria-label="普通姜饼可滑，蓝白糖霜表示冻结"><span id="normalKey">普通可滑</span> <b id="freezeKey">白霜冻结</b></span><span id="hearts" role="status" aria-label="剩余 3 心">♥♥♥</span><button id="language" class="language" aria-label="切换语言">EN</button><details class="audio-menu"><summary id="audioOptions" aria-label="音频设置">♫</summary><div><button type="button" data-pine-audio="music">背景音乐 · 开</button><button type="button" data-pine-audio="sfx">操作音效 · 开</button></div></details><button id="pause" aria-label="暂停">Ⅱ</button></header>
 <div class="arena"><canvas id="field" role="img" aria-label="姜饼屋叠放区域"></canvas><output class="msg" id="message" aria-live="polite">拖推车去接住姜饼</output><div class="next-box" id="nextBox" hidden role="img" aria-label="下一块"><span id="nextLabel">下一块</span><svg id="nextIcon" width="35" height="28" viewBox="0 0 32 26" aria-hidden="true"></svg><small id="nextCondition" hidden>接住后掉糖霜</small></div></div>
 <footer class="controls"><div id="cartHandle" class="cart-handle" tabindex="0" role="slider" aria-label="推车把手，拖动或使用左右键" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50"><span id="cartThumb">↔ 推车</span></div><button id="drop"><span id="dropLabel">下落</span> <small id="holdLabel">可长按</small></button><button id="rotate">旋转</button></footer>
 <div id="finaleControls" class="finale-controls" hidden><output id="finaleStatus" aria-live="polite"></output><button id="skipFinale" type="button">跳过动画</button></div>
-<section id="screen" class="screen"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><h2 id="dialogTitle">搭姜饼屋</h2><p id="dialogCopy">拖动推车接姜饼。接触够宽会先粘住，贴稳后更牢，移动时仍可微滑；大幅甩车会甩掉薄粘块。点按或长按「下落」加速，也可以旋转。</p><div class="result" id="result" hidden><div id="resultTag" class="result-tag" aria-hidden="true">✦  雪夜留影  ✦</div><div class="result-score"><strong id="resultScore">0</strong><span id="resultUnit">块留存</span></div><p id="resultFine" class="result-fine"></p><figure><canvas id="resultHouse" role="img" aria-label="本局实际留下的姜饼屋以及屋顶和彩灯"></canvas></figure></div><div class="row"><button class="primary" id="start">开始</button></div><div id="resultActions" class="result-actions" hidden><button id="save" disabled>保存我的姜饼屋</button><button id="share" disabled>分享</button><button id="copyLink" class="copy-link" type="button">复制游戏链接</button></div><div class="result-nav"><a id="homeLink" class="home-link" href="../">返回游戏首页</a><button id="screenLanguage" class="screen-language" type="button" aria-label="切换语言">English</button></div><div class="audio-sheet"><button type="button" data-pine-audio="music">背景音乐 · 开</button><button type="button" data-pine-audio="sfx">操作音效 · 开</button></div><p id="shareStatus" class="share-status" role="status" hidden></p></div></section>
+<section id="screen" class="screen"><div class="sheet" role="dialog" aria-modal="true" aria-labelledby="dialogTitle"><h2 id="dialogTitle">搭姜饼屋</h2><p id="dialogCopy">拖动推车接姜饼。接触够宽会先粘住，贴稳后更牢，移动时仍可微滑；大幅甩车会甩掉薄粘块。点按或长按「下落」加速，也可以旋转。</p><div class="result" id="result" hidden><div id="resultTag" class="result-tag" aria-hidden="true">✦  雪夜留影  ✦</div><div class="result-summary"><div class="result-score"><strong id="resultScore">0</strong><span id="resultUnit">块留存</span></div><p id="resultFine" class="result-fine"></p></div><figure><canvas id="resultHouse" role="img" aria-label="本局实际留下的姜饼屋以及屋顶和彩灯"></canvas></figure></div><div id="resultActions" class="result-actions" hidden><button id="save" disabled>保存图片</button><button id="share" disabled>分享图片</button></div><div class="row"><button class="primary" id="start">开始</button><button id="copyLink" class="copy-link" type="button" hidden>复制游戏链接</button></div><div class="result-nav"><a id="homeLink" class="home-link" href="../">返回游戏首页</a><button id="screenLanguage" class="screen-language" type="button" aria-label="切换语言">English</button></div><div class="audio-sheet"><button type="button" data-pine-audio="music">背景音乐 · 开</button><button type="button" data-pine-audio="sfx">操作音效 · 开</button></div><p id="shareStatus" class="share-status" role="status" hidden></p><input id="shareUrl" class="share-url" type="url" readonly hidden aria-label="游戏链接"></div></section>
 </main>
 <script id="engine">
 const GB=(()=>{
@@ -530,11 +550,11 @@ const finaleControls=$('finaleControls'),finStatus=$('finaleStatus');
 let shareGeneration=0,posterBlob=null,posterFile=null,shareBusy=false;
 const share=$('share'),shareStatus=$('shareStatus');
 const reduced=matchMedia('(prefers-reduced-motion: reduce)').matches;
-function reset(){window.PineAudio?.arm();sfx('nice');clearPoster();finaleControls.hidden=true;$('result').hidden=true;$('resultActions').hidden=true;s=GB.make();mode='playing';look=0;flashUntil=0;currentFlash='';clearHold();overlay.hidden=true;pause.textContent='Ⅱ';pause.setAttribute('aria-label',L('暂停','Pause'));handle.focus();update();}
+function reset(){window.PineAudio?.arm();sfx('nice');clearPoster();finaleControls.hidden=true;$('result').hidden=true;$('resultActions').hidden=true;$('copyLink').hidden=true;s=GB.make();mode='playing';look=0;flashUntil=0;currentFlash='';clearHold();overlay.hidden=true;pause.textContent='Ⅱ';pause.setAttribute('aria-label',L('暂停','Pause'));handle.focus();update();}
 function dialog(kind){
  mode=kind;clearHold();overlay.dataset.mode=kind;overlay.hidden=false;
  const done=kind==='collapse';
- $('result').hidden=!done;$('resultActions').hidden=!done;
+ $('result').hidden=!done;$('resultActions').hidden=!done;$('copyLink').hidden=!done;
  if(overlay.classList)overlay.classList.toggle('is-result',done);
  textForDialog(kind);
  start.focus();update();
@@ -550,9 +570,9 @@ function localize(){
  document.title=NAME();
  for(const [id,cn,en] of [
   ['brand','搭姜饼屋','Gingerbread Builder'],['normalKey','普通可滑','Loose'],['freezeKey','白霜冻结','Frosted'],['nextLabel','下一块','Next'],['dropLabel','下落','Drop'],['holdLabel','可长按','hold'],['rotate','旋转','Rotate'],
-  ['resultTag','✦ 雪夜留影 ✦','✦ WINTER KEEPSAKE ✦'],['resultUnit','块留存','saved'],['save','保存我的姜饼屋','Save House'],['share','分享','Share'],['copyLink','复制游戏链接','Copy Game Link'],['homeLink','返回游戏首页','Back to Game Menu'],['skipFinale','跳过动画','Skip'],
+  ['resultTag','✦ 雪夜留影 ✦','✦ WINTER KEEPSAKE ✦'],['resultUnit','块留存','saved'],['save','保存图片','Save Image'],['share','分享图片','Share Image'],['copyLink','复制游戏链接','Copy Game Link'],['homeLink','返回游戏首页','Back to Game Menu'],['skipFinale','跳过动画','Skip'],
   ['language','EN','中'],['screenLanguage','English','中文']])$(id).textContent=L(cn,en);
- for(const [id,cn,en] of [['language','切换语言','Change language'],['screenLanguage','切换语言','Change language'],['pause','暂停','Pause'],['audioOptions','音频设置','Audio settings'],['score','车上姜饼','Cookies on the cart'],['iceLegend','普通姜饼可滑，蓝白糖霜表示冻结','Plain cookies can slide; frost marks frozen cookies'],['field','姜饼屋叠放区域','Gingerbread playing field'],['cartHandle','推车把手，拖动或使用左右键','Cart handle, drag or use the arrow keys'],['resultHouse','本局实际留下的姜饼屋以及屋顶和彩灯','Your retained gingerbread house with roof and lights']])$(id).setAttribute('aria-label',L(cn,en));
+ for(const [id,cn,en] of [['language','切换语言','Change language'],['screenLanguage','切换语言','Change language'],['pause','暂停','Pause'],['audioOptions','音频设置','Audio settings'],['score','车上姜饼','Cookies on the cart'],['iceLegend','普通姜饼可滑，蓝白糖霜表示冻结','Plain cookies can slide; frost marks frozen cookies'],['field','姜饼屋叠放区域','Gingerbread playing field'],['cartHandle','推车把手，拖动或使用左右键','Cart handle, drag or use the arrow keys'],['resultHouse','本局搭建成果、留存数与扫码入口','Your build, retained piece count, and QR code to play'],['shareUrl','游戏链接','Game link']])$(id).setAttribute('aria-label',L(cn,en));
  if(mode==='idle'||mode==='paused'||mode==='collapse')textForDialog(mode);
  previewKey=null;hearts.textContent='';update();
  if(mode==='finishing')showFinaleCaption(true);
@@ -881,24 +901,29 @@ document.addEventListener('keyup',e=>{const action=keyMap(e.key.toLowerCase());i
 window.addEventListener('blur',()=>{if(mode==='playing')dialog('paused');});
 document.addEventListener('visibilitychange',()=>{if(document.hidden&&mode==='playing')dialog('paused');});
 function note(text){shareStatus.textContent=text;shareStatus.hidden=!text;}
-function clearPoster(){shareGeneration++;posterBlob=null;posterFile=null;shareBusy=false;save.disabled=true;share.disabled=true;note('');}
+function clearPoster(){shareGeneration++;posterBlob=null;posterFile=null;shareBusy=false;save.disabled=true;share.disabled=true;$('shareUrl').hidden=true;note('');}
 function preparePoster(){
  clearPoster();const ticket=shareGeneration,reward=GB.rewardFor(s);
  $('resultScore').textContent=String(reward.rows.length);
  $('resultFine').textContent=L('车上保留 '+reward.rows.length+' 块 · 屋顶与彩灯已落位',reward.rows.length+' saved · roof and lights in place');
- const view=$('resultHouse');view.width=660;view.height=670;
- render(view.getContext('2d'),660,670,0,overTime+3,true);
- const out=document.createElement('canvas');out.width=780;out.height=1040;
- const c=out.getContext('2d');
- c.fillStyle='#152734';c.fillRect(0,0,out.width,out.height);
- c.save();c.translate(0,170);render(c,780,752,0,overTime+3,true);c.restore();
- c.strokeStyle='#566c7b';c.lineWidth=2;c.strokeRect(22,22,736,996);
- c.fillStyle='#e8b994';c.font='bold 20px "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif';c.beginPath();c.moveTo(63,43);c.lineTo(66,50);c.lineTo(74,53);c.lineTo(66,56);c.lineTo(63,63);c.lineTo(60,56);c.lineTo(52,53);c.lineTo(60,50);c.closePath();c.fill();c.fillText(L('雪夜留影','WINTER KEEPSAKE'),84,61);
- c.fillStyle='#fff0cd';c.font='bold 43px "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif';c.fillText(NAME(),53,121);
- c.fillStyle='#ffd097';c.textAlign='right';c.font='bold 42px "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif';c.fillText(reward.rows.length+L(' 块',' saved'),724,121);
- c.textAlign='left';c.fillStyle='#ead1ac';c.font='22px "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif';
- c.fillText(L('车上保留 '+reward.rows.length+' 块 · 屋顶和彩灯',reward.rows.length+' saved · scan to play'),54,972);
- drawQR(c,610,877,3);
+ if(!reward.rows.length)$('resultFine').textContent=L('推车留空了，下一局再搭一座','An empty cart. Build again next round.');
+ const out=$('resultHouse');out.width=780;out.height=1040;
+ const c=out.getContext('2d'), font=' "PingFang SC", "Noto Sans CJK SC", "Microsoft YaHei", sans-serif';
+ c.fillStyle='#152734';c.fillRect(0,0,780,1040);
+ c.strokeStyle='#796e72';c.lineWidth=2;c.strokeRect(23,23,734,994);
+ c.strokeStyle='#435967';c.lineWidth=1;c.strokeRect(31,31,718,978);
+ c.fillStyle='#d8aa83';c.beginPath();c.moveTo(64,60);c.lineTo(67,67);c.lineTo(74,70);c.lineTo(67,73);c.lineTo(64,80);c.lineTo(61,73);c.lineTo(54,70);c.lineTo(61,67);c.closePath();c.fill();
+ c.font='bold 19px'+font;c.fillText(L('松针雪夜  /  雪夜留影','PINE & SNOW  /  WINTER KEEPSAKE'),84,78);
+ c.fillStyle='#fff0cd';c.font='bold 44px'+font;c.fillText(NAME(),56,133,670);
+ c.save();c.translate(44,163);c.beginPath();c.rect(0,0,692,643);c.clip();render(c,692,643,0,overTime+3,true);c.restore();
+ c.strokeStyle='#6d7881';c.lineWidth=2;c.strokeRect(43,162,694,645);
+ c.fillStyle='#ead1ac';c.font='20px'+font;
+ c.fillText(L('本局留存','PIECES KEPT'),57,865);
+ c.fillStyle='#ffd097';c.font='bold 57px'+font;
+ c.fillText(String(reward.rows.length),55,935);
+ c.fillStyle='#ecdbbd';c.font='20px'+font;
+ c.fillText(L('邀请朋友来搭一座','Scan to build one'),349,930);
+ drawQR(c,552,817,4);
  note(L("正在制作分享图片…","Preparing your image…"));
  if(!out.toBlob){note(L("这个浏览器不支持生成图片。","Your browser cannot generate images."));return;}
  try{out.toBlob(blob=>{
@@ -927,8 +952,9 @@ share.onclick=async()=>{
  finally{if(ticket===shareGeneration){shareBusy=false;share.disabled=false;}}
 };
 $('copyLink').onclick=async()=>{
- try{await navigator.clipboard.writeText(CANONICAL);note(L('游戏链接已复制。','Game link copied.'));}
- catch{note(CANONICAL);}
+ const ticket=shareGeneration,url=$('shareUrl');
+ try{await navigator.clipboard.writeText(CANONICAL);if(ticket===shareGeneration){url.hidden=true;note(L('游戏链接已复制。','Game link copied.'));}}
+ catch{if(ticket===shareGeneration){url.value=CANONICAL;url.hidden=false;url.focus();url.select?.();note(L('复制下面的游戏链接。','Copy the game link below.'));}}
 };
 localize();dialog('idle');requestAnimationFrame(frame);
 })();

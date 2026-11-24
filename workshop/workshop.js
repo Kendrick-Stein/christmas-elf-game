@@ -1,7 +1,16 @@
 (()=>{
 'use strict';
 const M=window.WorkshopModel,$=id=>document.getElementById(id),{W,H}=M,canvas=$('tree'),g=canvas.getContext('2d');
+const POSTCARD_URL='https://kendrick-stein.github.io/christmas-elf-game/workshop/';
+const QR_ROWS='1fdc8727f 105a84641 174df665d 175c2b55d 1747e295d 104f5f541 1fd55557f 154a700 16e95894b 1ca39fa6d 1a6b94efb 905075a9 e7c7819b 618f712a dc58fd6c 1a755cec 18cf35cdc 142821fdb cebacdf4 928885d2 12517ea2d 173f57341 36e84b2b e0dd7248 16ea4b1fb 1b32318 1fdddbb50 105b72f1e 174b05ff4 1752ade21 175875f60 10472d571 1fd34fa14'.split(' ').map(x=>parseInt(x,16));
 const words={
+ postcard:['分享明信片','Share postcard'],close:['关闭','Close'],send:['分享','Share'],copy:['复制链接','Copy link'],
+ poster:['明信片预览','Postcard preview'],scan:['扫码进入造树工坊','Scan to open Tree Workshop'],
+ streak:['这棵树，只此一棵。','A Christmas tree of my own.'],
+ oneLayer:['1 层松枝','1 layer'],postcardCount:['{n} 层松枝','{n} layers'],
+ preparing:['正在生成…','Preparing…'],copied:['已复制工坊链接。','Workshop link copied.'],
+ manual:['请选中链接复制。','Select the link to copy it.'],sent:['分享操作已完成。','Sharing complete.'],
+ canceled:['已取消分享。','Share canceled.'],
  back:['返回游戏','Back to game'],brand:['造树工坊','Tree Workshop'],export:['保存 PNG','Save PNG'],myTree:['我的圣诞树','My Christmas tree'],workbench:['工作台','WORKBENCH'],customize:['搭一棵自己的树','Build your own tree'],layers:['松枝','Branches'],decor:['挂饰','Ornaments'],photo:['照片','Photos'],
  aboutLayers:['点树枝选层，每层可以用不同宽度。','Tap a branch to select a layer. Each can have its own width.'],width:['松枝宽度','Branch width'],small:['小','Small'],medium:['中','Medium'],large:['大','Large'],addLayer:['＋ 加一层','＋ Add a layer'],deleteLayer:['删掉这层','Remove this layer'],
  aboutDecor:['先选挂饰，再点松枝挂上去。','Choose an ornament, then tap a branch to hang it.'],hangSelected:['挂到所选层','Hang on selected layer'],deleteLast:['移除该层最后一件','Remove last item from layer'],
@@ -21,7 +30,7 @@ if(embedded){
    if(lang!==e.data.language){lang=e.data.language;language();}
  });
  window.addEventListener('keydown',e=>{
-   if(e.key==='Escape'&&location.origin!=='null'){e.preventDefault();window.parent.postMessage({type:'pine:workshop-close'},location.origin);}
+   if(e.key==='Escape'&&!$('workshopShare').open&&location.origin!=='null'){e.preventDefault();window.parent.postMessage({type:'pine:workshop-close'},location.origin);}
  });
 }
 const t=(k,vars={})=>(words[k]?.[lang==='en'?1:0]??k).replace(/\{(\w+)\}/g,(_,n)=>vars[n]??'');
@@ -72,7 +81,8 @@ function language(){
  $('audioOptions').setAttribute('aria-label',lang==='en'?'Audio settings':'音频设置');window.PineAudio?.refresh();document.title=t('brand')+' · Pine & Snow';
  for(const node of document.querySelectorAll('[data-i18n]'))node.textContent=t(node.dataset.i18n);
  $('language').textContent=lang==='en'?'🌐 中文':'🌐 English';$('language').setAttribute('aria-label',t('switch'));
- canvas.setAttribute('aria-label',t('stage'));$('photoFile').setAttribute('aria-label',t('choosePhoto'));
+ canvas.setAttribute('aria-label',t('stage'));$('postcardCanvas').setAttribute('aria-label',t('poster'));$('postcardLink').setAttribute('aria-label',t('copy'));
+ if($('workshopShare').open)renderPostcardDialog();$('photoFile').setAttribute('aria-label',t('choosePhoto'));
  buildLayers();buildSwatches();message(status);photoMessage(photoStatus);sync();
 }
 function changeTab(name,focus=false){
@@ -202,16 +212,87 @@ $('photoFile').addEventListener('change',async e=>{
  finally{URL.revokeObjectURL(u);}
 });
 $('removeWhite').addEventListener('change',refreshPhoto);
-$('export').onclick=async()=>{
+const dialog=$('workshopShare'),postcardCanvas=$('postcardCanvas');
+const postcardStatus=$('postcardStatus'),postcardLink=$('postcardLink');
+const postcardSave=$('postcardSave'),postcardSend=$('postcardSend');
+let postcardTask=0,postcardReady=null;
+postcardLink.value=POSTCARD_URL;
+function drawPostcard(ctx,snapshot){
+ const text=(str,x,y,size,col,max)=>{ctx.fillStyle=col;ctx.font='800 '+size+'px system-ui,"PingFang SC","Microsoft YaHei","Noto Sans CJK SC",sans-serif';ctx.textAlign='left';ctx.fillText(str,x,y,max);};
+ rect(ctx,'#6d8ca4',0,0,960,1020);rect(ctx,'#142740',3,3,954,1014);
+ for(const x of [18,905])for(const y of [18,996])rect(ctx,'#e8bb80',x,y,36,6);
+ text('PINE & SNOW  /  '+t('brand'),53,63,23,'#f7c991',851);
+ text(t('myTree'),51,130,53,'#fff0d4',853);
+ rect(ctx,'#52748e',51,149,858,2);
+ rect(ctx,'#203850',31,171,898,691);
+ // Exact branch/ornament geometry, without selection marks or UI.
+ ctx.save();ctx.translate(160,171);draw(ctx,snapshot,false);ctx.restore();
+ rect(ctx,'#244560',31,855,898,131);rect(ctx,'#62859a',31,855,898,2);
+ text(snapshot.layers.length===1?t('oneLayer'):t('postcardCount',{n:snapshot.layers.length}),52,906,28,'#ffda9b',626);
+ text(t('streak'),52,949,23,'#e7edf1',626);
+ const x=770,y=835,u=4,quiet=4,n=QR_ROWS.length;
+ rect(ctx,'#fffdf3',x,y,(n+quiet*2)*u,(n+quiet*2)*u);
+ for(let i=0;i<n;i++)for(let j=0;j<n;j++)if(Math.floor(QR_ROWS[i]/2**(n-1-j))%2)rect(ctx,'#152536',x+(j+quiet)*u,y+(i+quiet)*u,u,u);
+ // Caption stays left of the square, aligned to the lower half.
+ rect(ctx,'#244560',586,871,177,106);
+ text(t('scan'),592,947,18,'#dae5ea',167);
+}
+function preparePostcard(output,snapshot){
+ const context=output.getContext('2d');
+ if(!context)throw Error('Canvas unavailable');
+ drawPostcard(context,snapshot);
+ return new Promise((resolve,reject)=>output.toBlob(blob=>blob?resolve(blob):reject(Error('PNG unavailable')),'image/png'));
+}
+function waitForArt(snapshot){
+ const keys=[...new Set(snapshot.layers.flatMap(l=>l.deco.map(o=>o.photo).filter(Boolean)))];
+ return ready.then(()=>Promise.all(keys.map(p=>photos.get(p)?.decode?.().catch(()=>{}))));
+}
+function downloadPostcard(blob){
+ const u=URL.createObjectURL(blob),a=document.createElement('a');
+ a.href=u;a.download='pine-and-snow-workshop.png';document.body.append(a);
+ try{a.click();}finally{a.remove();setTimeout(()=>URL.revokeObjectURL(u),20000);}
+}
+async function renderPostcardDialog(){
+ const id=++postcardTask,snapshot=M.clone(model);postcardReady=null;
+ postcardSave.disabled=postcardSend.disabled=true;postcardLink.hidden=true;postcardStatus.textContent=t('preparing');
  try{
-   await ready;
-   const pending=[...new Set(model.layers.flatMap(l=>l.deco.map(o=>o.photo).filter(Boolean)))];
-   await Promise.all(pending.map(p=>photos.get(p)?.decode?.().catch(()=>{})));
-   const c=document.createElement('canvas');c.width=960;c.height=1020;
-   const ctx=c.getContext('2d');ctx.scale(1.5,1.5);draw(ctx,model,false);
-   c.toBlob(blob=>{if(!blob){message('saveBad');return;}const u=URL.createObjectURL(blob),a=document.createElement('a');
-     a.href=u;a.download='pine-and-snow-workshop.png';document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(u),20000);message('saved');sfx('lights');
-   },'image/png');
+  await waitForArt(snapshot);
+  if(id!==postcardTask||!dialog.open)return;
+  const blob=await preparePostcard(postcardCanvas,snapshot);
+  if(id!==postcardTask||!dialog.open)return;
+  postcardReady=blob;postcardSave.disabled=postcardSend.disabled=false;postcardStatus.textContent='';
+ }catch(_){if(id===postcardTask)postcardStatus.textContent=t('saveBad');}
+}
+$('openShare').onclick=()=>{if(!dialog.open){dialog.showModal();renderPostcardDialog();}};
+$('closeShare').onclick=()=>dialog.close();
+dialog.addEventListener('close',()=>{postcardTask++;postcardReady=null;$('openShare').focus();});
+postcardSave.onclick=()=>{if(!postcardReady)return;try{downloadPostcard(postcardReady);postcardStatus.textContent=t('saved');sfx('lights');}catch(_){postcardStatus.textContent=t('saveBad');}};
+const announce=(result)=>{if(dialog.open)postcardStatus.textContent=t(result);};
+function manualPostcard(){
+ if(!dialog.open)return;
+ postcardLink.hidden=false;postcardLink.focus();postcardLink.select();announce('manual');
+}
+function copyPostcard(){
+ const clipboard=window.navigator?.clipboard;
+ if(!clipboard?.writeText){manualPostcard();return;}
+ try{Promise.resolve(clipboard.writeText(POSTCARD_URL)).then(()=>announce('copied'),manualPostcard);}catch(_){manualPostcard();}
+}
+$('postcardCopy').onclick=copyPostcard;
+postcardSend.onclick=()=>{
+ if(!postcardReady)return;
+ const nav=window.navigator;
+ try{
+  const file=new File([postcardReady],'pine-and-snow-workshop.png',{type:'image/png'});
+  if(!nav?.share||!nav.canShare?.({files:[file]})){copyPostcard();return;}
+  Promise.resolve(nav.share({files:[file],url:POSTCARD_URL,title:t('myTree')})).then(()=>announce('sent'),err=>err?.name==='AbortError'?announce('canceled'):copyPostcard());
+ }catch(err){if(err?.name==='AbortError')announce('canceled');else copyPostcard();}
+};
+$('export').onclick=async()=>{
+ const snapshot=M.clone(model);
+ try{
+  await waitForArt(snapshot);
+  const out=document.createElement('canvas');out.width=960;out.height=1020;
+  downloadPostcard(await preparePostcard(out,snapshot));message('saved');sfx('lights');
  }catch(_){message('saveBad');}
 };
 if(typeof ResizeObserver==='function')new ResizeObserver(render).observe(canvas);else window.addEventListener('resize',render);
