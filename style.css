@@ -286,8 +286,17 @@ html[lang="en"] .mast .brand{letter-spacing:0}
 .shell.is-arcade .readout,.shell.is-arcade #controls,.shell.is-arcade .footer{visibility:hidden;pointer-events:none}
 
 
-.panel[data-mode=ready] .mode-grid .defense-mode{background:#4b4937;border-color:#d1ae78}
-.panel[data-mode=ready] .mode-grid .defense-mode:before{background-image:url("./assets/sprite-santa.svg")}
 
-.panel[data-mode=ready] .mode-grid .cocoa-mode{grid-column:1/-1;background:#594038;border-color:#c29b79}
+.panel[data-mode=ready] .mode-grid .cocoa-mode{background:#594038;border-color:#c29b79}
 .panel[data-mode=ready] .mode-grid .cocoa-mode:before{background-image:url("./assets/arcade-cocoa.svg")}
+
+/* Compact 2 × 2 arcade, only while the opening menu is visible. */
+.panel[data-mode=ready] .card{background:linear-gradient(145deg,#162939fa,#201f33f5);border-color:#a1a68a;box-shadow:0 6px 23px #080f22bd}
+.panel[data-mode=ready] #panelTitle{text-wrap:balance}
+.panel[data-mode=ready] #panelText{margin:4px auto 9px}
+.panel[data-mode=ready] .mode-grid .mode-card:focus-visible{outline:2px solid #ffe2aa;outline-offset:2px}
+@media(max-width:435px){
+ .panel[data-mode=ready] .card{padding:10px 9px}
+ .panel[data-mode=ready] #panelText{font-size:.73rem}
+ .panel[data-mode=ready] .mode-grid .mode-card{min-height:62px}
+}
