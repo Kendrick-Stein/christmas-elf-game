@@ -313,3 +313,11 @@ html[lang="en"] .mast .brand{letter-spacing:0}
 @media(max-width:650px) and (orientation:portrait){
  .shell.is-arcade .arcade-backdrop{background-image:url('./assets/arcade-market-portrait.svg?v=market-30')}
 }
+
+.panel .bellbound-mode{display:none}
+.panel[data-mode=ready] .mode-grid .bellbound-mode{display:grid;grid-column:1/-1;background:#313850;border-color:#ad8b84}
+.panel[data-mode=ready] .mode-grid .bellbound-mode:before{background-image:url("./bellbound/deer.svg")}
+@media(max-height:460px) and (orientation:landscape){
+ .panel[data-mode=ready] .mode-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+ .panel[data-mode=ready] .mode-grid .bellbound-mode{grid-column:auto}
+}

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="zh-CN"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#171f36"><meta name="description" content="从夜空钻入湖底，带着铃光回到雪镇。海陆空三段旅程，圈圈加速。">
+<title>铃光远行 · Bellbound</title>
+<link rel="icon" href="./deer.svg" type="image/svg+xml"><link rel="stylesheet" href="./style.css?v=release-1">
+<script defer src="./core.js?v=release-1"></script><script defer src="./art.js?v=release-1"></script><script defer src="./postcard.js?v=release-1"></script><script defer src="./app.js?v=release-1"></script></head>
+<body><main>
+<header><a class="tool back-tool" id="arcade" href="../" aria-label="返回游戏合集" title="返回游戏合集">‹</a><div class="mast"><p data-t="brand">松针雪夜 · 圣诞小游戏</p><h1 data-t="title">铃光远行</h1></div>
+<div class="tools"><button class="tool" id="lang" type="button" aria-label="Switch to English">EN</button><button class="tool" id="sound" type="button" aria-pressed="true">声音</button><button class="tool" id="pause" type="button" data-t="pause" hidden>暂停</button></div></header>
+<section class="board" id="board" aria-labelledby="heading">
+<canvas id="scene" width="224" height="292" aria-hidden="true"></canvas>
+<div class="hud"><div><span id="world">夜空 · 第 1 圈</span><output id="collect">0</output></div><div class="score"><span data-t="score">总分</span><output id="score">0</output></div><div><span data-t="best">纪录</span><output id="best">0</output></div></div>
+<div class="ann" aria-live="polite"><b id="notice" hidden></b></div>
+<div class="power" aria-label="Power-ups"><span id="dash" hidden></span><span id="shield" hidden></span><span id="magnet" hidden></span></div>
+<div class="overlay" id="overlay"><div class="card">
+<p id="eyebrow" class="eyebrow"></p><h2 id="heading">铃光远行</h2><p id="intro"></p>
+<div class="results" id="results" hidden><div><span data-t="coins">金币</span><b id="lastCoins">0</b></div><div><span data-t="fish">吃到的鱼</span><b id="lastFish">0</b></div></div>
+<button id="primary" type="button" class="gold">开始远行</button>
+<details id="practice" class="practice"><summary data-t="practice">分场景练习</summary><div class="stagePick"><button type="button" data-stage="air" data-t="air">夜空</button><button type="button" data-stage="sea" data-t="sea">海里</button><button type="button" data-stage="land" data-t="land">雪地</button></div></details>
+<div class="resultActions" id="resultActions" hidden><button id="card" type="button" data-t="card">保存明信片</button><button id="menu" type="button" data-t="menu">回到菜单</button></div>
+<button id="pauseMenu" type="button" data-t="menu" hidden>回到菜单</button>
+</div></div>
+<button id="tapZone" type="button" hidden aria-label="点一下移动"></button>
+</section><p class="hint tipFoot" id="hint"></p>
+</main><dialog id="postcardDialog" aria-labelledby="postcardHeading">
+<div class="sharehead"><h2 id="postcardHeading" data-t="postcardTitle">明信片</h2><button id="closePostcard" type="button" data-t="close">关闭</button></div>
+<img id="postcardPreview" width="1500" height="1000" alt="">
+<div class="actions"><a class="tool gold" id="downloadPostcard" download="bellbound-postcard.png" data-t="download">下载 PNG</a></div>
+</dialog></body></html>

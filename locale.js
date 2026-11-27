@@ -118,6 +118,8 @@ const words={
  defenseDesc:["布置防线，守住礼物","Build defenses to protect the gifts"],
  cocoaGame:["雪夜可可铺","Snowy Cocoa Stand"],
  cocoaDesc:["调热可可，招待雪夜客人","Mix cocoa and serve snowy-night guests"],
+ bellboundGame:["铃光远行","Bellbound"],
+ bellboundDesc:["飞越屋顶，潜入湖底，奔向雪镇","Fly over rooftops, dive deep, and race through the snow"],
  workshopOther:["自由搭树，不计分，和垒树挑战分开。","Build a separate tree at your own pace, without scoring."],
  workshopBack:["返回首页","Back to home"],
  settings:["设置","Settings"],
